@@ -1,6 +1,6 @@
 <h3 align="center">
 
-<img src="./public/icon.png" width="200" alt="Logo" />  
+<img src="./apps/client/public/icon.png" width="200" alt="Logo" />  
 
 <p> SCS Intellisense extension for <a href="https://code.visualstudio.com">VSCode</a></p>
 
