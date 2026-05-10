@@ -1,3 +1,5 @@
 node_modules
 dist/*
 .vscode-test/
+apps/client/LICENSE.md
+apps/client/README.md

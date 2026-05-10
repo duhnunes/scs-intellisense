@@ -3,9 +3,8 @@
 All changes to the "scs-intellisense" extension will be documented in this file.
 
 ## 1.0.0 - [2026-05-09]
-- Convert project to **LSP** para ser mais robusto e mais preciso
-- Add script to package-all when need pack `.vsix`
-
+## 1.0.0 - [2026-05-09]
+- Converted project to **LSP** for improved robustness and accuracy
 
 ## 0.0.6
 - Add `.sui` files support
