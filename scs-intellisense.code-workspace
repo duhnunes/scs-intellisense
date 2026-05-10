@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "path": "apps/client"
+    },
+    {
+      "path": "apps/server"
+    },
+    {
+      "path": "packages"
+    }
+  ],
+  "settings": {}
+}

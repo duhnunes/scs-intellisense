@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "copy-server": "copyfiles -f apps/server/dist/server.js apps/client/dist/",
+    "build": "pnpm -r run build && pnpm run copy-server",
+    "dev": "pnpm --filter ./apps/client dev"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "typescript": "^5.9.3"
+  }
+}
