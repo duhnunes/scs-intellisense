@@ -3,7 +3,6 @@
 All changes to the "scs-intellisense" extension will be documented in this file.
 
 ## 1.0.0 - [2026-05-09]
-## 1.0.0 - [2026-05-09]
 - Converted project to **LSP** for improved robustness and accuracy
 
 ## 0.0.6

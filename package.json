@@ -6,8 +6,10 @@
   ],
   "scripts": {
     "copy-server": "copyfiles -f apps/server/dist/server.js apps/client/dist/",
-    "build": "pnpm -r run build && pnpm run copy-server",
-    "dev": "pnpm --filter ./apps/client dev"
+    "build": "pnpm i && pnpm -r run build && pnpm run copy-server",
+    "dev": "pnpm --filter ./apps/client dev",
+    "package:client": "pnpm --filter ./apps/client run vsce:package",
+    "compile": "pnpm run build && pnpm run package:client"
   },
   "devDependencies": {
     "copyfiles": "^2.4.1",

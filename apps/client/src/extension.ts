@@ -1,3 +1,4 @@
+import path from 'node:path';
 import * as vscode from 'vscode';
 import {
   LanguageClient,
@@ -8,7 +9,7 @@ import {
 
 export function activate(context: vscode.ExtensionContext) {
   const serverModule = context.asAbsolutePath(
-    vscode.Uri.joinPath(context.extensionUri, 'dist', 'server.js').fsPath
+    path.join('dist', 'server.js')
   );
 
   const serverOptions: ServerOptions = {
@@ -21,12 +22,14 @@ export function activate(context: vscode.ExtensionContext) {
   };
 
   const client = new LanguageClient(
-    'exampleLsp',
-    'Example LSP',
+    'scsintellisense',
+    'SCS-Intellisense',
     serverOptions,
     clientOptions
   );
 
   context.subscriptions.push(client);
   client.start();
+
+  console.log("SCS-Intellisense running");
 }

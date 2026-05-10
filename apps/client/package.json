@@ -18,12 +18,30 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
-    "language": [
+    "languages": [
       {
         "id": "sii",
         "aliases": ["SII", "sii"],
         "extensions": [".sii"],
         "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "sui",
+        "aliases": ["SUI", "sui"],
+        "extensions": [".sui"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sii",
+        "scopeName": "source.sii",
+        "path": "./syntaxes/sii.tmLanguage.json"
+      },
+      {
+        "language": "sui",
+        "scopeName": "source.sii",
+        "path": "./syntaxes/sii.tmLanguage.json"
       }
     ]
   },
@@ -31,7 +49,7 @@
     "vscode:prepublish": "pnpm run package",
     "compile": "pnpm run check-types && pnpm run lint && node esbuild.js",
     "package": "pnpm run check-types && pnpm run lint && node esbuild.js --production",
-    "build": "pnpm run check-types && pnpm run lint && node esbuild.js",
+    "build": "pnpm i && pnpm run check-types && pnpm run lint && node esbuild.js",
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",

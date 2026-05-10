@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "./dist/server.js",
   "scripts": {
-    "build": "tsc -p ./"
+    "build": "pnpm i && tsc -p ./"
   },
   "dependencies": {
     "vscode-languageserver": "^9.0.1",
