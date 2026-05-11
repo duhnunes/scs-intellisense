@@ -2,6 +2,12 @@
 
 All changes to the "scs-intellisense" extension will be documented in this file.
 
+## 1.1.0
+- Add `prefab` structure to auto-complete
+
+## 1.0.1 
+- Add all `structures` file as a base to all system
+
 ## 1.0.0 - [2026-05-09]
 - Converted project to **LSP** for improved robustness and accuracy
 
