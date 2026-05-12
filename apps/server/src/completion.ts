@@ -29,7 +29,8 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
           kind: "markdown",
           value: "Siinunit inside **class_name**"
         },
-        insertText: `${name} : `
+        insertTextFormat: 2,
+        insertText: `${name} : \${1:unit_name} {\n\t$0\n}`
       }));
     }
 
@@ -79,7 +80,8 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
         kind: "markdown",
         value: "SiiNunit inside **class_name**"
       },
-      insertText: `${name} : `
+      insertTextFormat: 2,
+      insertText: `${name} : \${1:unit_name} {\n\t$0\n}`
     }));
   }
 
