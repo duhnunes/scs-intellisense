@@ -1,6 +1,6 @@
 {
   "name": "scs-int-server",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "main": "./dist/server.js",
   "scripts": {
     "build": "pnpm i && pnpm run check-types && node esbuild.js",
