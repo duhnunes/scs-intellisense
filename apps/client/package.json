@@ -15,7 +15,9 @@
     "type": "git",
     "url": "https://github.com/duhnunes/scs-intellisense.git"
   },
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:SII"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "languages": [

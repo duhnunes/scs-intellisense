@@ -11,16 +11,18 @@ export function activate(context: vscode.ExtensionContext) {
   const serverModule = context.asAbsolutePath(
     path.join('dist', 'server.js')
   );
-
+  
   const serverOptions: ServerOptions = {
     run: { module: serverModule, transport: TransportKind.ipc },
     debug: { module: serverModule, transport: TransportKind.ipc }
   };
-
+  
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme: 'file', language: 'plaintext' }]
+    documentSelector: [
+      { scheme: 'file', language: 'sii' }
+    ]
   };
-
+  
   const client = new LanguageClient(
     'scsintellisense',
     'SCS-Intellisense',
@@ -31,5 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(client);
   client.start();
 
-  console.log("SCS-Intellisense running");
+  vscode.window.showInformationMessage("SCS-Intellisense client started");
 }
+
+export function deactivate() {}

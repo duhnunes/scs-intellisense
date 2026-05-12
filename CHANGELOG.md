@@ -2,7 +2,8 @@
 
 All changes to the "scs-intellisense" extension will be documented in this file.
 
-## 1.1.0
+## 1.1.1
+- Add **sugestions** for VSCode
 - Add `prefab` structure to auto-complete
 
 ## 1.0.1 

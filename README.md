@@ -31,7 +31,7 @@
 
 ## Features
 
-- Syntax highlighting for SCS Software files (`.sii`, `.sui`)
+- Syntax highlighting for SCS Software files (`.sii`)
 - Support for single-line comments (`// comment`, `# comment`) and multi-line comments (`/* comment */`)
 - **Auto-close brackets** - automatically insert matching pairs for braces `{}`, parentheses `()`, and square brackets `[]` to speed up editing and reduce syntax errors
 
