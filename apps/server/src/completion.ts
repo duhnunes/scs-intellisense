@@ -3,6 +3,7 @@ import { SiiNunitClassName } from "./@types/data/sii-classes";
 import type { AttributeDef, SiiClass, SiiFile } from "./@types/structure";
 import { CompletionItemKind, type CompletionItem } from "vscode-languageserver/node";
 import { valueSuggestions } from "./utils/attr-types";
+import { snippetForTypes } from "./utils/snippet-types";
 
 interface ParsedAttribute extends AttributeDef {
   keyRange: { start: number; end: number }
@@ -30,7 +31,7 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
           value: "Siinunit inside **class_name**"
         },
         insertTextFormat: 2,
-        insertText: `${name} : \${1:unit_name} {\n\t$0\n}`
+        insertText: `${name} : \${1:unit.name} {\n\t$0\n}`
       }));
     }
 
@@ -54,19 +55,25 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
         }
       }
 
-      const existingKeys = cls.attributes.map(attr => attr.key);
+      const existingKeys = cls.attributes.map(attr => attr.key)
       return def.attributes
         .filter(attr => !existingKeys.includes(attr.key))
-        .map((attr: AttributeDef) => ({
-          label: attr.key,
-          kind: CompletionItemKind.Property,
-          detail: Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type,
-          documentation: {
-            kind: "markdown",
-            value: `**${attr.key}** - Type: \`${Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type}\`\nDescription: ${attr.description ?? ""}\n\n[See More - SCSWiki](https://modding.scssoft.com/wiki/Main_Page)`
-          },
-          insertText: `${attr.key}: `
-        }));
+        .map((attr: AttributeDef) => {
+          const snippet = snippetForTypes(attr.type)
+          const insertText = `${attr.key}: ${snippet}`
+
+          return {
+            label: attr.key,
+            kind: CompletionItemKind.Property,
+            detail: Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type,
+            documentation: {
+              kind: "markdown",
+              value: `**${attr.key}** - Type: \`${Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type}\`\nDescription: ${attr.description ?? ""}\n\n[See More - SCSWiki](https://modding.scssoft.com/wiki/Main_Page)`
+            },
+            insertTextFormat: 2,
+            insertText
+          } as CompletionItem
+        })
     }
   }
 
