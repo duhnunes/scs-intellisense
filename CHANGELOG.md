@@ -2,7 +2,18 @@
 
 All changes to the "scs-intellisense" extension will be documented in this file.
 
-## 1.1.0
+## 1.2.0
+- Fix error when suggestions attribute dont start
+- Fix error when suggestion attribute value dont start
+- Add text to show attribute types
+- Add Snippet template to automation when tiping `class_name`
+- Fix an issue where completion was not reconizing `key: valeu`
+- Add Snippet template to automation when tiping `attributes`
+- Add `sortText` to `suggestions`
+
+
+## 1.1.1
+- Add **sugestions** for VSCode
 - Add `prefab` structure to auto-complete
 
 ## 1.0.1 

@@ -4,6 +4,8 @@
  */
 
 export const SiiNunitClassName: string[] = [
-  'prefab_model'
+  'prefab_model',
+  'model_def',
+  'vegetation_data'
 ]
 

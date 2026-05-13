@@ -4,7 +4,7 @@
   "publisher": "DuHNunes",
   "description": "Extension to add intellisense for SCS Software files.",
   "icon": "public/icon.png",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "engines": {
     "vscode": "^1.118.0"
   },
@@ -15,7 +15,9 @@
     "type": "git",
     "url": "https://github.com/duhnunes/scs-intellisense.git"
   },
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:SII"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "languages": [

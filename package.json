@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "copy-server": "copyfiles -f apps/server/dist/server.js apps/client/dist/",
+    "copy-server": "copyfiles -u 3 apps/server/dist/**/* apps/client/dist/",
     "build": "pnpm i && pnpm -r run build && pnpm run copy-server",
     "dev": "pnpm --filter ./apps/client dev",
     "package:client": "pnpm --filter ./apps/client run vsce:package",

@@ -1,5 +1,6 @@
 node_modules
-dist/*
+**/dist/*
 .vscode-test/
 apps/client/LICENSE.md
 apps/client/README.md
+TODO.md

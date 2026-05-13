@@ -1,9 +1,10 @@
 {
-  "name": "server",
-  "version": "1.0.0",
+  "name": "scs-int-server",
+  "version": "1.2.0",
   "main": "./dist/server.js",
   "scripts": {
-    "build": "pnpm i && tsc -p ./"
+    "build": "pnpm i && pnpm run check-types && node esbuild.js",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "vscode-languageserver": "^9.0.1",
@@ -11,6 +12,7 @@
   },
   "devDependencies": {
     "@types/node": "~22.19.18",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "esbuild": "^0.27.3"
   }
 }

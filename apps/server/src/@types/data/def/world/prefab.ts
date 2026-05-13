@@ -3,9 +3,25 @@ import type { ClassDef } from "../../../structure";
 export const prefabModel: ClassDef = {
   className: 'prefab_model',
   attributes: [
-    { key: 'name', type: 'string' },
+    /**
+     * `name` - `string`
+     * Is a name from your prefab
+     */
+    { key: 'name', type: 'string', description: "This is the name from your prefab."},
+    /** 
+     * `model_desc` - `resource_tie`
+     * Is path to your prefab model
+     */
     { key: 'model_desc', type: 'resource_tie' },
+    /**
+     * `prefab_desc` - `resource_tie`
+     * Is path to your prefab description
+     */
     { key: 'prefab_desc', type: 'resource_tie' },
+    /**
+     * `use_perlin` - `boolean`
+     * Active the perlin noise
+     */
     { key: 'use_perlin', type: 'bool' },
     { key: 'dynamic_lod_desc', type: ['fixed', 'resource_tie'], isArray: true, arrayElementType: 'fixed' },
     { key: 'dynamic_lod_dist', type: 'fixed', isArray: true, arrayElementType: 'fixed' },
