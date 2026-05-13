@@ -20,12 +20,12 @@
   "repository": {
     "root": {
       "match": "\\bSiiNunit\\b",
-      "name": "entity.name.function.root.sii"
+      "name": "keyword.control.sii"
     },
     "root_block": {
       "begin": "\\b(SiiNunit)\\b\\s*(\\{)",
       "beginCaptures": {
-        "1": { "name": "entity.name.function.root.sii" },
+        "1": { "name": "keyword.control.sii" },
         "2": { "name": "punctuation.section.block.begin.sii" }
       },
       "end": "\\}",
@@ -43,7 +43,7 @@
     "class": {
       "match": "^\\s*([A-Za-z0-9_.-]+)(\\s+)(:)",
       "captures": {
-        "1": { "name": "entity.name.type.entry.sii" },
+        "1": { "name": "entity.name.type.sii" },
         "2": { "name": "punctuation.whitespace.separator.sii" },
         "3": { "name": "punctuation.separator.key-value.sii" }
       }
@@ -51,7 +51,7 @@
     "class_block": {
       "begin": "^\\s*([A-Za-z0-9_.-]+)\\s*(:)\\s*(?:[a-z0-9_]+)\\.\\s*(?:[A-Za-z0-9_.-]+)?\\s*(\\{)?",
       "beginCaptures": {
-        "1": { "name": "entity.name.type.entry.sii" },
+        "1": { "name": "entity.name.type.sii" },
         "2": { "name": "punctuation.separator.whitespace-separatator.sii" },
         "3": { "name": "punctuation.separator.key-value.sii" },
         "4": { "name": "punctuation.section.block.begin.sii" }
@@ -153,7 +153,7 @@
       "patterns": [
         {
           "match": "#.*$",
-          "name": "comment.line.number.sii"
+          "name": "comment.line.sii"
         },
         {
           "match": "//.*$",
