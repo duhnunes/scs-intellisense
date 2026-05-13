@@ -10,7 +10,7 @@ All changes to the "scs-intellisense" extension will be documented in this file.
 - Fix an issue where completion was not reconizing `key: valeu`
 - Add Snippet template to automation when tiping `attributes`
 - Add `sortText` to `suggestions`
-
+- Add `.sui` support
 
 ## 1.1.1
 - Add **sugestions** for VSCode

@@ -31,17 +31,17 @@
 
 ## Features
 
-- Syntax highlighting for SCS Software files (`.sii`)
+- Semantic highlighting for SCS Software files (`.sii`, `.sui`)
 - Support for single-line comments (`// comment`, `# comment`) and multi-line comments (`/* comment */`)
 - **Auto-close brackets** - automatically insert matching pairs for braces `{}`, parentheses `()`, and square brackets `[]` to speed up editing and reduce syntax errors
 
 
 ## Tested themes
 1. **Dark**
+  - `Dark 2026` (VSCode)
   - `Catppuccin Frappé`
   - `Catppuccin Macchiato`
   - `Catppuccin Mocha` (developed theme)
-  - `Dark 2026` (VSCode default modern)
   - `Dracula Theme` & `Dracula Theme Soft`
   - `Abyss`
   - `Dark Modern`

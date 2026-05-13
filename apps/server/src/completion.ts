@@ -11,18 +11,81 @@ interface ParsedAttribute extends AttributeDef {
 }
 interface ParsedClass extends SiiClass {
   attributes: ParsedAttribute[]
+  classNameStart: number
+  classNameEnd: number
+  unitNameStart: number
+  unitNameEnd: number
+  bodyStart: number
+  bodyEnd: number
 }
 interface ParsedFile extends SiiFile {
   classes: ParsedClass[]
 }
 
+/**
+ * Provide completion items
+ * Use parseSii internaly to support `SII` and `SUI`
+ */
+
 export function provideCompletionItems(documentText: string, cursorOffset: number): CompletionItem[] {
   const siiFile = parseSii(documentText);
 
+  let cursorInsideAnyBody = false;
+  for (const c of siiFile.classes) {
+    if (typeof c.bodyStart === 'number' && typeof c.bodyEnd === 'number') {
+      if (cursorOffset > c.bodyStart && cursorOffset < c.bodyEnd) {
+        cursorInsideAnyBody = true;
+        break;
+      }
+    }
+  }
+
+  if (!cursorInsideAnyBody) {
+    const lineStartOffset = (() => {
+      const prevNewline = documentText.lastIndexOf('\n', Math.max(0, cursorOffset - 1));
+      return prevNewline === -1 ? 0 : prevNewline + 1;
+    })();
+
+    const lineEndOffset = (() => {
+      const nextNewline = documentText.indexOf('\n', cursorOffset);
+      return nextNewline === -1 ? documentText.length : nextNewline;
+    })();
+
+    const lineText = documentText.slice(lineStartOffset, lineEndOffset);
+    // aceita "class_name", "class_name :", "class_name : unit.name"
+    const headerMatch = lineText.match(/^(\s*)([A-Za-z0-9_.-]*)(?:\s*:\s*(.*))?$/);
+
+    if (headerMatch) {
+      const indent = headerMatch[1] ?? '';
+      const classNamePartial = headerMatch[2] ?? '';
+      const classNameStart = lineStartOffset + indent.length;
+      const classNameEnd = classNameStart + classNamePartial.length;
+
+      // cursor sobre o nome (ou logo depois)
+      if (cursorOffset >= classNameStart && cursorOffset <= Math.max(classNameEnd, classNameStart + 1)) {
+        return [...SiiNunitClassName]
+          .filter(n => classNamePartial.length === 0 || n.toLowerCase().startsWith(classNamePartial.toLowerCase()))
+          .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+          .map(name => ({
+            label: name,
+            kind: CompletionItemKind.Class,
+            documentation: {
+              kind: "markdown",
+              value: "SiiNunit inside **class_name**"
+            },
+            insertTextFormat: 2,
+            insertText: `${name} : \${1:unit.name} {\n\t$0\n}`,
+            sortText: name.toLowerCase()
+          }));
+      }
+    }
+  }
+
   for (const cls of siiFile.classes) {
     // # CLASS_NAME 1
-    if (cursorOffset >= documentText.indexOf(cls.className) &&
-        cursorOffset <= documentText.indexOf(cls.className) + cls.className.length) {
+    if (cls.classNameStart !== undefined &&
+      cursorOffset >= cls.classNameStart &&
+      cursorOffset <= cls.classNameEnd) {
       return [...SiiNunitClassName].sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).map(name => ({
         label: name,
         kind: CompletionItemKind.Class,
@@ -37,15 +100,16 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
     }
 
     // # UNIT_NAME
-    if (cursorOffset >= documentText.indexOf(cls.unitName) &&
-        cursorOffset <= documentText.indexOf(cls.unitName) + cls.unitName.length) {
-      return [];
+    if (cls.unitNameStart !== undefined &&
+      cursorOffset >= cls.unitNameStart &&
+      cursorOffset <= cls.unitNameEnd) {
+        return []
     }
 
     // # ATTRIBUTES
-    const classStart = documentText.indexOf("{", documentText.indexOf(cls.unitName));
-    const classEnd = documentText.indexOf("}", classStart);
-    if (cursorOffset > classStart && cursorOffset < classEnd) {
+    const classStart = cls.bodyStart
+    const classEnd = cls.bodyEnd
+    if (classStart !== undefined && classEnd !== undefined && cursorOffset > classStart && cursorOffset < classEnd) {
       const def = ClassDefinitions[cls.className];
       if (!def) return [];
 
@@ -101,56 +165,152 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
   return [];
 }
 
+/**
+ * ParseSii
+ * - Support SII (with `SiiNunit {...}` and SUI files
+ * - Return ParsedFile with classes[]. Which class have className, unitName and attribute[] with absolute ranges.
+ */
 
 export function parseSii(documentText: string): ParsedFile {
   const classes: ParsedClass[] = []
-  const regex = /(\w+)\s*:\s*(\w+)\s*{([^}]*)}/g;
-  let match
-  while ((match = regex.exec(documentText)) !== null) {
-    const [_, className, unitName, body] = match
-    const classOffset = match.index
-    const bodyOffset = documentText.indexOf(body, classOffset)
-    const def = ClassDefinitions[className]
 
-    const attributes: ParsedAttribute[] = body
-      .split("\n")
-      .map(lineRaw => lineRaw)
-      .map(line => {
-        const lineStart = documentText.indexOf(line, bodyOffset)
-        if ( lineStart === -1) return null
-
-        const colonIndex = line.indexOf(":")
-        if (colonIndex === -1) return null
-
-        const afterColon = line.slice(colonIndex + 1)
-        const leadingSpacesMatch = afterColon.match(/^\s*/)
-        const leadingSpaces = leadingSpacesMatch ? leadingSpacesMatch[0].length : 0
-
-        if (leadingSpaces === 0) return null
-
-        const keyRaw = line.slice(0, colonIndex)
-        const key = keyRaw.trim()
-
-        const value = afterColon.trim()
-
-        const keyStart = lineStart + line.indexOf(key)
-        const keyEnd = keyStart + key.length
-
-        const valueStart = lineStart + colonIndex + 1 + leadingSpaces
-        const valueEnd = lineStart + line.length
-
-        const defAttr = def?.attributes.find(a => a.key === key)
-        return {
-          key,
-          type: defAttr?.type ?? 'string',
-          keyRange: { start: keyStart, end: keyEnd },
-          valueRange: { start: valueStart, end: valueEnd }
-        } as ParsedAttribute
-      })
-      .filter((a): a is ParsedAttribute => a !== null)
-
-    classes.push({ className, unitName, attributes })
+  // With "SiiNunit"
+  const rootIndex = documentText.indexOf("SiiNunit")
+  if (rootIndex !== -1) {
+    const braceOpen = documentText.indexOf("{", rootIndex)
+    if (braceOpen !== -1) {
+      const braceClose = findMatchingBrace(documentText, braceOpen)
+      const body = braceClose !== -1 ? documentText.slice(braceOpen + 1, braceClose) : documentText.slice(braceOpen + 1)
+      parseClassesInto(documentText, braceOpen + 1, body, classes)
+      return { magicMark: "SiiNunit", classes }
+    }
   }
 
+  // Without "SiiNunit"
+  parseClassesInto(documentText, 0, documentText, classes)
   return { magicMark: "SiiNunit", classes }
+}
+
+/**
+ * parseClassesInto
+ * - baseOffset: offset in the document where 'text' begins (to calculate absolute ranges)
+ * - text: section to be parsed (this could be the SiiNunit body or the entire document)
+ * - classesOut: array where the found classes will be pushed.
+ */
+function parseClassesInto(documentText: string, baseOffset: number, text: string, classesOut: ParsedClass[]) {
+  // Scan to ClassName
+  const classHeaderRegex = /([A-Za-z0-9_.-]+)\s*:\s*([A-Za-z0-9_.-]+)\s*\{/g;
+  let match
+  while ((match = classHeaderRegex.exec(text)) !== null) {
+    const [full, className, unitName] = match
+    const headerIndexInText = match.index
+    const headerIndexInDoc = baseOffset + headerIndexInText
+
+    // calcula posições absolutas do className e unitName dentro do documento
+    const classNameIndexInHeader = full.indexOf(className)
+    const unitNameIndexInHeader = full.indexOf(unitName, classNameIndexInHeader + className.length)
+
+    const classNameStart = headerIndexInDoc + classNameIndexInHeader
+    const classNameEnd = classNameStart + className.length
+
+    const unitNameStart = headerIndexInDoc + unitNameIndexInHeader
+    const unitNameEnd = unitNameStart + unitName.length
+
+    const braceOpenInText = headerIndexInText + full.lastIndexOf("{")
+    const braceOpenInDoc = baseOffset + braceOpenInText
+    const braceCloseInDoc = findMatchingBrace(documentText, braceOpenInDoc)
+    const bodyStart = braceOpenInDoc + 1
+    const bodyEnd = braceCloseInDoc !== -1 ? braceCloseInDoc : documentText.length
+    const body = documentText.slice(bodyStart, bodyEnd)
+
+    const attributes: ParsedAttribute[] = extractAttributesFromBody(documentText, body, bodyStart, className)
+
+    classesOut.push({
+      className,
+      unitName,
+      attributes,
+      classNameStart,
+      classNameEnd,
+      unitNameStart,
+      unitNameEnd,
+      bodyStart,
+      bodyEnd
+    })
+
+    if (braceCloseInDoc !== -1) {
+      const nextPos = braceCloseInDoc - baseOffset + 1
+      classHeaderRegex.lastIndex = nextPos
+    }
+  }
+}
+
+/**
+ * extractAttributesFromBody
+ * - body: block text (only content inside { ... })
+ * - bodyStartOffset: absolute offset from document where body begins
+ * - return ParsedAttribute[] with absolute keyRange/valueRange
+ */
+
+function extractAttributesFromBody(documentText: string, body: string, bodyStartOffset: number, className: string): ParsedAttribute[] {
+  const lines = body.split(/\r?\n/)
+  const attrs: ParsedAttribute[] = []
+  let cursor = 0
+  for (const rawLine of lines) {
+    const line = rawLine
+    const lineStartInDoc = bodyStartOffset + cursor
+    cursor += rawLine.length + 1
+
+    const trimmed = line.trim()
+    if (!trimmed) continue
+    if (trimmed.startsWith("//") || trimmed.startsWith("#")) continue
+
+    const colonIndex = line.indexOf(":")
+    if (colonIndex === -1) continue
+
+    const afterColon = line.slice(colonIndex + 1)
+    const leadingSpacesMatch = afterColon.match(/^\s*/)
+    const leadingSpaces = leadingSpacesMatch ? leadingSpacesMatch[0].length : 0
+    if (leadingSpaces === 0) continue
+
+    const keyRaw = line.slice(0, colonIndex)
+    const key = keyRaw.trim()
+    const value = afterColon.trim()
+
+    const keyStart = lineStartInDoc + line.indexOf(key)
+    const keyEnd = keyStart + key.length
+
+    const valueStart = lineStartInDoc + colonIndex + 1 + leadingSpaces
+    const valueEnd = lineStartInDoc + line.length
+
+    const def = ClassDefinitions[className]
+    const defAttr = def?.attributes.find(a => a.key === key)
+
+    attrs.push({
+      key,
+      type: defAttr?.type ?? 'string',
+      keyRange: { start: keyStart, end: keyEnd },
+      valueRange: { start: valueStart, end: valueEnd }
+    })
+  }
+  return attrs
+}
+
+/**
+ * findMatchingBrace
+ * - given an index of '{' in the document, find the corresponding index of '}' (balancing)
+ * - returns -1 if not found.
+ */
+
+function findMatchingBrace (text: string, openIndex: number): number {
+  if (openIndex < 0 || text[openIndex] !== "{") return -1
+  let depth = 0
+  for (let i = openIndex; i < text.length; i++) {
+    const ch = text[i]
+    if (ch === "{") depth ++
+    else if (ch === "}") {
+      depth--
+      if (depth === 0) return i
+    }
+  }
+  return -1
 }
