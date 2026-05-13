@@ -69,7 +69,7 @@ export function provideSemanticTokensForDocument(documentText: string): Semantic
     builder.push(p.line, p.char, 'SiiNunit'.length, tokenTypes.indexOf('keyword'), 0);
   }
 
-  // parseSii
+  // ParseSii
   const parsed = parseSii(documentText);
 
   for (const cls of parsed.classes) {
@@ -94,7 +94,7 @@ export function provideSemanticTokensForDocument(documentText: string): Semantic
     }
   }
 
-  // comments scanner
+  // Comments
   const text = documentText;
   let i = 0;
   while (i < text.length) {
@@ -152,18 +152,29 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
   return result;
 });
 
-
-
 // documents.onDidChangeContent(change => {
 //   connection.console.log(`File changed: ${change.document.uri}`);
 // });
 
 connection.onCompletion((params) => {
-  const doc = documents.get(params.textDocument.uri)
-  if (!doc) return []
-  
-  const items = provideCompletionItems(doc.getText(), doc.offsetAt(params.position))
-  return items
+  try {
+    const doc = documents.get(params.textDocument.uri)
+    if (!doc) {
+      connection.console.log('[sii] onCpletion: document not found for ' + params.textDocument.uri)
+      return []
+    }
+
+    connection.console.log(`[sii] onCompletion: uri=${params.textDocument.uri} langueId=${doc.languageId}`)
+    const offset = doc.offsetAt(params.position)
+    connection.console.log(`[sii] onCompletion: position=${JSON.stringify(params.position)} offset=${offset}`)
+
+    const items = provideCompletionItems(doc.getText(), offset)
+    connection.console.log(`[sii] onCompletion: returned ${items?.length ?? 0} items`)
+    return items
+  } catch (error) {
+    connection.console.error('[sii] onCompletion error: ' + (error && (error as Error).message))
+    return []
+  }
 })
 
 documents.listen(connection);
