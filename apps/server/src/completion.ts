@@ -23,7 +23,7 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
     // # CLASS_NAME 1
     if (cursorOffset >= documentText.indexOf(cls.className) &&
         cursorOffset <= documentText.indexOf(cls.className) + cls.className.length) {
-      return SiiNunitClassName.map(name => ({
+      return [...SiiNunitClassName].sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).map(name => ({
         label: name,
         kind: CompletionItemKind.Class,
         documentation: {
@@ -31,7 +31,8 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
           value: "Siinunit inside **class_name**"
         },
         insertTextFormat: 2,
-        insertText: `${name} : \${1:unit.name} {\n\t$0\n}`
+        insertText: `${name} : \${1:unit.name} {\n\t$0\n}`,
+        sortText: name.toLowerCase()
       }));
     }
 
@@ -56,9 +57,12 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
       }
 
       const existingKeys = cls.attributes.map(attr => attr.key)
-      return def.attributes
+
+      const sortedAttrs = [...def.attributes]
         .filter(attr => !existingKeys.includes(attr.key))
-        .map((attr: AttributeDef) => {
+        .sort((a, b) => a.key.toLowerCase().localeCompare(b.key.toLowerCase()))
+
+      return sortedAttrs.map((attr: AttributeDef) => {
           const snippet = snippetForTypes(attr.type)
           const insertText = `${attr.key}: ${snippet}`
 
@@ -71,16 +75,17 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
               value: `**${attr.key}** - Type: \`${Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type}\`\nDescription: ${attr.description ?? ""}\n\n[See More - SCSWiki](https://modding.scssoft.com/wiki/Main_Page)`
             },
             insertTextFormat: 2,
-            insertText
+            insertText,
+            sortText: attr.key.toLowerCase()
           } as CompletionItem
         })
     }
   }
 
-  // # CLASS_NAME in "SiiNunit {"
+  // # CLASS_NAME inside "SiiNunit {"
   const siiStart = documentText.indexOf("SiiNunit {");
   if (siiStart !== -1 && cursorOffset > siiStart + "SiiNunit {".length) {
-    return SiiNunitClassName.map(name => ({
+    return [...SiiNunitClassName].sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).map(name => ({
       label: name,
       kind: CompletionItemKind.Class,
       documentation: {
@@ -88,7 +93,8 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
         value: "SiiNunit inside **class_name**"
       },
       insertTextFormat: 2,
-      insertText: `${name} : \${1:unit_name} {\n\t$0\n}`
+      insertText: `${name} : \${1:unit.name} {\n\t$0\n}`,
+      sortText: name.toLowerCase()
     }));
   }
 
@@ -148,40 +154,3 @@ export function parseSii(documentText: string): ParsedFile {
 
   return { magicMark: "SiiNunit", classes }
 }
-
-// export function parseSii(documentText: string): ParsedFile {
-//   const classes: ParsedClass[] = [];
-//   const regex = /(\w+)\s*:\s*(\w+)\s*{([^}]*)}/g;
-//   let match;
-//   while ((match = regex.exec(documentText)) !== null) {
-//     const [_, className, unitName, body] = match;
-//     const classOffset = match.index
-//     const bodyOffset = documentText.indexOf(body, classOffset)
-//     const def = ClassDefinitions[className]
-//     const attributes: ParsedAttribute[] = body.split("\n")
-//       .map(line => line.trim())
-//       .filter(line => line.includes(":"))
-//       .map(line => {
-//         const lineStart = documentText.indexOf(line, bodyOffset)
-//         const match = line.match(/^(\w+)\s*:\s+(.*)$/)
-//         if (!match) return null
-
-//         const [, key, value] = match
-//         const colonIndex = line.indexOf(":")
-//         const keyStart = lineStart
-//         const keyEnd = keyStart + key.length
-//         const valueStart = lineStart + colonIndex + 1 + (line.slice(colonIndex + 1).match(/^\s+/)?.[0].length ?? 0)
-//         const valueEnd = lineStart + line.length
-
-//         const defAttr = def?.attributes.find(a => a.key === key)
-//         return {
-//           key,
-//           type: defAttr?.type ?? 'string',
-//           keyRange: { start: keyStart, end: keyEnd },
-//           valueRange: { start: valueStart, end: valueEnd }
-//         };
-//       }).filter((attr): attr is ParsedAttribute => attr !== null)
-//     classes.push({ className, unitName, attributes });
-//   }
-//   return { magicMark: "SiiNunit", classes };
-// }
