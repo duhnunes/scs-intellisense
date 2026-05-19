@@ -1,7 +1,7 @@
 const { renameSync, readdirSync, mkdirSync } = require("fs");
 const { join } = require("path");
 
-const distPath = join(__dirname, "../../../release");
+const distPath = join(__dirname, "../release");
 
 // Find the .vsix file in the current folder
 const vsixFile = readdirSync(".").find(f => f.endsWith(".vsix"));
