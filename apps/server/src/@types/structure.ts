@@ -51,7 +51,7 @@ export type AttributeType =
     type: AttributeType | AttributeType[]
     isArray?: boolean
     arrayElementType?: AttributeType
-    description?: string
+    description: string
   }
 
   export interface ClassDef {
