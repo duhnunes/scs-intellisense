@@ -22,13 +22,14 @@ interface ParsedFile extends SiiFile {
   classes: ParsedClass[]
 }
 
+
 /**
  * Provide completion items
  * Use parseSii internaly to support `SII` and `SUI`
- */
-
+*/
 export function provideCompletionItems(documentText: string, cursorOffset: number): CompletionItem[] {
-  const siiFile = parseSii(documentText);
+  try {
+    const siiFile = parseSii(documentText);
 
   let cursorInsideAnyBody = false;
   for (const c of siiFile.classes) {
@@ -52,7 +53,7 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
     })();
 
     const lineText = documentText.slice(lineStartOffset, lineEndOffset);
-    // aceita "class_name", "class_name :", "class_name : unit.name"
+    // accept "class_name", "class_name :", "class_name : unit.name"
     const headerMatch = lineText.match(/^(\s*)([A-Za-z0-9_.-]*)(?:\s*:\s*(.*))?$/);
 
     if (headerMatch) {
@@ -163,6 +164,9 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
   }
 
   return [];
+  } catch (err) {
+    return [];
+  }
 }
 
 /**
@@ -170,7 +174,6 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
  * - Support SII (with `SiiNunit {...}` and SUI files
  * - Return ParsedFile with classes[]. Which class have className, unitName and attribute[] with absolute ranges.
  */
-
 export function parseSii(documentText: string): ParsedFile {
   const classes: ParsedClass[] = []
 
@@ -206,7 +209,6 @@ function parseClassesInto(documentText: string, baseOffset: number, text: string
     const headerIndexInText = match.index
     const headerIndexInDoc = baseOffset + headerIndexInText
 
-    // calcula posições absolutas do className e unitName dentro do documento
     const classNameIndexInHeader = full.indexOf(className)
     const unitNameIndexInHeader = full.indexOf(unitName, classNameIndexInHeader + className.length)
 
@@ -250,57 +252,61 @@ function parseClassesInto(documentText: string, baseOffset: number, text: string
  * - bodyStartOffset: absolute offset from document where body begins
  * - return ParsedAttribute[] with absolute keyRange/valueRange
  */
-
-function extractAttributesFromBody(documentText: string, body: string, bodyStartOffset: number, className: string): ParsedAttribute[] {
-  const lines = body.split(/\r?\n/)
-  const attrs: ParsedAttribute[] = []
-  let cursor = 0
+function extractAttributesFromBody(documentText: string, body: string, bodyStartOffset: number, className: string, documentUri?: string): ParsedAttribute[] {
+  const lines = body.split(/\r?\n/);
+  const attrs: ParsedAttribute[] = [];
+  let cursor = 0;
   for (const rawLine of lines) {
-    const line = rawLine
-    const lineStartInDoc = bodyStartOffset + cursor
-    cursor += rawLine.length + 1
+    const line = rawLine;
+    const lineStartInDoc = bodyStartOffset + cursor;
+    cursor += rawLine.length + 1;
 
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    if (trimmed.startsWith("//") || trimmed.startsWith("#")) continue
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.startsWith("//") || trimmed.startsWith("#")) continue;
 
-    const colonIndex = line.indexOf(":")
-    if (colonIndex === -1) continue
+    const colonIndex = line.indexOf(":");
+    if (colonIndex === -1) continue;
 
-    const afterColon = line.slice(colonIndex + 1)
-    const leadingSpacesMatch = afterColon.match(/^\s*/)
-    const leadingSpaces = leadingSpacesMatch ? leadingSpacesMatch[0].length : 0
-    if (leadingSpaces === 0) continue
+    // parte após os dois-pontos (pode ser vazio ou sem espaço)
+    const afterColon = line.slice(colonIndex + 1);
+    const leadingSpacesMatch = afterColon.match(/^\s*/);
+    const leadingSpaces = leadingSpacesMatch ? leadingSpacesMatch[0].length : 0;
 
-    const keyRaw = line.slice(0, colonIndex)
-    const key = keyRaw.trim()
-    const value = afterColon.trim()
+    // key e value raw
+    const keyRaw = line.slice(0, colonIndex);
+    const key = keyRaw.trim();
+    const value = afterColon.trim(); // pode ser ''
 
-    const keyStart = lineStartInDoc + line.indexOf(key)
-    const keyEnd = keyStart + key.length
+    // calcula ranges absolutos
+    const keyStart = lineStartInDoc + line.indexOf(key);
+    const keyEnd = keyStart + key.length;
 
-    const valueStart = lineStartInDoc + colonIndex + 1 + leadingSpaces
-    const valueEnd = lineStartInDoc + line.length
+    // valueStart: se houver espaços, começa depois deles; se não, começa imediatamente após ':'
+    const valueStart = lineStartInDoc + colonIndex + 1 + leadingSpaces;
+    // valueEnd: se houver texto após os espaços, até o fim da linha; se não houver, valueEnd = valueStart (range vazio)
+    const valueEnd = value.length > 0 ? (lineStartInDoc + line.length) : valueStart;
 
-    const def = ClassDefinitions[className]
-    const defAttr = def?.attributes.find(a => a.key === key)
+    const def = ClassDefinitions[className];
+    const defAttr = def?.attributes.find(a => a.key === key);
 
     attrs.push({
       key,
       type: defAttr?.type ?? 'string',
       keyRange: { start: keyStart, end: keyEnd },
-      valueRange: { start: valueStart, end: valueEnd }
-    })
+      valueRange: { start: valueStart, end: valueEnd },
+      description: ""
+    });
   }
-  return attrs
+  return attrs;
 }
+
 
 /**
  * findMatchingBrace
  * - given an index of '{' in the document, find the corresponding index of '}' (balancing)
  * - returns -1 if not found.
  */
-
 function findMatchingBrace (text: string, openIndex: number): number {
   if (openIndex < 0 || text[openIndex] !== "{") return -1
   let depth = 0
