@@ -31,6 +31,18 @@
         "extensions": [".sui"],
         "configuration": "./language-configuration.json"
       }
+    ],
+    "commands": [
+      {
+        "command": "scsIntellisense.showOutput",
+        "title": "SCS Intellisense: Show Output",
+        "category": "SCS Intellisense"
+      },
+      {
+        "command": "scsIntellisense.clearOutput",
+        "title": "SCS Intellisense: Clear Output",
+        "category": "SCS Intellisense"
+      }
     ]
   },
   "scripts": {

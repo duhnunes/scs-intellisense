@@ -99,7 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('scsIntellisense.clerOutput', () => {
+    vscode.commands.registerCommand('scsIntellisense.clearOutput', () => {
       output.clear();
     })
   );
