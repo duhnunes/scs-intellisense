@@ -53,6 +53,27 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
     })();
 
     const lineText = documentText.slice(lineStartOffset, lineEndOffset);
+    const trimmedLine = lineText.trim()
+
+    if (trimmedLine.startsWith('@')) {
+      const tokenStart = lineStartOffset + lineText.indexOf('@')
+      if (cursorOffset >= tokenStart && cursorOffset <= lineEndOffset) {
+        return [{
+          label: '@include',
+          kind: CompletionItemKind.Property,
+          documentation: {
+            kind: 'markdown',
+            value: 'Include another .sui file: `@include "file.sui"`'
+          },
+          insertTextFormat: 2,
+          insertText: '@include "${1:file.sui}"',
+          sortText: '@include',
+          filterText: 'include',
+          preselect: true
+        }]
+      }
+    }
+
     // accept "class_name", "class_name :", "class_name : unit.name"
     const headerMatch = lineText.match(/^(\s*)([A-Za-z0-9_.-]*)(?:\s*:\s*(.*))?$/);
 
@@ -125,22 +146,37 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
       const sortedAttrs = [...def.attributes]
         .filter(attr => !existingKeys.includes(attr.key))
         .sort((a, b) => a.key.toLowerCase().localeCompare(b.key.toLowerCase()))
+      
+      // @include
+      if (!existingKeys.includes('@include')) {
+        const includeAttr: AttributeDef = {
+          key: '@include',
+          type: 'resource_tie',
+          description: 'Include another `.sui` file'
+        } as AttributeDef
+        sortedAttrs.push(includeAttr)
+        sortedAttrs.sort((a, b) => a.key.toLowerCase().localeCompare(b.key.toLowerCase()))
+      }
 
       return sortedAttrs.map((attr: AttributeDef) => {
-          const snippet = snippetForTypes(attr.type)
-          const insertText = `${attr.key}: ${snippet}`
+        const isInclude = attr.key === '@include'
+        const typeLabel = Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type
+        const snippet = isInclude ? '@include "${1:file.sui}"' : snippetForTypes(attr.type)
+        const insertText = isInclude ? snippet : `${attr.key}: ${snippet}`
 
           return {
             label: attr.key,
             kind: CompletionItemKind.Property,
-            detail: Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type,
+            detail: typeLabel,
             documentation: {
               kind: "markdown",
-              value: `**${attr.key}** - Type: \`${Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type}\`\nDescription: ${attr.description ?? ""}\n\n[See More - SCSWiki](https://modding.scssoft.com/wiki/Main_Page)`
+              value: `Type: **${attr.key}**\`${Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type}\`\nDescription: ${attr.description ?? ""}`
             },
             insertTextFormat: 2,
             insertText,
-            sortText: attr.key.toLowerCase()
+            sortText: attr.key.toLowerCase(),
+            filterText: isInclude ? 'include' : undefined,
+            preselect: isInclude ? true : undefined
           } as CompletionItem
         })
     }
@@ -264,6 +300,35 @@ function extractAttributesFromBody(documentText: string, body: string, bodyStart
     if (!trimmed) continue;
     if (trimmed.startsWith("//") || trimmed.startsWith("#")) continue;
 
+    // @Include
+    if (trimmed.startsWith('@include')) {
+      const includeIndex = line.indexOf('@include')
+      const keyStart = lineStartInDoc + includeIndex
+      const keyEnd = keyStart + '@include'.length
+
+      const after = line.slice(includeIndex + '@include'.length)
+      const m = after.match(/^\s*(?:"([^"]+)"|'([^']+)'|([^\s]+))/)
+      let valueText = ''
+      let valueStart = keyEnd
+      let valueEnd = keyEnd
+      if (m) {
+        valueText = m[1] ?? m[2] ?? m[3] ?? ''
+        const matchIndexInAfter = after.indexOf(m[0])
+        const rawValueIndexInAfter = matchIndexInAfter + m[0].indexOf(valueText)
+        valueStart = lineStartInDoc + includeIndex + '@include'.length + rawValueIndexInAfter
+        valueEnd = valueStart + valueText.length
+      }
+
+      attrs.push({
+        key: '@include',
+        type: 'resource_tie',
+        keyRange: { start: keyStart, end: keyEnd },
+        valueRange: { start: valueStart, end: valueEnd },
+        description: ''
+      })
+      continue
+    }
+
     const colonIndex = line.indexOf(":");
     if (colonIndex === -1) continue;
 
@@ -274,7 +339,7 @@ function extractAttributesFromBody(documentText: string, body: string, bodyStart
     // key e value raw
     const keyRaw = line.slice(0, colonIndex);
     const key = keyRaw.trim();
-    const value = afterColon.trim(); // pode ser ''
+    const value = afterColon.trim();
 
     const keyStart = lineStartInDoc + line.indexOf(key);
     const keyEnd = keyStart + key.length;
@@ -295,7 +360,6 @@ function extractAttributesFromBody(documentText: string, body: string, bodyStart
   }
   return attrs;
 }
-
 
 /**
  * findMatchingBrace

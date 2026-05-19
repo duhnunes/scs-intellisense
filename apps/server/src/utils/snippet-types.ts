@@ -36,7 +36,7 @@ export function snippetForTypes(type: AttributeType | AttributeType[]): string {
     case 'u64':
       return '${1:0}'
     case 'bool':
-      return '${1|true, false|}'
+      return '${1|true,false|}'
     case 'token':
       return '${1:my_token}'
     case 'owner_ptr':

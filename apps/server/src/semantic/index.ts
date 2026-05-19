@@ -112,7 +112,14 @@ export function provideSemanticTokensForDocument(documentText: string): Semantic
       // Keys & Values
       for (const attr of cls.attributes) {
         if (attr && attr.keyRange && typeof attr.keyRange.start === 'number' && typeof attr.keyRange.end === 'number') {
-          pushTokenByRange(builder, lineStarts, attr.keyRange.start, attr.keyRange.end, tokenTypes.indexOf('parameter'), textLength);
+          // @include
+          if (attr.key === '@include') {
+            const kwIdx = tokenTypes.indexOf('keyword')
+            if (kwIdx >= 0) pushTokenByRange(builder, lineStarts, attr.keyRange.start, attr.keyRange.end, kwIdx, textLength)
+          } else {
+            const paramIdx = tokenTypes.indexOf('parameter')
+            if (paramIdx >= 0) pushTokenByRange(builder, lineStarts, attr.keyRange.start, attr.keyRange.end, paramIdx, textLength)
+          }
         }
 
         // Value Types
