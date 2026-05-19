@@ -8,9 +8,13 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { provideCompletionItems } from './completion';
 import { registerSemantic, semanticTokensLegend } from './semantic';
+import { getLogger, initLogger } from './logger';
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
+
+initLogger(connection)
+const logger = getLogger()
 
 registerSemantic(connection, documents)
 
@@ -29,32 +33,37 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     full: true,
     range: false
   }
+
+  logger.info('SERVER_INIT', 'SCS Intellisense server intialized!')
+
   return result;
 });
-
-// documents.onDidChangeContent(change => {
-//   connection.console.log(`File changed: ${change.document.uri}`);
-// });
 
 connection.onCompletion((params) => {
   try {
     const doc = documents.get(params.textDocument.uri)
     if (!doc) {
-      connection.console.log('[sii] onCpletion: document not found for ' + params.textDocument.uri)
+      logger.warn('DOC_NOT_FOUND', 'Document not found for completion', undefined, params.textDocument.uri)
       return []
     }
 
-    connection.console.log(`[sii] onCompletion: uri=${params.textDocument.uri} langueId=${doc.languageId}`)
     const offset = doc.offsetAt(params.position)
-    connection.console.log(`[sii] onCompletion: position=${JSON.stringify(params.position)} offset=${offset}`)
-
     const items = provideCompletionItems(doc.getText(), offset)
-    connection.console.log(`[sii] onCompletion: returned ${items?.length ?? 0} items`)
+    
     return items
   } catch (error) {
-    connection.console.error('[sii] onCompletion error: ' + (error && (error as Error).message))
+    const details = error && (error as Error).stack ? (error as Error).stack : String(error)
+    logger.error('ON_COMPLETION_ERROR', 'onCompletion error', details, params.textDocument?.uri)
     return []
   }
+})
+
+process.on('uncaughtException', (err) => {
+  logger.error('UNCAUGHT_EXCEPTION', 'Uncaught exception in server process', (err && (err as Error).stack) || String(err))
+})
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('UNHANDLED_REJECTION', 'Unhandled promise rejection', String(reason))
 })
 
 documents.listen(connection);

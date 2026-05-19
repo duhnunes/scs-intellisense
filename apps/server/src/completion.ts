@@ -62,7 +62,6 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
       const classNameStart = lineStartOffset + indent.length;
       const classNameEnd = classNameStart + classNamePartial.length;
 
-      // cursor sobre o nome (ou logo depois)
       if (cursorOffset >= classNameStart && cursorOffset <= Math.max(classNameEnd, classNameStart + 1)) {
         return [...SiiNunitClassName]
           .filter(n => classNamePartial.length === 0 || n.toLowerCase().startsWith(classNamePartial.toLowerCase()))
@@ -268,7 +267,6 @@ function extractAttributesFromBody(documentText: string, body: string, bodyStart
     const colonIndex = line.indexOf(":");
     if (colonIndex === -1) continue;
 
-    // parte após os dois-pontos (pode ser vazio ou sem espaço)
     const afterColon = line.slice(colonIndex + 1);
     const leadingSpacesMatch = afterColon.match(/^\s*/);
     const leadingSpaces = leadingSpacesMatch ? leadingSpacesMatch[0].length : 0;
@@ -278,13 +276,10 @@ function extractAttributesFromBody(documentText: string, body: string, bodyStart
     const key = keyRaw.trim();
     const value = afterColon.trim(); // pode ser ''
 
-    // calcula ranges absolutos
     const keyStart = lineStartInDoc + line.indexOf(key);
     const keyEnd = keyStart + key.length;
 
-    // valueStart: se houver espaços, começa depois deles; se não, começa imediatamente após ':'
     const valueStart = lineStartInDoc + colonIndex + 1 + leadingSpaces;
-    // valueEnd: se houver texto após os espaços, até o fim da linha; se não houver, valueEnd = valueStart (range vazio)
     const valueEnd = value.length > 0 ? (lineStartInDoc + line.length) : valueStart;
 
     const def = ClassDefinitions[className];

@@ -4,7 +4,7 @@
   "publisher": "DuHNunes",
   "description": "Extension to add intellisense for SCS Software files.",
   "icon": "public/icon.png",
-  "version": "1.2.0",
+  "version": "0.0.1",
   "engines": {
     "vscode": "^1.118.0"
   },
@@ -30,18 +30,6 @@
         "aliases": ["SUI", "sui"],
         "extensions": [".sui"],
         "configuration": "./language-configuration.json"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "sii",
-        "scopeName": "source.sii",
-        "path": "./syntaxes/sii.tmLanguage.json"
-      },
-      {
-        "language": "sui",
-        "scopeName": "source.sii",
-        "path": "./syntaxes/sii.tmLanguage.json"
       }
     ]
   },

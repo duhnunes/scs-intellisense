@@ -1,6 +1,7 @@
 import { SemanticTokens, SemanticTokensBuilder, SemanticTokensLegend, type Connection, type TextDocuments } from "vscode-languageserver";
 import { parseSii } from "../completion";
 import type { TextDocument } from "vscode-languageserver-textdocument";
+import { getLogger } from "../logger";
 
 // # TOKEN TYPES
 export const tokenTypes = ['keyword', 'class', 'property', 'parameter', 'type', 'string', 'number', 'comment', 'variable'];
@@ -10,6 +11,8 @@ export const semanticTokensLegend: SemanticTokensLegend = {
   tokenTypes,
   tokenModifiers
 }
+
+const logger = getLogger()
 
 // helper: calculates line starts
 function computeLineStarts(text: string) {
@@ -79,7 +82,7 @@ export function provideSemanticTokensForDocument(documentText: string): Semantic
     const parsed = parseSii(documentText);
 
     for (const cls of parsed.classes) {
-      // Class_name
+      // Class_name: determine search window (prefer parser-provided offsets)
       let searchStart = 0;
       let searchEnd = documentText.length;
       if ((cls as any).classNameStart !== undefined && (cls as any).classNameEnd !== undefined) {
@@ -159,7 +162,8 @@ export function provideSemanticTokensForDocument(documentText: string): Semantic
 
     return builder.build() as SemanticTokens;
   } catch (err) {
-    try { (globalThis as any).connection?.console?.log?.(`SEMANTIC ERROR: ${(err && (err as Error).stack) || String(err)}`); } catch {}
+    const details = (err && (err as Error).stack) ? (err as Error).stack : String(err)
+    logger.error('SEMANTIC_ERROR', 'Failed to build semantic tokens', details)
     return { data: [] } as SemanticTokens;
   }
 }
@@ -170,10 +174,15 @@ export function registerSemantic (connection: Connection, documents: TextDocumen
   connection.languages.semanticTokens.on((params) => {
     try {
       const doc = documents.get(params.textDocument.uri)
-      if (!doc) return { data: [] } as SemanticTokens
+      if (!doc) {
+        logger.warn('DOC_NOT_FOUND', 'Document not found for semantic tokens request', undefined, params.textDocument.uri)
+        return { data: [] } as SemanticTokens
+      }
+
       return provideSemanticTokensForDocument(doc.getText())
     } catch (err) {
-      connection.console.log(`SEMANTIC HANDLE ERROR: ${(err && (err as Error).stack) || String(err)}`)
+      const details = (err && (err as Error).stack) ? (err as Error).stack : String(err)
+      logger.error('SEMANTIC_HANDLER_ERROR', 'Semantic handler failed', details, params.textDocument.uri)
       return { data: [] } as SemanticTokens
     }
   })
