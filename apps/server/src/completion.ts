@@ -144,7 +144,6 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
       const existingKeys = cls.attributes.map(attr => attr.key)
 
       const sortedAttrs = [...def.attributes]
-        .filter(attr => !existingKeys.includes(attr.key))
         .sort((a, b) => a.key.toLowerCase().localeCompare(b.key.toLowerCase()))
       
       // @include
