@@ -22,6 +22,34 @@ interface ParsedFile extends SiiFile {
   classes: ParsedClass[]
 }
 
+// detect comment to not completions inside
+export function isOffsetInsideComment(text: string, offset: number): boolean {
+  if (offset < 0) return false
+
+  // check line comments '//' and '#'
+  const lineStart = text.lastIndexOf('\n', Math.max(0, offset - 1)) + 1
+  const lineEnd = text.indexOf('\n', offset)
+  const lineSlice = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd)
+
+  const idxSlash = lineSlice.indexOf('//')
+  if (idxSlash !== -1) {
+    const commentStartInDoc = lineStart + idxSlash
+    if (offset >= commentStartInDoc) return true
+  }
+  const idxHash = lineSlice.indexOf('#')
+  if (idxHash !== -1) {
+    const commentStartInDoc = lineStart + idxHash
+    if (offset >= commentStartInDoc) return true
+  }
+
+  const lastOpen = text.lastIndexOf('/*', offset)
+  if (lastOpen === -1) return false
+  const nextClose = text.indexOf('*/', lastOpen + 2)
+  if (nextClose === -1 || nextClose >= offset) return true
+
+  return false
+}
+
 
 /**
  * Provide completion items
@@ -30,89 +58,169 @@ interface ParsedFile extends SiiFile {
 export function provideCompletionItems(documentText: string, cursorOffset: number): CompletionItem[] {
   try {
     const siiFile = parseSii(documentText);
-
-  let cursorInsideAnyBody = false;
-  for (const c of siiFile.classes) {
-    if (typeof c.bodyStart === 'number' && typeof c.bodyEnd === 'number') {
-      if (cursorOffset > c.bodyStart && cursorOffset < c.bodyEnd) {
-        cursorInsideAnyBody = true;
-        break;
-      }
+    if (isOffsetInsideComment(documentText, cursorOffset)) {
+      return []
     }
-  }
 
-  if (!cursorInsideAnyBody) {
-    const lineStartOffset = (() => {
-      const prevNewline = documentText.lastIndexOf('\n', Math.max(0, cursorOffset - 1));
-      return prevNewline === -1 ? 0 : prevNewline + 1;
-    })();
-
-    const lineEndOffset = (() => {
-      const nextNewline = documentText.indexOf('\n', cursorOffset);
-      return nextNewline === -1 ? documentText.length : nextNewline;
-    })();
-
-    const lineText = documentText.slice(lineStartOffset, lineEndOffset);
-    const trimmedLine = lineText.trim()
-
-    if (trimmedLine.startsWith('@')) {
-      const tokenStart = lineStartOffset + lineText.indexOf('@')
-      if (cursorOffset >= tokenStart && cursorOffset <= lineEndOffset) {
-        return [{
-          label: '@include',
-          kind: CompletionItemKind.Property,
-          documentation: {
-            kind: 'markdown',
-            value: 'Include another .sui file: `@include "file.sui"`'
-          },
-          insertTextFormat: 2,
-          insertText: '@include "${1:file.sui}"',
-          sortText: '@include',
-          filterText: 'include',
-          preselect: true
-        }]
+    let cursorInsideAnyBody = false;
+    for (const c of siiFile.classes) {
+      if (typeof c.bodyStart === 'number' && typeof c.bodyEnd === 'number') {
+        if (cursorOffset > c.bodyStart && cursorOffset < c.bodyEnd) {
+          cursorInsideAnyBody = true;
+          break;
+        }
       }
     }
 
-    // accept "class_name", "class_name :", "class_name : unit.name"
-    const headerMatch = lineText.match(/^(\s*)([A-Za-z0-9_.-]*)(?:\s*:\s*(.*))?$/);
+    if (!cursorInsideAnyBody) {
+      const lineStartOffset = (() => {
+        const prevNewline = documentText.lastIndexOf('\n', Math.max(0, cursorOffset - 1));
+        return prevNewline === -1 ? 0 : prevNewline + 1;
+      })();
 
-    if (headerMatch) {
-      const indent = headerMatch[1] ?? '';
-      const classNamePartial = headerMatch[2] ?? '';
-      const classNameStart = lineStartOffset + indent.length;
-      const classNameEnd = classNameStart + classNamePartial.length;
+      const lineEndOffset = (() => {
+        const nextNewline = documentText.indexOf('\n', cursorOffset);
+        return nextNewline === -1 ? documentText.length : nextNewline;
+      })();
 
-      if (cursorOffset >= classNameStart && cursorOffset <= Math.max(classNameEnd, classNameStart + 1)) {
-        return [...SiiNunitClassName]
-          .filter(n => classNamePartial.length === 0 || n.toLowerCase().startsWith(classNamePartial.toLowerCase()))
-          .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-          .map(name => ({
-            label: name,
-            kind: CompletionItemKind.Class,
+      const lineText = documentText.slice(lineStartOffset, lineEndOffset);
+      const trimmedLine = lineText.trim()
+
+      if (trimmedLine.startsWith('@')) {
+        const tokenStart = lineStartOffset + lineText.indexOf('@')
+        if (cursorOffset >= tokenStart && cursorOffset <= lineEndOffset) {
+          return [{
+            label: '@include',
+            kind: CompletionItemKind.Property,
             documentation: {
-              kind: "markdown",
-              value: "SiiNunit inside **class_name**"
+              kind: 'markdown',
+              value: 'Include another .sui file: `@include "file.sui"`'
             },
             insertTextFormat: 2,
-            insertText: `${name} : \${1:unit.name} {\n\t$0\n}`,
-            sortText: name.toLowerCase()
-          }));
+            insertText: '@include "${1:file.sui}"',
+            sortText: '@include',
+            filterText: 'include',
+            preselect: true
+          }]
+        }
+      }
+
+      // accept "class_name", "class_name :", "class_name : unit.name"
+      const headerMatch = lineText.match(/^(\s*)([A-Za-z0-9_.-]*)(?:\s*:\s*(.*))?$/);
+
+      if (headerMatch) {
+        const indent = headerMatch[1] ?? '';
+        const classNamePartial = headerMatch[2] ?? '';
+        const classNameStart = lineStartOffset + indent.length;
+        const classNameEnd = classNameStart + classNamePartial.length;
+
+        if (cursorOffset >= classNameStart && cursorOffset <= Math.max(classNameEnd, classNameStart + 1)) {
+          return [...SiiNunitClassName]
+            .filter(n => classNamePartial.length === 0 || n.toLowerCase().startsWith(classNamePartial.toLowerCase()))
+            .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+            .map(name => ({
+              label: name,
+              kind: CompletionItemKind.Class,
+              documentation: {
+                kind: "markdown",
+                value: "SiiNunit inside **class_name**"
+              },
+              insertTextFormat: 2,
+              insertText: `${name} : \${1:unit.name} {\n\t$0\n}`,
+              sortText: name.toLowerCase()
+            }));
+        }
       }
     }
-  }
 
-  for (const cls of siiFile.classes) {
-    // # CLASS_NAME 1
-    if (cls.classNameStart !== undefined &&
-      cursorOffset >= cls.classNameStart &&
-      cursorOffset <= cls.classNameEnd) {
+    for (const cls of siiFile.classes) {
+      // # CLASS_NAME 1
+      if (cls.classNameStart !== undefined &&
+        cursorOffset >= cls.classNameStart &&
+        cursorOffset <= cls.classNameEnd) {
+        return [...SiiNunitClassName].sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).map(name => ({
+          label: name,
+          kind: CompletionItemKind.Class,
+          documentation: {
+            kind: "markdown",
+            value: "Siinunit inside **class_name**"
+          },
+          insertTextFormat: 2,
+          insertText: `${name} : \${1:unit.name} {\n\t$0\n}`,
+          sortText: name.toLowerCase()
+        }));
+      }
+
+      // # UNIT_NAME
+      if (cls.unitNameStart !== undefined &&
+        cursorOffset >= cls.unitNameStart &&
+        cursorOffset <= cls.unitNameEnd) {
+          return []
+      }
+
+      // # ATTRIBUTES
+      const classStart = cls.bodyStart
+      const classEnd = cls.bodyEnd
+      if (classStart !== undefined && classEnd !== undefined && cursorOffset > classStart && cursorOffset < classEnd) {
+        const def = ClassDefinitions[cls.className];
+        if (!def) return [];
+
+        for (const attr of cls.attributes) {
+          if (cursorOffset >= attr.valueRange.start && cursorOffset <= attr.valueRange.end) {
+            const type = Array.isArray(attr.type) ? attr.type[0] : attr.type
+            return valueSuggestions[type] ?? [{ label: '<value>', kind: CompletionItemKind.Text }]
+          }
+        }
+
+        const existingKeys = cls.attributes.map(attr => attr.key)
+
+        const sortedAttrs = [...def.attributes]
+          .sort((a, b) => a.key.toLowerCase().localeCompare(b.key.toLowerCase()))
+        
+        // @include
+        if (!existingKeys.includes('@include')) {
+          const includeAttr: AttributeDef = {
+            key: '@include',
+            type: 'resource_tie',
+            description: 'Include another `.sui` file'
+          } as AttributeDef
+          sortedAttrs.push(includeAttr)
+          sortedAttrs.sort((a, b) => a.key.toLowerCase().localeCompare(b.key.toLowerCase()))
+        }
+
+        return sortedAttrs.map((attr: AttributeDef) => {
+          const isInclude = attr.key === '@include'
+          const typeLabel = Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type
+          const snippet = isInclude ? '@include "${1:file.sui}"' : snippetForTypes(attr.type)
+          const insertText = isInclude ? snippet : `${attr.key}: ${snippet}`
+
+            return {
+              label: attr.key,
+              kind: CompletionItemKind.Property,
+              detail: typeLabel,
+              documentation: {
+                kind: "markdown",
+                value: `Type: **${attr.key}**\`${Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type}\`\nDescription: ${attr.description ?? ""}`
+              },
+              insertTextFormat: 2,
+              insertText,
+              sortText: attr.key.toLowerCase(),
+              filterText: isInclude ? 'include' : undefined,
+              preselect: isInclude ? true : undefined
+            } as CompletionItem
+          })
+      }
+    }
+
+    // # CLASS_NAME inside "SiiNunit {"
+    const siiStart = documentText.indexOf("SiiNunit {");
+    if (siiStart !== -1 && cursorOffset > siiStart + "SiiNunit {".length) {
       return [...SiiNunitClassName].sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).map(name => ({
         label: name,
         kind: CompletionItemKind.Class,
         documentation: {
           kind: "markdown",
-          value: "Siinunit inside **class_name**"
+          value: "SiiNunit inside **class_name**"
         },
         insertTextFormat: 2,
         insertText: `${name} : \${1:unit.name} {\n\t$0\n}`,
@@ -120,84 +228,7 @@ export function provideCompletionItems(documentText: string, cursorOffset: numbe
       }));
     }
 
-    // # UNIT_NAME
-    if (cls.unitNameStart !== undefined &&
-      cursorOffset >= cls.unitNameStart &&
-      cursorOffset <= cls.unitNameEnd) {
-        return []
-    }
-
-    // # ATTRIBUTES
-    const classStart = cls.bodyStart
-    const classEnd = cls.bodyEnd
-    if (classStart !== undefined && classEnd !== undefined && cursorOffset > classStart && cursorOffset < classEnd) {
-      const def = ClassDefinitions[cls.className];
-      if (!def) return [];
-
-      for (const attr of cls.attributes) {
-        if (cursorOffset >= attr.valueRange.start && cursorOffset <= attr.valueRange.end) {
-          const type = Array.isArray(attr.type) ? attr.type[0] : attr.type
-          return valueSuggestions[type] ?? [{ label: '<value>', kind: CompletionItemKind.Text }]
-        }
-      }
-
-      const existingKeys = cls.attributes.map(attr => attr.key)
-
-      const sortedAttrs = [...def.attributes]
-        .sort((a, b) => a.key.toLowerCase().localeCompare(b.key.toLowerCase()))
-      
-      // @include
-      if (!existingKeys.includes('@include')) {
-        const includeAttr: AttributeDef = {
-          key: '@include',
-          type: 'resource_tie',
-          description: 'Include another `.sui` file'
-        } as AttributeDef
-        sortedAttrs.push(includeAttr)
-        sortedAttrs.sort((a, b) => a.key.toLowerCase().localeCompare(b.key.toLowerCase()))
-      }
-
-      return sortedAttrs.map((attr: AttributeDef) => {
-        const isInclude = attr.key === '@include'
-        const typeLabel = Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type
-        const snippet = isInclude ? '@include "${1:file.sui}"' : snippetForTypes(attr.type)
-        const insertText = isInclude ? snippet : `${attr.key}: ${snippet}`
-
-          return {
-            label: attr.key,
-            kind: CompletionItemKind.Property,
-            detail: typeLabel,
-            documentation: {
-              kind: "markdown",
-              value: `Type: **${attr.key}**\`${Array.isArray(attr.type) ? attr.type.join(" | ") : attr.type}\`\nDescription: ${attr.description ?? ""}`
-            },
-            insertTextFormat: 2,
-            insertText,
-            sortText: attr.key.toLowerCase(),
-            filterText: isInclude ? 'include' : undefined,
-            preselect: isInclude ? true : undefined
-          } as CompletionItem
-        })
-    }
-  }
-
-  // # CLASS_NAME inside "SiiNunit {"
-  const siiStart = documentText.indexOf("SiiNunit {");
-  if (siiStart !== -1 && cursorOffset > siiStart + "SiiNunit {".length) {
-    return [...SiiNunitClassName].sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).map(name => ({
-      label: name,
-      kind: CompletionItemKind.Class,
-      documentation: {
-        kind: "markdown",
-        value: "SiiNunit inside **class_name**"
-      },
-      insertTextFormat: 2,
-      insertText: `${name} : \${1:unit.name} {\n\t$0\n}`,
-      sortText: name.toLowerCase()
-    }));
-  }
-
-  return [];
+    return [];
   } catch (err) {
     return [];
   }

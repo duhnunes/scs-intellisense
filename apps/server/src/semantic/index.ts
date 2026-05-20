@@ -167,7 +167,16 @@ export function provideSemanticTokensForDocument(documentText: string): Semantic
       i++;
     }
 
-    return builder.build() as SemanticTokens;
+    tokensToEmit.sort((a, b) => {
+      if (a.start !== b.start) return a.start - b.start
+      return a.end - b.end
+    })
+
+    for (const te of tokensToEmit) {
+      pushTokenByRange(builder, lineStarts, te.start, te.end, te.tokenTypeIndex, textLength)
+    }
+
+    return builder.build() as SemanticTokens
   } catch (err) {
     const details = (err && (err as Error).stack) ? (err as Error).stack : String(err)
     logger.error('SEMANTIC_ERROR', 'Failed to build semantic tokens', details)
