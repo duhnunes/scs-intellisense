@@ -14,10 +14,10 @@
 
 ## About
 
-**SCS Intellisense** provides semantic highlighting and completions for SCS Software data files (`.sii`, `.sui`). It improves readability and speeds up editing by offering:  
+**SCS Intellisense** provides semantic highlighting <s>and completions</s> for <a href="https://www.scssoft.com/">SCS Software</a> data files (`.sii`, `.sui`). It improves readability and speeds up editing by offering:  
 - Semantic token coloring for keywords, classes, properties, strings, numbers and comments;
 - Context-aware completions for class attributes and values;
-- Snippets for common constructs and directives;
+- <s>Snippets for common constructs and directives;</s>
 
 ### Sii Extructure
 

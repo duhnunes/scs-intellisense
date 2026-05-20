@@ -2,49 +2,6 @@
 
 All changes to the "scs-intellisense" extension will be documented in this file.
 
-## 1.2.0
-- Fix error when suggestions attribute dont start
-- Fix error when suggestion attribute value dont start
-- Add text to show attribute types
-- Add Snippet template to automation when tiping `class_name`
-- Fix an issue where completion was not reconizing `key: valeu`
-- Add Snippet template to automation when tiping `attributes`
-- Add `sortText` to `suggestions`
-- Add `.sui` support
-
-## 1.1.1
-- Add **sugestions** for VSCode
-- Add `prefab` structure to auto-complete
-
-## 1.0.1 
-- Add all `structures` file as a base to all system
-
-## 1.0.0 - [2026-05-09]
-- Converted project to **LSP** for improved robustness and accuracy
-
-## 0.0.6
-- Add `.sui` files support
-
-## 0.0.5
-- Fix token regex to accept lowercase letters, digits and underscore `a-z0-9_` to follow documentation
-- Add automatic auto-closing for parentheses `()`
-- Add syntax highlighting for numbers inside parentheses `(...)` (integers, floats and scientific notation; covers float2/3/4, placement tuples and similar)
-
-
-## 0.0.4
-- Add highlighting to `@include` directives
-- Remove stray `prefixtype` ghost token
-- Fix parsin conflict between `class` and `attribute`
-  - Behavior change: a `class` is now recognized only when there is a space before the colon (`class_name :`); `name:` (no space) is treated as an attribute
-- Expand `class` matching so all `class_name` forms are highlighted consistently
-
-## 0.0.3
-- Remove prefix_type ghost rule
-- Add change.log
-
-## 0.0.2
-- Add multi-line comments
-
 ## 0.0.1
 
 - Initial release
