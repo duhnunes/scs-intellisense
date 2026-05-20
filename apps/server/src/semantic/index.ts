@@ -168,6 +168,22 @@ export function provideSemanticTokensForDocument(documentText: string): Semantic
             valEnd = idxComment
           }
 
+          if (attr.key === '@include') {
+            if (valStart - 1 >= 0) {
+              const chBefore = documentText[valStart - 1]
+              if (chBefore === '"' || chBefore === "'") {
+                valStart = valStart - 1
+              }
+            }
+
+            if (valEnd < documentText.length) {
+              const chAfter = documentText[valEnd]
+              if (chAfter === '"' || chAfter === '"') {
+                valEnd = valEnd + 1
+              }
+            }
+          }
+
           const tokIdx = tokenTypes.indexOf(tokenTypeForValue)
           if (tokIdx >= 0 && valEnd > valStart) {
             queueToken(valStart, valEnd, tokIdx)
