@@ -1,18 +1,23 @@
-import { ClassDefinitions } from './@types/data/class-defs'
-import { SiiNunitClassName } from './@types/data/sii-classes'
-import type { AttributeDef, SiiClass, SiiFile } from './@types/structure'
+import { ClassDefinitions } from '../@types/data/class-defs'
+import { SiiNunitClassName } from '../@types/data/sii-classes'
+import type { AttributeDef, SiiClass, SiiFile } from '../@types/structure'
 import {
   CompletionItemKind,
   type CompletionItem,
 } from 'vscode-languageserver/node'
-import { valueSuggestions } from './utils/attr-types'
-import { snippetForTypes } from './utils/snippet-types'
+import { valueSuggestions } from '../utils/attr-types'
+import { snippetForTypes } from '../utils/snippet-types'
+import {
+  findMatchingBrace,
+  isOffsetInsideComment,
+  parseClassesInto,
+} from './utils'
 
-interface ParsedAttribute extends AttributeDef {
+export interface ParsedAttribute extends AttributeDef {
   keyRange: { start: number; end: number }
   valueRange: { start: number; end: number }
 }
-interface ParsedClass extends SiiClass {
+export interface ParsedClass extends SiiClass {
   attributes: ParsedAttribute[]
   classNameStart: number
   classNameEnd: number
@@ -21,39 +26,8 @@ interface ParsedClass extends SiiClass {
   bodyStart: number
   bodyEnd: number
 }
-interface ParsedFile extends SiiFile {
+export interface ParsedFile extends SiiFile {
   classes: ParsedClass[]
-}
-
-// detect comment to not completions inside
-export function isOffsetInsideComment(text: string, offset: number): boolean {
-  if (offset < 0) return false
-
-  // check line comments '//' and '#'
-  const lineStart = text.lastIndexOf('\n', Math.max(0, offset - 1)) + 1
-  const lineEnd = text.indexOf('\n', offset)
-  const lineSlice = text.slice(
-    lineStart,
-    lineEnd === -1 ? text.length : lineEnd
-  )
-
-  const idxSlash = lineSlice.indexOf('//')
-  if (idxSlash !== -1) {
-    const commentStartInDoc = lineStart + idxSlash
-    if (offset >= commentStartInDoc) return true
-  }
-  const idxHash = lineSlice.indexOf('#')
-  if (idxHash !== -1) {
-    const commentStartInDoc = lineStart + idxHash
-    if (offset >= commentStartInDoc) return true
-  }
-
-  const lastOpen = text.lastIndexOf('/*', offset)
-  if (lastOpen === -1) return false
-  const nextClose = text.indexOf('*/', lastOpen + 2)
-  if (nextClose === -1 || nextClose >= offset) return true
-
-  return false
 }
 
 /**
@@ -312,78 +286,12 @@ export function parseSii(documentText: string): ParsedFile {
 }
 
 /**
- * parseClassesInto
- * - baseOffset: offset in the document where 'text' begins (to calculate absolute ranges)
- * - text: section to be parsed (this could be the SiiNunit body or the entire document)
- * - classesOut: array where the found classes will be pushed.
- */
-function parseClassesInto(
-  documentText: string,
-  baseOffset: number,
-  text: string,
-  classesOut: ParsedClass[]
-) {
-  // Scan to ClassName
-  const classHeaderRegex = /([A-Za-z0-9_.-]+)\s*:\s*([A-Za-z0-9_.-]+)\s*\{/g
-  let match
-  while ((match = classHeaderRegex.exec(text)) !== null) {
-    const [full, className, unitName] = match
-    const headerIndexInText = match.index
-    const headerIndexInDoc = baseOffset + headerIndexInText
-
-    const classNameIndexInHeader = full.indexOf(className)
-    const unitNameIndexInHeader = full.indexOf(
-      unitName,
-      classNameIndexInHeader + className.length
-    )
-
-    const classNameStart = headerIndexInDoc + classNameIndexInHeader
-    const classNameEnd = classNameStart + className.length
-
-    const unitNameStart = headerIndexInDoc + unitNameIndexInHeader
-    const unitNameEnd = unitNameStart + unitName.length
-
-    const braceOpenInText = headerIndexInText + full.lastIndexOf('{')
-    const braceOpenInDoc = baseOffset + braceOpenInText
-    const braceCloseInDoc = findMatchingBrace(documentText, braceOpenInDoc)
-    const bodyStart = braceOpenInDoc + 1
-    const bodyEnd =
-      braceCloseInDoc !== -1 ? braceCloseInDoc : documentText.length
-    const body = documentText.slice(bodyStart, bodyEnd)
-
-    const attributes: ParsedAttribute[] = extractAttributesFromBody(
-      documentText,
-      body,
-      bodyStart,
-      className
-    )
-
-    classesOut.push({
-      className,
-      unitName,
-      attributes,
-      classNameStart,
-      classNameEnd,
-      unitNameStart,
-      unitNameEnd,
-      bodyStart,
-      bodyEnd,
-    })
-
-    if (braceCloseInDoc !== -1) {
-      const nextPos = braceCloseInDoc - baseOffset + 1
-      classHeaderRegex.lastIndex = nextPos
-    }
-  }
-}
-
-/**
  * extractAttributesFromBody
  * - body: block text (only content inside { ... })
  * - bodyStartOffset: absolute offset from document where body begins
  * - return ParsedAttribute[] with absolute keyRange/valueRange
  */
-function extractAttributesFromBody(
+export function extractAttributesFromBody(
   documentText: string,
   body: string,
   bodyStartOffset: number,
@@ -466,23 +374,4 @@ function extractAttributesFromBody(
     })
   }
   return attrs
-}
-
-/**
- * findMatchingBrace
- * - given an index of '{' in the document, find the corresponding index of '}' (balancing)
- * - returns -1 if not found.
- */
-function findMatchingBrace(text: string, openIndex: number): number {
-  if (openIndex < 0 || text[openIndex] !== '{') return -1
-  let depth = 0
-  for (let i = openIndex; i < text.length; i++) {
-    const ch = text[i]
-    if (ch === '{') depth++
-    else if (ch === '}') {
-      depth--
-      if (depth === 0) return i
-    }
-  }
-  return -1
 }
