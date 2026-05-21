@@ -1,14 +1,10 @@
-const { 
-  renameSync,
-  readdirSync,
-  existsSync,
-  readFileSync,
-  writeFileSync,
-  statSync,
-  mkdirSync
-} = require("fs")
-const { join, basename, extname } = require("path")
-const crypto = require("crypto")
+import { renameSync, readdirSync, existsSync, readFileSync, writeFileSync, statSync, mkdirSync } from "fs"
+import { join, basename, extname, dirname } from "path"
+import { createHash } from "crypto"
+import { fileURLToPath } from "url"
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const genDir = join(__dirname, "../apps/client")
 const distPath = join(__dirname, "../release")
@@ -18,7 +14,7 @@ const manifestPath = join(__dirname, "../release/manifest.json")
 
 function sha256File(path) {
   const data = readFileSync(path)
-  return crypto.createHash("sha256").update(data).digest("hex")
+  return createHash("sha256").update(data).digest("hex")
 }
 
 function ensureDirs() {

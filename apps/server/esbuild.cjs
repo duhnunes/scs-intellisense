@@ -1,4 +1,5 @@
-import { context } from 'esbuild'
+/* eslint-disable no-undef */
+const esbuild = require('esbuild')
 
 const production = process.argv.includes('--production')
 const watch = process.argv.includes('--watch')
@@ -26,7 +27,7 @@ const esbuildProblemMatcherPlugin = {
 }
 
 async function main() {
-  const ctx = await context({
+  const ctx = await esbuild.context({
     entryPoints: ['src/server.ts'],
     bundle: true,
     format: 'cjs',

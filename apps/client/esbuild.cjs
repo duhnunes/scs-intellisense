@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const esbuild = require('esbuild')
 
 const production = process.argv.includes('--production')
@@ -11,7 +12,7 @@ const esbuildProblemMatcherPlugin = {
 
   setup(build) {
     build.onStart(() => {
-      console.log('[watch] build started')
+      console.log('[watch] client build started')
     })
     build.onEnd((result) => {
       result.errors.forEach(({ text, location }) => {
@@ -20,7 +21,7 @@ const esbuildProblemMatcherPlugin = {
           `    ${location.file}:${location.line}:${location.column}:`
         )
       })
-      console.log('[watch] build finished')
+      console.log('[watch] client build finished')
     })
   },
 }
