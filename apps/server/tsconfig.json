@@ -1,14 +1,14 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "@scs-int/ts-config/base.json",
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
     "paths": {
-      "@/*": ["./*"],
-      "@scs-int/eslint-config/*": ["../../config/eslint-config/*"]
+      "@/*": ["./*"]
     }
   },
-  "include": ["src", "**/*.ts"],
+  "include": [
+    "**/*.ts",
+    "src"
+  ],
   "exclude": [
     "node_modules"
   ]

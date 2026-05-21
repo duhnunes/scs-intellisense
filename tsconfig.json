@@ -1,0 +1,3 @@
+{
+  "extends": "@scs-int/ts-config/base.json"
+}

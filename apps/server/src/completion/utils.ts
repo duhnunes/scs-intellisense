@@ -55,6 +55,8 @@ export function parseClassesInto(
     const headerIndexInText = match.index
     const headerIndexInDoc = baseOffset + headerIndexInText
 
+    if (!className || !unitName) continue
+
     const classNameIndexInHeader = full.indexOf(className)
     const unitNameIndexInHeader = full.indexOf(
       unitName,

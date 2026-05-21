@@ -16,6 +16,7 @@
     "compile": "pnpm run build && pnpm run package:client"
   },
   "devDependencies": {
+    "@scs-int/ts-config": "workspace:*",
     "copyfiles": "^2.4.1",
     "typescript": "^5.9.3",
     "prettier": "^3.8.3"

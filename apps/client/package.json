@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "@scs-int/eslint-config": "workspace:^",
+    "@scs-int/ts-config": "workspace:*",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/vscode": "^1.118.0",

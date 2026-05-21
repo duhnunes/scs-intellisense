@@ -1,15 +1,15 @@
 {
-	"extends": "../../tsconfig.base.json",
+	"extends": "@scs-int/ts-config/base.json",
 	"compilerOptions": {
-		"module": "Node16",
-		"target": "ES2022",
-		"lib": [
-			"ES2022"
-		],
-		"sourceMap": true,
-		"rootDir": "./src",
-		"outDir": "./dist",
-		"strict": true,
+		"paths": {
+			"@/*": ["./*"]
+		}
 	},
-	"include": ["src"]
+	"include": [
+		"**/*.ts",
+		"src"
+	],
+	"exclude": [
+		"node_modules"
+	]
 }

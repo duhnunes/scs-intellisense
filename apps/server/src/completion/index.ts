@@ -169,6 +169,7 @@ export function provideCompletionItems(
         cursorOffset > classStart &&
         cursorOffset < classEnd
       ) {
+        if (!cls.className) return []
         const def = ClassDefinitions[cls.className]
         if (!def) return []
 
@@ -177,7 +178,8 @@ export function provideCompletionItems(
             cursorOffset >= attr.valueRange.start &&
             cursorOffset <= attr.valueRange.end
           ) {
-            const type = Array.isArray(attr.type) ? attr.type[0] : attr.type
+            const rawType = Array.isArray(attr.type) ? attr.type[0] : attr.type
+            const type = rawType ?? 'string'
             return (
               valueSuggestions[type] ?? [
                 { label: '<value>', kind: CompletionItemKind.Text },

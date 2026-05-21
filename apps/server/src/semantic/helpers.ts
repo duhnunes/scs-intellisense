@@ -13,11 +13,12 @@ export function offsetToPosition(lineStarts: number[], offset: number) {
     high = lineStarts.length - 1
   while (low <= high) {
     const mid = Math.floor((low + high) / 2)
-    if (lineStarts[mid] <= offset) low = mid + 1
+    const midVal = lineStarts[mid] ?? Number.MAX_SAFE_INTEGER
+    if (midVal <= offset) low = mid + 1
     else high = mid - 1
   }
   const line = Math.max(0, low - 1)
-  const char = offset - lineStarts[line]
+  const char = offset - (lineStarts[line] ?? 0)
   return { line, char }
 }
 
@@ -40,7 +41,7 @@ export function pushTokenByRange(
     const startPos = offsetToPosition(lineStarts, cur)
     const lineEndOffset =
       startPos.line + 1 < lineStarts.length
-        ? lineStarts[startPos.line + 1]
+        ? (lineStarts[startPos.line + 1] ?? Number.MAX_SAFE_INTEGER)
         : Number.MAX_SAFE_INTEGER
     const chunkEnd = Math.min(endOffset, lineEndOffset)
     const length = chunkEnd - cur
@@ -80,6 +81,7 @@ export function rangeIntersectsComments(
   while (lo <= hi) {
     const mid = Math.floor((lo + hi) / 2)
     const cr = commentRanges[mid]
+    if (cr === undefined) break
     if (end <= cr.start) hi = mid - 1
     else if (start >= cr.end) lo = mid + 1
     else return true
