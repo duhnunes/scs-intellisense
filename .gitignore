@@ -3,4 +3,5 @@ node_modules
 .vscode-test/
 apps/client/LICENSE.md
 apps/client/README.md
+/release/
 TODO.md
