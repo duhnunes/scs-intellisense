@@ -58,6 +58,7 @@
     "vsce:package": "vsce package && node ../../scripts/mover.js"
   },
   "devDependencies": {
+    "@scs-int/eslint-config": "workspace:^",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/vscode": "^1.118.0",

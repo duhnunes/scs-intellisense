@@ -1,19 +1,23 @@
 {
+  "name": "scs-intellisense",
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "config/*"
   ],
   "scripts": {
     "copy-server": "copyfiles -u 3 apps/server/dist/**/* apps/client/dist/",
     "copy-readme": "copyfiles ./README.md apps/client/",
     "build": "pnpm i && pnpm -r run build && pnpm run copy-server && pnpm run copy-readme",
     "dev": "pnpm --filter ./apps/client dev",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "format:staged": "lint-staged",
     "package:client": "pnpm --filter ./apps/client run vsce:package",
     "compile": "pnpm run build && pnpm run package:client"
   },
   "devDependencies": {
     "copyfiles": "^2.4.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "prettier": "^3.8.3"
   }
 }

@@ -1,7 +1,9 @@
 packages:
   - 'apps/*'
-  - 'packages/*'
+  - 'config/*'
+
 allowBuilds:
   core-js: true
   esbuild: true
   movefile: true
+  unrs-resolver: true

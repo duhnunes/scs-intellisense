@@ -4,6 +4,8 @@
   "main": "./dist/server.js",
   "scripts": {
     "build": "pnpm i && pnpm run check-types && node esbuild.js",
+    "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix",
+    "lint:check": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --mx-wrnings=0",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -11,8 +13,10 @@
     "vscode-languageserver-textdocument": "^1.0.12"
   },
   "devDependencies": {
+    "@scs-int/eslint-config": "workspace:^",
     "@types/node": "~22.19.18",
-    "typescript": "^5.9.3",
-    "esbuild": "^0.27.3"
+    "esbuild": "^0.27.3",
+    "eslint": "^10.4.0",
+    "typescript": "^5.9.3"
   }
 }

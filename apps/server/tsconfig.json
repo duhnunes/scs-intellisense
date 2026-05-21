@@ -2,7 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "paths": {
+      "@/*": ["./*"],
+      "@scs-int/eslint-config/*": ["../../config/eslint-config/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "**/*.ts"],
+  "exclude": [
+    "node_modules"
+  ]
 }

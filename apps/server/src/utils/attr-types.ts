@@ -1,5 +1,5 @@
-import { CompletionItemKind, type CompletionItem } from "vscode-languageserver";
-import type { AttributeType } from "../@types/structure";
+import { CompletionItemKind, type CompletionItem } from 'vscode-languageserver'
+import type { AttributeType } from '../@types/structure'
 
 export const valueSuggestions: Record<AttributeType, CompletionItem[]> = {
   string: [{ label: '"..."', kind: CompletionItemKind.Text }],
@@ -13,7 +13,9 @@ export const valueSuggestions: Record<AttributeType, CompletionItem[]> = {
   fixed3: [{ label: '(0,0,0)', kind: CompletionItemKind.Text }],
   fixed4: [{ label: '(0,0,0,0)', kind: CompletionItemKind.Text }],
   int2: [{ label: '(0,0)', kind: CompletionItemKind.Text }],
-  quaternion: [{ label: '(1.0, 0.0, 0.0, 0.0)', kind: CompletionItemKind.Text }],
+  quaternion: [
+    { label: '(1.0, 0.0, 0.0, 0.0)', kind: CompletionItemKind.Text },
+  ],
   s16: [{ label: '-15', kind: CompletionItemKind.Text }],
   s32: [{ label: '-15', kind: CompletionItemKind.Text }],
   s64: [{ label: '-15', kind: CompletionItemKind.Text }],
@@ -22,10 +24,12 @@ export const valueSuggestions: Record<AttributeType, CompletionItem[]> = {
   u64: [{ label: '15', kind: CompletionItemKind.Text }],
   bool: [
     { label: 'true', kind: CompletionItemKind.Text },
-    { label: 'false', kind: CompletionItemKind.Text }
+    { label: 'false', kind: CompletionItemKind.Text },
   ],
   token: [{ label: 'my_token', kind: CompletionItemKind.Text }],
   owner_ptr: [{ label: '.unit_name', kind: CompletionItemKind.Text }],
   link_ptr: [{ label: 'some.named.unit', kind: CompletionItemKind.Text }],
-  resource_tie: [{ label: '"/path/to/resourche.pma"', kind: CompletionItemKind.Text }]
+  resource_tie: [
+    { label: '"/path/to/resourche.pma"', kind: CompletionItemKind.Text },
+  ],
 }

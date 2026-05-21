@@ -7,7 +7,7 @@
       "path": "apps/server"
     },
     {
-      "path": "packages"
+      "path": "config"
     }
   ],
   "settings": {}
