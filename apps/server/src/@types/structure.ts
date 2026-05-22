@@ -1,5 +1,5 @@
 export type AttributeType =
-/** "x" -> "mod_name" */
+  /** "x" -> "mod_name" */
   | 'string'
   /** x -> 1.0 // Using normal float-notation | &3f800000 // using ieee754 hexa notation */
   | 'float'
@@ -46,18 +46,18 @@ export type AttributeType =
   /** "x" -> "/path/to/some/resource.pma" -> is typically used to bind animations to animated models. The syntax is the same as for 'string' type attributes. */
   | 'resource_tie'
 
-  export interface AttributeDef {
-    key: string
-    type: AttributeType | AttributeType[]
-    isArray?: boolean
-    arrayElementType?: AttributeType
-    description: string
-  }
+export interface AttributeDef {
+  key: string
+  type: AttributeType | AttributeType[] // Type from key (e.g.: category: "string")
+  isArray?: boolean
+  arrayElementType?: AttributeType | AttributeType[] // Type from array key (e.g.: dynamic_lod_desc[]: "/path/to/file.pmd")
+  description: string
+}
 
-  export interface ClassDef {
-    className: string
-    attributes: AttributeDef[]
-  }
+export interface ClassDef {
+  className: string
+  attributes: AttributeDef[]
+}
 
 export interface SiiFile {
   magicMark: 'SiiNunit'
