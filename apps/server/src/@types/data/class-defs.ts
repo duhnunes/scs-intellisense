@@ -13,8 +13,16 @@ import { journeyDetour } from './def/world/journey-detour'
 import { journeyEventsDetourData } from './def/world/journey-events-detour-data'
 import { journeyEventsRoadEvent } from './def/world/journey-events-road-event'
 import { journeyEventsRoadEventData } from './def/world/journey-events-road-event-master'
-import { loaderGranMatch } from './def/world/loader_grab_match'
+import { loaderGranMatch } from './def/world/loader-grab-match'
 import { prefabModel } from './def/world/prefab'
+import { modelDef } from './def/world/model-def'
+import { moverModel } from './def/world/mover-model'
+import { moverAction } from './def/world/mover-action'
+import { moverAnim } from './def/world/mover-anim'
+import { moverDesc } from './def/world/mover-desc'
+import { overlayDef } from './def/world/overlay-def'
+import { railingModel } from './def/world/railing'
+import { prefabCorner } from './def/world/prefab-corner'
 
 export const ClassDefinitions: Record<string, ClassDef> = {
   prefab_model: prefabModel,
@@ -33,4 +41,12 @@ export const ClassDefinitions: Record<string, ClassDef> = {
   journey_events_road_event_data: journeyEventsRoadEventData,
   journey_events_road_event: journeyEventsRoadEvent,
   loader_grab_match: loaderGranMatch,
+  model_def: modelDef,
+  mover_model: moverModel,
+  mover_action: moverAction,
+  mover_anim: moverAnim,
+  mover_desc: moverDesc,
+  overlay_def: overlayDef,
+  railing_model: railingModel,
+  prefab_corner: prefabCorner,
 }

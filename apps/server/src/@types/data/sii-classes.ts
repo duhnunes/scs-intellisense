@@ -20,4 +20,12 @@ export const SiiNunitClassName: string[] = [
   'journey_events_road_event_data',
   'journey_events_road_event',
   'loader_grab_match',
+  'mode_def',
+  'mover_model',
+  'mover_action',
+  'mover_anim',
+  'mover_desc',
+  'overlay_def',
+  'railing_model',
+  'prefab_corner',
 ]
