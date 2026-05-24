@@ -1,6 +1,11 @@
 import { ClassDefinitions } from '../@types/data/class-defs'
 import { SiiNunitClassName } from '../@types/data/sii-classes'
-import type { AttributeDef, SiiClass, SiiFile } from '../@types/structure'
+import type {
+  AttributeDef,
+  AttributeType,
+  SiiClass,
+  SiiFile,
+} from '../@types/structure'
 import {
   CompletionItemKind,
   type CompletionItem,
@@ -12,6 +17,9 @@ import {
   isOffsetInsideComment,
   parseClassesInto,
 } from './utils'
+import { getLogger } from '../logger'
+
+const logger = getLogger()
 
 export interface ParsedAttribute extends AttributeDef {
   keyRange: { start: number; end: number }
@@ -179,9 +187,9 @@ export function provideCompletionItems(
             cursorOffset <= attr.valueRange.end
           ) {
             const rawType = Array.isArray(attr.type) ? attr.type[0] : attr.type
-            const type = rawType ?? 'string'
+            const typeKey = (rawType ?? 'string') as AttributeType
             return (
-              valueSuggestions[type] ?? [
+              valueSuggestions[typeKey] ?? [
                 { label: '<value>', kind: CompletionItemKind.Text },
               ]
             )
@@ -214,7 +222,9 @@ export function provideCompletionItems(
             : attr.type
           const snippet = isInclude
             ? '@include "${1:file.sui}"'
-            : snippetForTypes(attr.type)
+            : snippetForTypes(
+                (attr.type ?? 'string') as AttributeType | AttributeType[]
+              )
           const insertText = isInclude ? snippet : `${attr.key}: ${snippet}`
 
           return {
@@ -255,6 +265,7 @@ export function provideCompletionItems(
 
     return []
   } catch (err) {
+    logger.error(err)
     return []
   }
 }
@@ -298,8 +309,10 @@ export function extractAttributesFromBody(
   body: string,
   bodyStartOffset: number,
   className: string,
-  documentUri?: string
+  _documentUri?: string
 ): ParsedAttribute[] {
+  void _documentUri
+
   const lines = body.split(/\r?\n/)
   const attrs: ParsedAttribute[] = []
   let cursor = 0
@@ -320,19 +333,19 @@ export function extractAttributesFromBody(
 
       const after = line.slice(includeIndex + '@include'.length)
       const m = after.match(/^\s*(?:"([^"]+)"|'([^']+)'|([^\s]+))/)
-      let valueText = ''
       let valueStart = keyEnd
       let valueEnd = keyEnd
       if (m) {
-        valueText = m[1] ?? m[2] ?? m[3] ?? ''
+        const valueTextFound = m[1] ?? m[2] ?? m[3] ?? ''
         const matchIndexInAfter = after.indexOf(m[0])
-        const rawValueIndexInAfter = matchIndexInAfter + m[0].indexOf(valueText)
+        const rawValueIndexInAfter =
+          matchIndexInAfter + m[0].indexOf(valueTextFound)
         valueStart =
           lineStartInDoc +
           includeIndex +
           '@include'.length +
           rawValueIndexInAfter
-        valueEnd = valueStart + valueText.length
+        valueEnd = valueStart + valueTextFound.length
       }
 
       attrs.push({
@@ -341,6 +354,8 @@ export function extractAttributesFromBody(
         keyRange: { start: keyStart, end: keyEnd },
         valueRange: { start: valueStart, end: valueEnd },
         description: '',
+        isArray: false,
+        arrayElementType: undefined,
       })
       continue
     }
@@ -369,9 +384,11 @@ export function extractAttributesFromBody(
 
     attrs.push({
       key,
-      type: defAttr?.type ?? 'string',
+      type: defAttr?.type ?? undefined,
       keyRange: { start: keyStart, end: keyEnd },
       valueRange: { start: valueStart, end: valueEnd },
+      arrayElementType: defAttr?.arrayElementType,
+      isArray: !!defAttr?.isArray,
       description: '',
     })
   }
