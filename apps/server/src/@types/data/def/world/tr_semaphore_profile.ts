@@ -2,17 +2,20 @@ import type { ClassDef } from '../../../structure'
 
 export const trSemaphoreProfile: ClassDef = {
   className: 'tr_semaphore_profile',
+  description: '',
   attributes: [
     {
       key: 'name',
       type: 'string',
       isArray: false,
+      arrayElementType: undefined,
       description: 'Name from semphore profile',
     },
     {
       key: 'inherited',
       type: 'token',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
     {
@@ -52,7 +55,7 @@ export const trSemaphoreProfile: ClassDef = {
     },
     {
       key: 'model_offset',
-      type: 'fixed',
+      type: undefined,
       isArray: true,
       arrayElementType: 'fixed3',
       description: '',
@@ -61,6 +64,7 @@ export const trSemaphoreProfile: ClassDef = {
       key: 'id_offset',
       type: 'fixed',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
   ],

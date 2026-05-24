@@ -2,29 +2,34 @@ import type { ClassDef } from '../../../structure'
 
 export const gateModel: ClassDef = {
   className: 'gate_model',
+  description: '',
   attributes: [
     {
       key: 'name',
       type: 'string',
       isArray: false,
-      description: 'This is the name from your gate model',
+      arrayElementType: undefined,
+      description: 'This is the name from gate model',
     },
     {
       key: 'category',
       type: 'string',
       isArray: false,
-      description: 'Categiry from your gate model',
+      arrayElementType: undefined,
+      description: 'Categiry from gate model',
     },
     {
       key: 'model_desc',
       type: 'resource_tie',
       isArray: false,
+      arrayElementType: undefined,
       description: '/path/to/file.pmd',
     },
     {
       key: 'model_coll',
       type: 'resource_tie',
       isArray: false,
+      arrayElementType: undefined,
       description: '/path/to/file.pmc',
     },
     {
@@ -36,9 +41,9 @@ export const gateModel: ClassDef = {
     },
     {
       key: 'sounds',
-      type: 'resource_tie',
+      type: undefined,
       isArray: true,
-      arrayElementType: ['resource_tie', 'string'],
+      arrayElementType: 'string',
       description: 'OY|/path/to/file.soundref',
     },
     {

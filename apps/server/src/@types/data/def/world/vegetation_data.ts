@@ -2,6 +2,7 @@ import type { ClassDef } from '../../../structure'
 
 export const vegetationData: ClassDef = {
   className: 'vegetation_data',
+  description: '',
   attributes: [
     {
       key: 'name',

@@ -2,38 +2,41 @@ import type { ClassDef } from '../../../structure'
 
 export const curveModel: ClassDef = {
   className: 'curve_model',
+  description: '',
   attributes: [
     {
       key: 'name',
       type: 'string',
       isArray: false,
+      arrayElementType: undefined,
       description: 'This is the name from your cuver_model.',
     },
     {
       key: 'model_desc',
       type: 'resource_tie',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
     {
-      key: 'variation', // ??
+      key: 'variation',
       type: 'fixed',
       isArray: true,
-      arrayElementType: 'string',
+      arrayElementType: 'string', // ??
       description: '',
     },
     {
-      key: 'start_part', // ??
+      key: 'start_part',
       type: 'fixed',
       isArray: true,
-      arrayElementType: ['token', 'string'],
+      arrayElementType: 'string', // ??
       description: '',
     },
     {
-      key: 'end_part', // ??
+      key: 'end_part',
       type: 'fixed',
       isArray: true,
-      arrayElementType: ['token', 'string'],
+      arrayElementType: 'string', // ??
       description: '',
     },
     {
@@ -51,7 +54,7 @@ export const curveModel: ClassDef = {
       description: '',
     },
     {
-      key: 'high_tess', // ??
+      key: 'high_tess',
       type: 'fixed',
       isArray: true,
       arrayElementType: ['token', 'string'],
@@ -61,6 +64,7 @@ export const curveModel: ClassDef = {
       key: 'smooth_surface',
       type: 'bool',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
     {
@@ -71,37 +75,38 @@ export const curveModel: ClassDef = {
       description: '',
     },
     {
-      key: 'overlay', // ??
+      key: 'overlay',
       type: 'fixed',
       isArray: true,
-      arrayElementType: 'string',
+      arrayElementType: 'string', // ??
       description: '',
     },
     {
-      key: 'vegetation', // ??
+      key: 'vegetation',
       type: 'fixed',
       isArray: true,
-      arrayElementType: 'string',
+      arrayElementType: 'string', // ??
       description: '',
     },
     {
-      key: 'fixed_inner_start', // ??
+      key: 'fixed_inner_start',
       type: 'fixed',
       isArray: true,
-      arrayElementType: 'string',
+      arrayElementType: ['token', 'string'],
       description: '',
     },
     {
-      key: 'fixed_inner_end', // ??
+      key: 'fixed_inner_end',
       type: 'fixed',
       isArray: true,
-      arrayElementType: 'string',
+      arrayElementType: ['token', 'string'],
       description: '',
     },
     {
       key: 'fixed_step',
       type: ['float', 'fixed'],
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
   ],

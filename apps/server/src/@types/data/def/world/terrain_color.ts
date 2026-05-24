@@ -2,23 +2,25 @@ import type { ClassDef } from '../../../structure'
 
 export const terrainColor: ClassDef = {
   className: 'terrain_color',
+  description: '',
   attributes: [
     {
       key: 'material',
       type: 'token',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
     {
       key: 'names',
-      type: 'string',
+      type: undefined,
       isArray: true,
       arrayElementType: 'string',
       description: '',
     },
     {
       key: 'colors',
-      type: 'float3',
+      type: undefined,
       isArray: true,
       arrayElementType: 'float3',
       description: '',

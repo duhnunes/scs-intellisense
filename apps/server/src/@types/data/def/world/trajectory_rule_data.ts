@@ -2,6 +2,7 @@ import type { ClassDef } from '../../../structure'
 
 export const trajectoryRuleData: ClassDef = {
   className: 'trajectory_rule_data',
+  description: '',
   attributes: [
     {
       key: 'rules',

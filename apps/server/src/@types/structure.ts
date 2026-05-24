@@ -56,6 +56,7 @@ export interface AttributeDef {
 
 export interface ClassDef {
   className: string
+  description: ''
   attributes: AttributeDef[]
 }
 

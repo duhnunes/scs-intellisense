@@ -2,29 +2,34 @@ import type { ClassDef } from '../../../structure'
 
 export const modelDef: ClassDef = {
   className: 'model_def',
+  description: '',
   attributes: [
     {
       key: 'name',
       type: 'string',
       isArray: false,
+      arrayElementType: undefined,
       description: 'This is the name from your prefab.',
     },
     {
       key: 'model_desc',
       type: 'resource_tie',
       isArray: false,
+      arrayElementType: undefined,
       description: '/path/to/file.pmd',
     },
     {
       key: 'vegetation_model',
       type: 'token',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
     {
       key: 'auto_compound',
       type: 'bool',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
     {
@@ -66,24 +71,28 @@ export const modelDef: ClassDef = {
       key: 'distance_scale',
       type: 'fixed',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
     {
       key: 'distance_min',
       type: 'fixed',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
     {
       key: 'distance_max',
       type: 'fixed',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
     {
       key: 'category',
       type: 'string',
       isArray: false,
+      arrayElementType: undefined,
       description: '',
     },
   ],

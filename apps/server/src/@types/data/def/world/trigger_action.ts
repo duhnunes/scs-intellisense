@@ -2,6 +2,7 @@ import type { ClassDef } from '../../../structure'
 
 export const triggerAction: ClassDef = {
   className: 'trigger_action',
+  description: '',
   attributes: [
     {
       key: 'name',
