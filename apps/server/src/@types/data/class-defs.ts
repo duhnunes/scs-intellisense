@@ -23,6 +23,28 @@ import { moverDesc } from './def/world/mover-desc'
 import { overlayDef } from './def/world/overlay-def'
 import { railingModel } from './def/world/railing'
 import { prefabCorner } from './def/world/prefab-corner'
+import { roadDef } from './def/world/road'
+import { roadEdge } from './def/world/road-edge'
+import { roadLook } from './def/world/road_look'
+import { roadMeterialDef } from './def/world/road_material'
+import { materialDef } from './def/world/material_def'
+import { trSemaphoreModel } from './def/world/semaphore_model'
+import { trSemaphoreProfile } from './def/world/semaphore_profile'
+import { signModel } from './def/world/sign'
+import { signBoardModel } from './def/world/sign_board_model'
+import { signStandModel } from './def/world/sign_stand'
+import { soundItemData } from './def/world/sound_item_data'
+import { soundItemReverb } from './def/world/sound_item_reverb'
+import { stampData } from './def/world/stamp_data'
+import { terrainColor } from './def/world/terrain_color'
+import { terrainEdge } from './def/world/terrain_edge'
+import { terrainProfile } from './def/world/terrain_profile'
+import { trafficLaneData } from './def/world/traffic_lane_data'
+import { trafficRuleData } from './def/world/traffic_rule_data'
+import { trajectoryRuleData } from './def/world/trajectory_rule_data'
+import { triggerAction } from './def/world/trigger_action'
+import { vegetationData } from './def/world/vegetation_data'
+import { vegetationModel } from './def/world/vegetation_model'
 
 export const ClassDefinitions: Record<string, ClassDef> = {
   prefab_model: prefabModel,
@@ -49,4 +71,26 @@ export const ClassDefinitions: Record<string, ClassDef> = {
   overlay_def: overlayDef,
   railing_model: railingModel,
   prefab_corner: prefabCorner,
+  road_def: roadDef,
+  road_edge: roadEdge,
+  road_look: roadLook,
+  road_material_def: roadMeterialDef,
+  material_def: materialDef,
+  tr_semaphore_model: trSemaphoreModel,
+  tr_semaphore_profile: trSemaphoreProfile,
+  sign_model: signModel,
+  sign_board_model: signBoardModel,
+  sign_stand_model: signStandModel,
+  sound_item_data: soundItemData,
+  sound_item_reverb: soundItemReverb,
+  stamp_data: stampData,
+  terrain_color: terrainColor,
+  terrain_edge: terrainEdge,
+  terrain_profile: terrainProfile,
+  traffic_lane_data: trafficLaneData,
+  traffic_rule_data: trafficRuleData,
+  trajectory_rule_data: trajectoryRuleData,
+  trigger_action: triggerAction,
+  vegetation_data: vegetationData,
+  vegetation_model: vegetationModel,
 }

@@ -48,9 +48,9 @@ export type AttributeType =
 
 export interface AttributeDef {
   key: string
-  type: AttributeType | AttributeType[] // Type from key (e.g.: category: "string")
-  isArray?: boolean
-  arrayElementType?: AttributeType | AttributeType[] // Type from array key (e.g.: dynamic_lod_desc[]: "/path/to/file.pmd")
+  type: AttributeType | AttributeType[] | undefined // Type from key (e.g.: category: "string")
+  isArray: boolean
+  arrayElementType: AttributeType | AttributeType[] | undefined // Type from array key (e.g.: dynamic_lod_desc[]: "/path/to/file.pmd")
   description: string
 }
 
