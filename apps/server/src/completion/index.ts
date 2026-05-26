@@ -1,42 +1,18 @@
 import { ClassDefinitions } from '../@types/data/class-defs'
 import { SiiNunitClassName } from '../@types/data/sii-classes'
-import type {
-  AttributeDef,
-  AttributeType,
-  SiiClass,
-  SiiFile,
-} from '../@types/structure'
+import type { AttributeDef, AttributeType } from '../@types/structure'
 import {
   CompletionItemKind,
   type CompletionItem,
 } from 'vscode-languageserver/node'
 import { valueSuggestions } from '../utils/attr-types'
 import { snippetForTypes } from '../utils/snippet-types'
-import {
-  findMatchingBrace,
-  isOffsetInsideComment,
-  parseClassesInto,
-} from './utils'
+import { isOffsetInsideComment } from './utils'
 import { getLogger } from '../logger'
+import { parseDocument } from '../lang/parser/docParser'
+import type { ParsedAttribute } from '../lang/parser/types'
 
 const logger = getLogger()
-
-export interface ParsedAttribute extends AttributeDef {
-  keyRange: { start: number; end: number }
-  valueRange: { start: number; end: number }
-}
-export interface ParsedClass extends SiiClass {
-  attributes: ParsedAttribute[]
-  classNameStart: number
-  classNameEnd: number
-  unitNameStart: number
-  unitNameEnd: number
-  bodyStart: number
-  bodyEnd: number
-}
-export interface ParsedFile extends SiiFile {
-  classes: ParsedClass[]
-}
 
 /**
  * Provide completion items
@@ -47,7 +23,7 @@ export function provideCompletionItems(
   cursorOffset: number
 ): CompletionItem[] {
   try {
-    const siiFile = parseSii(documentText)
+    const siiFile = parseDocument(documentText)
     if (isOffsetInsideComment(documentText, cursorOffset)) {
       return []
     }
@@ -268,34 +244,6 @@ export function provideCompletionItems(
     logger.error(err)
     return []
   }
-}
-
-/**
- * ParseSii
- * - Support SII (with `SiiNunit {...}` and SUI files
- * - Return ParsedFile with classes[]. Which class have className, unitName and attribute[] with absolute ranges.
- */
-export function parseSii(documentText: string): ParsedFile {
-  const classes: ParsedClass[] = []
-
-  // With "SiiNunit"
-  const rootIndex = documentText.indexOf('SiiNunit')
-  if (rootIndex !== -1) {
-    const braceOpen = documentText.indexOf('{', rootIndex)
-    if (braceOpen !== -1) {
-      const braceClose = findMatchingBrace(documentText, braceOpen)
-      const body =
-        braceClose !== -1
-          ? documentText.slice(braceOpen + 1, braceClose)
-          : documentText.slice(braceOpen + 1)
-      parseClassesInto(documentText, braceOpen + 1, body, classes)
-      return { magicMark: 'SiiNunit', classes }
-    }
-  }
-
-  // Without "SiiNunit"
-  parseClassesInto(documentText, 0, documentText, classes)
-  return { magicMark: 'SiiNunit', classes }
 }
 
 /**
