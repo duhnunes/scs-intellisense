@@ -5,7 +5,6 @@ import {
   type Connection,
   type TextDocuments,
 } from 'vscode-languageserver'
-import { parseSii } from '../completion'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
 import { getLogger } from '../logger'
 import {
@@ -14,6 +13,12 @@ import {
   pushTokenByRange,
   rangeIntersectsComments,
 } from './helpers'
+import {
+  detectExtFromUri,
+  detectModeFromExt,
+  normalizeText,
+  parseDocument,
+} from '../lang/parser/docParser'
 
 // # TOKEN TYPES
 export const tokenTypes = [
@@ -37,17 +42,22 @@ export const semanticTokensLegend: SemanticTokensLegend = {
 const logger = getLogger()
 
 export function provideSemanticTokensForDocument(
-  documentText: string
+  documentText: string,
+  documentUri?: string
 ): SemanticTokens {
   try {
+    const text = normalizeText(documentText)
+
+    const ext = detectExtFromUri(documentUri)
+    const mode = detectModeFromExt(ext)
+
     const builder = new SemanticTokensBuilder()
-    const lineStarts = computeLineStarts(documentText)
-    const textLength = documentText.length
+    const lineStarts = computeLineStarts(text)
+    const textLength = text.length
 
     // Comments
     const commentRanges: { start: number; end: number }[] = []
     {
-      const text = documentText
       let i = 0
       while (i < text.length) {
         const ch = text[i]
@@ -100,7 +110,7 @@ export function provideSemanticTokensForDocument(
     }
 
     // SiiNunit
-    const magicIndex = documentText.indexOf('SiiNunit')
+    const magicIndex = text.indexOf('SiiNunit')
     if (magicIndex !== -1) {
       const start = magicIndex
       const end = magicIndex + 'SiiNunit'.length
@@ -111,11 +121,14 @@ export function provideSemanticTokensForDocument(
     }
 
     // ParseSii
-    const parsed = parseSii(documentText)
+    const parsed = parseDocument(text, { uri: documentUri }) ?? {
+      magicMark: '',
+      classes: [],
+    }
     for (const cls of parsed.classes) {
       // Class_name: determine search window
       let searchStart = 0
-      let searchEnd = documentText.length
+      let searchEnd = text.length
       if (
         (cls as any).classNameStart !== undefined &&
         (cls as any).classNameEnd !== undefined
@@ -136,11 +149,11 @@ export function provideSemanticTokensForDocument(
         searchStart = (cls as any).bodyStart - 50
         if (searchStart < 0) searchStart = 0
         searchEnd = (cls as any).bodyEnd + 50
-        if (searchEnd > documentText.length) searchEnd = documentText.length
+        if (searchEnd > text.length) searchEnd = text.length
       }
 
       const occurrences = findAllOccurrences(
-        documentText,
+        text,
         cls.className,
         searchStart,
         searchEnd
@@ -188,21 +201,68 @@ export function provideSemanticTokensForDocument(
         }
 
         // Value Types
-        const t = Array.isArray(attr.type) ? attr.type[0] : attr.type
+        function inferTypeFromValueText(raw: string): string {
+          const v = raw.trim()
+          if (!v) return 'string'
+          // string
+          if (
+            (v.startsWith('"') && v.endsWith('"')) ||
+            (v.startsWith("'") && v.endsWith("'"))
+          )
+            return 'string'
+          // boolean
+          if (v === 'true' || v === 'false') return 'bool'
+          // vector (x, y, z)
+          if (v.startsWith('(') && v.endsWith(')')) {
+            const inner = v.slice(1, -1).trim()
+            if (
+              /^-?\d+(\.\d+)?([eE][+-]?\d+)?(\s*,\s*-?\d+(\.\d+)?([eE][+-]?\d+)?)*$/.test(
+                inner
+              )
+            )
+              return 'float'
+            return 'string'
+          }
+          // fixed
+          if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(v)) return 'float'
+          // token
+          if (/^[a-z0-9_\.]+$/.test(v)) return 'token'
+          return 'string'
+        }
+
+        let rawValueText = ''
+        if (
+          attr &&
+          attr.valueRange &&
+          typeof attr.valueRange.start === 'number' &&
+          typeof attr.valueRange.end === 'number'
+        ) {
+          rawValueText = text.slice(attr.valueRange.start, attr.valueRange.end)
+        }
+
+        const declaredType = Array.isArray(attr.type) ? attr.type[0] : attr.type
+        const effectiveType =
+          declaredType ?? inferTypeFromValueText(rawValueText)
+
         let tokenTypeForValue = 'string'
-        if (t === 'string' || t === 'resource_tie') tokenTypeForValue = 'string'
+        if (effectiveType === 'string' || effectiveType === 'resource_tie')
+          tokenTypeForValue = 'string'
         else if (
-          typeof t === 'string' &&
-          (t.startsWith('float') ||
-            t.startsWith('fixed') ||
-            t === 'int2' ||
-            t.startsWith('s') ||
-            t.startsWith('u') ||
-            t === 'quaternion')
+          typeof effectiveType === 'string' &&
+          (effectiveType.startsWith('float') ||
+            effectiveType.startsWith('fixed') ||
+            effectiveType === 'int2' ||
+            effectiveType.startsWith('s') ||
+            effectiveType.startsWith('u') ||
+            effectiveType === 'quaternion')
         )
           tokenTypeForValue = 'number'
-        else if (t === 'bool') tokenTypeForValue = 'keyword'
-        else if (t === 'token' || t === 'owner_ptr' || t === 'link_ptr')
+        else if (effectiveType === 'bool') tokenTypeForValue = 'keyword'
+        else if (
+          effectiveType === 'token' ||
+          effectiveType === 'owner_ptr' ||
+          effectiveType === 'link_ptr'
+        )
           tokenTypeForValue = 'variable'
         else tokenTypeForValue = 'string'
 
@@ -215,11 +275,11 @@ export function provideSemanticTokensForDocument(
           let valStart = attr.valueRange.start
           let valEnd = attr.valueRange.end
 
-          const lineStart = documentText.lastIndexOf('\n', valStart) + 1
-          const lineEnd = documentText.indexOf('\n', valStart)
-          const lineSlice = documentText.slice(
+          const lineStart = text.lastIndexOf('\n', valStart) + 1
+          const lineEnd = text.indexOf('\n', valStart)
+          const lineSlice = text.slice(
             lineStart,
-            lineEnd === -1 ? documentText.length : lineEnd
+            lineEnd === -1 ? text.length : lineEnd
           )
 
           const idxComment = (() => {
@@ -242,14 +302,14 @@ export function provideSemanticTokensForDocument(
 
           if (attr.key === '@include') {
             if (valStart - 1 >= 0) {
-              const chBefore = documentText[valStart - 1]
+              const chBefore = text[valStart - 1]
               if (chBefore === '"' || chBefore === "'") {
                 valStart = valStart - 1
               }
             }
 
-            if (valEnd < documentText.length) {
-              const chAfter = documentText[valEnd]
+            if (valEnd < text.length) {
+              const chAfter = text[valEnd]
               if (chAfter === '"' || chAfter === '"') {
                 valEnd = valEnd + 1
               }
@@ -316,7 +376,7 @@ export function registerSemantic(
         return { data: [] } as SemanticTokens
       }
 
-      return provideSemanticTokensForDocument(doc.getText())
+      return provideSemanticTokensForDocument(doc.getText(), doc.uri)
     } catch (err) {
       const details =
         err && (err as Error).stack ? (err as Error).stack : String(err)
