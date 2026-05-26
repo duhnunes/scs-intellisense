@@ -1,5 +1,5 @@
 import { CompletionItemKind, type CompletionItem } from 'vscode-languageserver'
-import type { AttributeType } from '../@types/structure'
+import type { AttributeType } from '../interfaces/structure'
 
 export const valueSuggestions: Record<AttributeType, CompletionItem[]> = {
   string: [{ label: '"..."', kind: CompletionItemKind.Text }],
@@ -30,6 +30,9 @@ export const valueSuggestions: Record<AttributeType, CompletionItem[]> = {
   owner_ptr: [{ label: '.unit_name', kind: CompletionItemKind.Text }],
   link_ptr: [{ label: 'some.named.unit', kind: CompletionItemKind.Text }],
   resource_tie: [
-    { label: '"/path/to/resourche.pma"', kind: CompletionItemKind.Text },
+    {
+      label: '"/path/to/file.{pma,pmd,ppd,tobj,etc}"',
+      kind: CompletionItemKind.Text,
+    },
   ],
 }

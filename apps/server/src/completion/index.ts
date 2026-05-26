@@ -1,6 +1,4 @@
-import { ClassDefinitions } from '../@types/data/class-defs'
-import { SiiNunitClassName } from '../@types/data/sii-classes'
-import type { AttributeDef, AttributeType } from '../@types/structure'
+import type { AttributeDef, AttributeType } from '../interfaces/structure'
 import {
   CompletionItemKind,
   type CompletionItem,
@@ -9,8 +7,10 @@ import { valueSuggestions } from '../utils/attr-types'
 import { snippetForTypes } from '../utils/snippet-types'
 import { isOffsetInsideComment } from './utils'
 import { getLogger } from '../logger'
-import { parseDocument } from '../lang/parser/docParser'
-import type { ParsedAttribute } from '../lang/parser/types'
+import { parseDocument } from '../parser/docParser'
+import { SiiNunitClassName } from '../database/sii-classes'
+import { ClassDefinitions } from '../database/class-defs'
+import type { ParsedAttribute } from '../interfaces/parser'
 
 const logger = getLogger()
 

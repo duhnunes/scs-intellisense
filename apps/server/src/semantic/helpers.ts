@@ -70,7 +70,7 @@ export function findAllOccurrences(
 
 // helper: check if a given [start, end] intersects any comment range
 export function rangeIntersectsComments(
-  commentRanges: { start: number; end: number }[],
+  commentRanges: { start: number; end?: number }[],
   start: number,
   end: number
 ) {
@@ -82,8 +82,12 @@ export function rangeIntersectsComments(
     const mid = Math.floor((lo + hi) / 2)
     const cr = commentRanges[mid]
     if (cr === undefined) break
-    if (end <= cr.start) hi = mid - 1
-    else if (start >= cr.end) lo = mid + 1
+
+    const crStart = cr.start
+    const crEnd = typeof cr.end === 'number' ? cr.end : Number.MAX_SAFE_INTEGER
+
+    if (end <= crStart) hi = mid - 1
+    else if (start >= crEnd) lo = mid + 1
     else return true
   }
   return false

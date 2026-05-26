@@ -1,5 +1,5 @@
 import { extractAttributesFromBody } from '.'
-import type { ParsedAttribute, ParsedClass } from '../lang/parser/types'
+import type { ParsedAttribute, ParsedClass } from '../interfaces/parser'
 
 // detect comment to not completions inside
 export function isOffsetInsideComment(text: string, offset: number): boolean {

@@ -18,7 +18,9 @@ import {
   detectModeFromExt,
   normalizeText,
   parseDocument,
-} from '../lang/parser/docParser'
+} from '../parser/docParser'
+import type { ParsedAttribute, ParsedClass } from '../interfaces/parser'
+import type { AttributeType } from '../interfaces/structure'
 
 // # TOKEN TYPES
 export const tokenTypes = [
@@ -50,13 +52,14 @@ export function provideSemanticTokensForDocument(
 
     const ext = detectExtFromUri(documentUri)
     const mode = detectModeFromExt(ext)
+    void mode // waiting to use
 
     const builder = new SemanticTokensBuilder()
     const lineStarts = computeLineStarts(text)
     const textLength = text.length
 
     // Comments
-    const commentRanges: { start: number; end: number }[] = []
+    const commentRanges: { start: number; end?: number }[] = []
     {
       let i = 0
       const len = text.length
@@ -68,7 +71,6 @@ export function provideSemanticTokensForDocument(
         const ch = text[i]
         const next = i + 1 < len ? text[i + 1] : ''
 
-        // handle block comment end when inside block
         if (inBlock) {
           if (ch === '*' && next === '/') {
             const end = i + 2
@@ -123,7 +125,7 @@ export function provideSemanticTokensForDocument(
           const start = i
           inBlock = true
           // push start with temporary end; will be closed when '*/' found
-          commentRanges.push({ start, end: undefined as any })
+          commentRanges.push({ start })
           i += 2
           continue
         }
@@ -175,34 +177,33 @@ export function provideSemanticTokensForDocument(
     }
 
     // ParseSii
-    const parsed = parseDocument(text, { uri: documentUri }) ?? {
-      magicMark: '',
-      classes: [],
-    }
-    for (const cls of parsed.classes) {
+    const parsed =
+      parseDocument(text, { uri: documentUri }) ??
+      ({
+        magicMark: '',
+        classes: [],
+      } as { magicMark: string; classes: ParsedClass[] })
+    for (const cls of parsed.classes as ParsedClass[]) {
       // Class_name: determine search window
       let searchStart = 0
       let searchEnd = text.length
       if (
-        (cls as any).classNameStart !== undefined &&
-        (cls as any).classNameEnd !== undefined
+        typeof cls.classNameStart === 'number' &&
+        typeof cls.classNameEnd === 'number'
       ) {
-        searchStart = (cls as any).classNameStart
-        searchEnd = (cls as any).classNameEnd + 1
+        searchStart = cls.classNameStart
+        searchEnd = cls.classNameEnd + 1
       } else if (
-        (cls as any).range &&
-        typeof (cls as any).range.start === 'number' &&
-        typeof (cls as any).range.end === 'number'
+        cls.range &&
+        typeof cls.range.start === 'number' &&
+        typeof cls.range.end === 'number'
       ) {
-        searchStart = (cls as any).range.start
-        searchEnd = (cls as any).range.end
-      } else if (
-        (cls as any).bodyStart !== undefined &&
-        (cls as any).bodyEnd !== undefined
-      ) {
-        searchStart = (cls as any).bodyStart - 50
+        searchStart = cls.range.start
+        searchEnd = cls.range.end
+      } else if (cls.bodyStart !== undefined && cls.bodyEnd !== undefined) {
+        searchStart = cls.bodyStart - 50
         if (searchStart < 0) searchStart = 0
-        searchEnd = (cls as any).bodyEnd + 50
+        searchEnd = cls.bodyEnd + 50
         if (searchEnd > text.length) searchEnd = text.length
       }
 
@@ -226,7 +227,7 @@ export function provideSemanticTokensForDocument(
       }
 
       // Key & Value
-      for (const attr of cls.attributes) {
+      for (const attr of cls.attributes as ParsedAttribute[]) {
         if (
           attr &&
           attr.keyRange &&
@@ -280,7 +281,7 @@ export function provideSemanticTokensForDocument(
           // fixed
           if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(v)) return 'float'
           // token
-          if (/^[a-z0-9_\.]+$/.test(v)) return 'token'
+          if (/^[a-z0-9_.]+$/.test(v)) return 'token'
           return 'string'
         }
 
@@ -294,7 +295,9 @@ export function provideSemanticTokensForDocument(
           rawValueText = text.slice(attr.valueRange.start, attr.valueRange.end)
         }
 
-        const declaredType = Array.isArray(attr.type) ? attr.type[0] : attr.type
+        const declaredType = Array.isArray(attr.type)
+          ? attr.type[0]
+          : (attr.type as AttributeType | undefined)
         const effectiveType =
           declaredType ?? inferTypeFromValueText(rawValueText)
 
@@ -381,7 +384,9 @@ export function provideSemanticTokensForDocument(
     const commentTokenIdx = tokenTypes.indexOf('comment')
     if (commentTokenIdx >= 0) {
       for (const cr of commentRanges) {
-        queueToken(cr.start, cr.end, commentTokenIdx)
+        const start = cr.start
+        const end = typeof cr.end === 'number' ? cr.end : textLength
+        if (start < end) queueToken(start, end, commentTokenIdx)
       }
     }
 
@@ -414,7 +419,7 @@ export function registerSemantic(
   connection: Connection,
   documents: TextDocuments<TextDocument>
 ) {
-  ;(globalThis as any).connection = connection
+  globalThis.connection = connection
 
   connection.languages.semanticTokens.on((params) => {
     try {

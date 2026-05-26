@@ -2,7 +2,11 @@
   "extends": "@scs-int/ts-config/base.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@interfaces/*": ["./src/interfaces/*"],
+      "@parser/*": ["./src/parser/*"],
+      "@semantic/*": ["./src/semantic/*"],
+      "@database/*": ["./src/database/*"]
     }
   },
   "include": [

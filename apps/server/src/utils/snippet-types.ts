@@ -1,4 +1,4 @@
-import type { AttributeType } from '../@types/structure'
+import type { AttributeType } from '../interfaces/structure'
 
 export function snippetForTypes(type: AttributeType | AttributeType[]): string {
   const t = Array.isArray(type) ? type[0] : type
