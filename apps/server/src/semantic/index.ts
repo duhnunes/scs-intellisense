@@ -59,40 +59,94 @@ export function provideSemanticTokensForDocument(
     const commentRanges: { start: number; end: number }[] = []
     {
       let i = 0
-      while (i < text.length) {
+      const len = text.length
+      let inSingle = false
+      let inDouble = false
+      let inBlock = false
+
+      while (i < len) {
         const ch = text[i]
-        if (ch === '/' && text[i + 1] === '/') {
+        const next = i + 1 < len ? text[i + 1] : ''
+
+        // handle block comment end when inside block
+        if (inBlock) {
+          if (ch === '*' && next === '/') {
+            const end = i + 2
+            // find last pushed block start and replace its end (or push now)
+            const last =
+              commentRanges.length > 0
+                ? commentRanges[commentRanges.length - 1]
+                : undefined
+            if (last && last.end === undefined) {
+              last.end = end
+            } else {
+              commentRanges.push({ start: Math.max(0, i - 1), end })
+            }
+            inBlock = false
+            i += 2
+            continue
+          }
+          i++
+          continue
+        }
+
+        // handle string toggles (respect escapes)
+        if (!inSingle && ch === '"' && text[i - 1] !== '\\') {
+          inDouble = !inDouble
+          i++
+          continue
+        }
+        if (!inDouble && ch === "'" && text[i - 1] !== '\\') {
+          inSingle = !inSingle
+          i++
+          continue
+        }
+
+        // if inside any string, skip comment detection
+        if (inSingle || inDouble) {
+          i++
+          continue
+        }
+
+        // line comment //
+        if (ch === '/' && next === '/') {
           const start = i
           i += 2
-          while (i < text.length && text[i] !== '\n') i++
+          while (i < len && text[i] !== '\n') i++
           const end = i
           commentRanges.push({ start, end })
           continue
         }
+
+        // block comment /*
+        if (ch === '/' && next === '*') {
+          const start = i
+          inBlock = true
+          // push start with temporary end; will be closed when '*/' found
+          commentRanges.push({ start, end: undefined as any })
+          i += 2
+          continue
+        }
+
+        // hash comment #
         if (ch === '#') {
           const start = i
           i++
-          while (i < text.length && text[i] !== '\n') i++
+          while (i < len && text[i] !== '\n') i++
           const end = i
           commentRanges.push({ start, end })
           continue
         }
-        if (ch === '/' && text[i + 1] === '*') {
-          const start = i
-          i += 2
-          while (i < text.length && !(text[i] === '*' && text[i + 1] === '/'))
-            i++
-          if (i < text.length) {
-            i += 2
-          } else {
-            i = text.length
-          }
-          const end = Math.min(i, text.length)
-          commentRanges.push({ start, end })
-          continue
-        }
+
         i++
       }
+
+      // finalize any unterminated block comments: set end to text.length
+      for (const cr of commentRanges) {
+        if (cr.end === undefined) cr.end = len
+      }
+
+      // sort ranges by start
       commentRanges.sort((a, b) => a.start - b.start)
     }
 
@@ -277,18 +331,17 @@ export function provideSemanticTokensForDocument(
 
           const lineStart = text.lastIndexOf('\n', valStart) + 1
           const lineEnd = text.indexOf('\n', valStart)
-          const lineSlice = text.slice(
-            lineStart,
-            lineEnd === -1 ? text.length : lineEnd
-          )
 
           const idxComment = (() => {
-            const idxSlash = lineSlice.indexOf('//')
-            if (idxSlash !== -1) return lineStart + idxSlash
-            const idxHash = lineSlice.indexOf('#')
-            if (idxHash !== -1) return lineStart + idxHash
-            const idxBlock = lineSlice.indexOf('/*')
-            if (idxBlock !== -1) return lineStart + idxBlock
+            const lineEndOffset = lineEnd === -1 ? text.length : lineEnd
+
+            for (let j = 0; j < commentRanges.length; j++) {
+              const cr = commentRanges[j]
+              if (!cr) continue
+              if (cr.start >= lineStart && cr.start < lineEndOffset)
+                return cr.start
+              if (cr.start >= lineEndOffset) break
+            }
             return -1
           })()
 
