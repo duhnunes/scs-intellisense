@@ -14,12 +14,14 @@
 
 ## About
 
-**SCS Intellisense** provides semantic highlighting <s>and completions</s> for <a href="https://www.scssoft.com/">SCS Software</a> data files (`.sii`, `.sui`). It improves readability and speeds up editing by offering:  
-- Semantic token coloring for keywords, classes, properties, strings, numbers and comments;
-- <s>Context-aware completions for class attributes and values;</s>
-- <s>Snippets for common constructs and directives;</s>
+**SCS Intellisense** provides semantic highlighting <!-- and completions --> for <a href="https://www.scssoft.com/">SCS Software</a> data files (`.sii`, `.sui`). It improves readability and speeds up editing by offering:  
+- Semantic token coloring for MagicMark, Classes, Attributes (Key and Values), strings, numbers, booleans and comments;
+- Auto-Close brackets;
+<!-- - Context-aware completions for class attributes and values;
+- Snippets for common constructs and directives; -->
 
 ### Sii Extructure
+> The structure is built as originally described in the <a href="https://modding.scssoft.com/wiki/Documentation/Engine/Units#Unit_definition_entry" target="_blank">documentation</a>.
 
 <div align="center">
 
@@ -38,8 +40,8 @@
 ## Features
 
 - **Semantic highlighting** for `.sii` and `.sui` files
-- **Completions** for class names, attributes and values (context-aware)
-- **`@include` directive**: recognized as a special key (no `:`), snippet support
+<!-- - **Completions** for class names, attributes and values (context-aware) -->
+- **`@include` directive**: recognized as a special key (no `:`)
 - **Comment support**: `//`, `#` and `/* ... */`
 - **Auto-close brackets** for `{}`, `()`, `[]`
 
@@ -59,7 +61,7 @@
   - `Catppuccin Latte`
   - Should work with the light variants of the themes listed above.
 
-*Note*: <u>`Dark (Visual Studio)`</u> and <u>`Light (Visual Studio)`</u> do not provide highlighting in all contexts.
+*Note*: <u>`Dark (Visual Studio)`</u> and <u>`Light (Visual Studio)`</u> do not provide highlighting in all scopes.
 
 ## License
 
