@@ -13,7 +13,8 @@ import type { ParsedAttribute } from '../interfaces/parser'
 export function parseAttributes(
   documentText: string,
   body: string,
-  bodyStartOffset: number
+  bodyStartOffset: number,
+  className: string
 ): ParsedAttribute[] {
   const lines = body.split(/\r?\n/)
   const attrs: ParsedAttribute[] = []
