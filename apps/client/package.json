@@ -1,33 +1,51 @@
 {
   "name": "scs-intellisense",
-  "displayName": "SCS Intellisense",
-  "publisher": "DuHNunes",
-  "description": "Extension to add intellisense for SCS Software files.",
-  "icon": "public/icon.png",
   "version": "0.1.0",
-  "engines": {
-    "vscode": "^1.118.0"
+  "displayName": "SCS Intellisense",
+  "description": "Extension to add intellisense for SCS Software files.",
+  "author": "DuH Nunes",
+  "license": "MIT",
+  "homepage": "https://github.com/duhnunes/scs-intellisense",
+  "bugs": {
+    "url": "https://github.com/duhnunes/scs-intellisense/issues",
+    "email": "duhnunes.dev@gmail.com"
   },
-  "categories": [
-    "Programming Languages", "Other"
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/duhnunes/scs-intellisense.git"
   },
+  "publisher": "DuHNunes",
+  "keywords": [
+    "scs software",
+    "scs-software",
+    "scs intellisense",
+    "scs-intellisense",
+    "ats",
+    "ets2"
+  ],
+  "icon": "public/icon.png",
+  "categories": [
+    "Programming Languages", "Other"
+  ],
+  "engines": {
+    "vscode": "^1.118.0"
+  },
   "activationEvents": [],
   "main": "./dist/extension.js",
+  "capabilities": {
+    "virtualWorkspaces": false
+  },
   "contributes": {
     "languages": [
       {
         "id": "sii",
-        "aliases": ["SII", "sii"],
+        "aliases": ["SII", "sii", "SCS Software", "SCS"],
         "extensions": [".sii"],
         "configuration": "./language-configuration.json"
       },
       {
         "id": "sui",
-        "aliases": ["SUI", "sui"],
+        "aliases": ["SUI", "sui", "SCS Software", "SCS"],
         "extensions": [".sui"],
         "configuration": "./language-configuration.json"
       }
@@ -44,12 +62,14 @@
         "category": "SCS Intellisense"
       }
     ],
+    "capabilities": {},
     "configuration": {
+      "title": "SCS Intellisense",
       "properties": {
         "scs-intellisense.semanticHighlighting": {
           "type": "boolean",
           "default": true,
-          "description": "Enable/disable semantic highlighting"
+          "markdownDescription": "Enable/disable semantic highlighting"
         }
       }
     }
