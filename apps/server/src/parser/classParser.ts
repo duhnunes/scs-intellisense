@@ -1,36 +1,5 @@
-import { extractAttributesFromBody } from '.'
 import type { ParsedAttribute, ParsedClass } from '../interfaces/parser'
-
-// detect comment to not completions inside
-export function isOffsetInsideComment(text: string, offset: number): boolean {
-  if (offset < 0) return false
-
-  // check line comments '//' and '#'
-  const lineStart = text.lastIndexOf('\n', Math.max(0, offset - 1)) + 1
-  const lineEnd = text.indexOf('\n', offset)
-  const lineSlice = text.slice(
-    lineStart,
-    lineEnd === -1 ? text.length : lineEnd
-  )
-
-  const idxSlash = lineSlice.indexOf('//')
-  if (idxSlash !== -1) {
-    const commentStartInDoc = lineStart + idxSlash
-    if (offset >= commentStartInDoc) return true
-  }
-  const idxHash = lineSlice.indexOf('#')
-  if (idxHash !== -1) {
-    const commentStartInDoc = lineStart + idxHash
-    if (offset >= commentStartInDoc) return true
-  }
-
-  const lastOpen = text.lastIndexOf('/*', offset)
-  if (lastOpen === -1) return false
-  const nextClose = text.indexOf('*/', lastOpen + 2)
-  if (nextClose === -1 || nextClose >= offset) return true
-
-  return false
-}
+import { parseAttributes } from './attributeParser'
 
 /**
  * parseClassesInto
@@ -38,7 +7,7 @@ export function isOffsetInsideComment(text: string, offset: number): boolean {
  * - text: section to be parsed (this could be the SiiNunit body or the entire document)
  * - classesOut: array where the found classes will be pushed.
  */
-export function parseClassesInto(
+export function parseClasses(
   documentText: string,
   baseOffset: number,
   text: string,
@@ -74,7 +43,7 @@ export function parseClassesInto(
       braceCloseInDoc !== -1 ? braceCloseInDoc : documentText.length
     const body = documentText.slice(bodyStart, bodyEnd)
 
-    const attributes: ParsedAttribute[] = extractAttributesFromBody(
+    const attributes: ParsedAttribute[] = parseAttributes(
       documentText,
       body,
       bodyStart,

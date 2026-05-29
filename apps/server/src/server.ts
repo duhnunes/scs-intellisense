@@ -8,7 +8,6 @@ import {
 } from 'vscode-languageserver/node'
 
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { provideCompletionItems } from './completion'
 import { registerSemantic, semanticTokensLegend } from './semantic'
 import { getLogger, initLogger } from './logger'
 
@@ -54,10 +53,10 @@ connection.onCompletion((params) => {
       return []
     }
 
-    const offset = doc.offsetAt(params.position)
-    const items = provideCompletionItems(doc.getText(), offset)
+    // const offset = doc.offsetAt(params.position)
+    // const items = provideCompletionItems(doc.getText(), offset)
 
-    return items
+    // return items
   } catch (error) {
     const details =
       error && (error as Error).stack ? (error as Error).stack : String(error)

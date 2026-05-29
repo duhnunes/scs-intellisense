@@ -4,7 +4,7 @@
   "publisher": "DuHNunes",
   "description": "Extension to add intellisense for SCS Software files.",
   "icon": "public/icon.png",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.118.0"
   },

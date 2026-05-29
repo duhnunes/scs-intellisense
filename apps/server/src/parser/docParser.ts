@@ -1,6 +1,5 @@
 import { URI } from 'vscode-uri'
 import path from 'node:path'
-import { findMatchingBrace, parseClassesInto } from '@/src/completion/utils'
 import type {
   ParsedClass,
   ParseOptions,
@@ -8,6 +7,7 @@ import type {
   ScsFileMode,
 } from '../interfaces/parser'
 import { ScsFileExt as ScsExtEnum } from '../interfaces/parser'
+import { findMatchingBrace, parseClasses } from './classParser'
 
 export function normalizeText(text: string): string {
   if (!text) return text
@@ -58,22 +58,22 @@ export function parseDocument(text: string, options?: ParseOptions) {
     if (rootIndex !== -1) {
       const braceOpen = normalized.indexOf('{', rootIndex)
       if (braceOpen !== -1) {
+        // parse the body of SiiNunit
         const braceClose = findMatchingBrace(normalized, braceOpen)
-        const body =
-          braceClose !== -1
-            ? normalized.slice(braceOpen + 1, braceClose)
-            : normalized.slice(braceOpen + 1)
-        parseClassesInto(normalized, braceOpen + 1, body, classes)
+        const bodyStart = braceOpen + 1
+        const bodyEnd = braceClose !== -1 ? braceClose : normalized.length
+        const body = normalized.slice(bodyStart, bodyEnd)
+        parseClasses(normalized, bodyStart, body, classes)
         return { magicMark: 'SiiNunit', classes }
       }
     }
   }
 
   if (_mode === 'sui') {
-    parseClassesInto(normalized, 0, normalized, classes)
+    parseClasses(normalized, 0, normalized, classes)
     return { magicMark: 'document.sui', classes }
   }
 
-  parseClassesInto(normalized, 0, normalized, classes)
+  parseClasses(normalized, 0, normalized, classes)
   return { magicMark: _mode === 'sii' ? 'document.sii' : 'document', classes }
 }
