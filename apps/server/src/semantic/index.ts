@@ -26,13 +26,11 @@ import type { AttributeType } from '../interfaces/structure'
 export const tokenTypes = [
   'keyword',
   'class',
-  'property',
   'parameter',
-  'type',
   'string',
   'number',
   'comment',
-  'variable',
+  'method',
 ]
 const tokenModifiers: string[] = []
 
@@ -320,7 +318,7 @@ export function provideSemanticTokensForDocument(
           effectiveType === 'owner_ptr' ||
           effectiveType === 'link_ptr'
         )
-          tokenTypeForValue = 'variable'
+          tokenTypeForValue = 'method'
         else tokenTypeForValue = 'string'
 
         if (

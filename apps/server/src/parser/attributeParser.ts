@@ -1,4 +1,5 @@
 import type { ParsedAttribute } from '../interfaces/parser'
+import { findColonOutsideString, findInlineCommentIndex } from './helpers'
 
 /**
  * parseAttributes
@@ -28,7 +29,7 @@ export function parseAttributes(
     if (!trimmed) continue
     if (trimmed.startsWith('//') || trimmed.startsWith('#')) continue
 
-    // @Include
+    // @Include - global attribute
     if (trimmed.startsWith('@include')) {
       const includeIndex = line.indexOf('@include')
       const keyStart = lineStartInDoc + includeIndex
@@ -63,7 +64,8 @@ export function parseAttributes(
       continue
     }
 
-    const colonIndex = line.indexOf(':')
+    // find colon outside strings
+    const colonIndex = findColonOutsideString(line)
     if (colonIndex === -1) continue
 
     const afterColon = line.slice(colonIndex + 1)
@@ -73,14 +75,73 @@ export function parseAttributes(
     // key e value raw
     const keyRaw = line.slice(0, colonIndex)
     const key = keyRaw.trim()
-    const value = afterColon.trim()
 
     const keyStart = lineStartInDoc + line.indexOf(key)
     const keyEnd = keyStart + key.length
 
+    // compute valueStart absolute
     const valueStart = lineStartInDoc + colonIndex + 1 + leadingSpaces
-    const valueEnd =
-      value.length > 0 ? lineStartInDoc + line.length : valueStart
+
+    // compute valueEnd
+    // - if value starts with quote, find closing quote (respecting escapes) on same line
+    // - otherwise, value ends at first inline comment or at first whitespace after token
+    let valueEnd = valueStart
+    const relValueStartInLine = colonIndex + 1 + leadingSpaces
+    if (relValueStartInLine < line.length) {
+      const firstChar = line[relValueStartInLine]
+      if (firstChar === '"' || firstChar === "'") {
+        // find closing quote on same line
+        const quote = firstChar
+        let escaped = false
+        let found = -1
+        for (let i = relValueStartInLine + 1; i < line.length; i++) {
+          const ch = line[i]
+          if (escaped) {
+            escaped = false
+            continue
+          }
+          if (ch === '\\') {
+            escaped = true
+            continue
+          }
+          if (ch === quote) {
+            found = i
+            break
+          }
+        }
+        if (found !== -1) {
+          // include closing quote
+          valueEnd = lineStartInDoc + found + 1
+        } else {
+          // no closing quote on same line: take until line end (safe fallback)
+          valueEnd = lineStartInDoc + line.length
+        }
+      } else {
+        // non-quoted value: end at inline comment or at first whitespace after token
+        const inlineCommentIdx = findInlineCommentIndex(line)
+        const tokenEndInLine = (() => {
+          // scan from relValueStartInLine until whitespace or comment
+          let i = relValueStartInLine
+          while (i < line.length) {
+            const ch = line[i]
+            if (ch === ' ' || ch === '\t') break
+            // stop if comment start (// or #)
+            if (ch === '/' && i + 1 < line.length && line[i + 1] === '/') break
+            if (ch === '#') break
+            i++
+          }
+          return i
+        })()
+
+        const endCandidate =
+          inlineCommentIdx !== -1
+            ? Math.min(tokenEndInLine, inlineCommentIdx)
+            : tokenEndInLine
+        valueEnd = lineStartInDoc + endCandidate
+      }
+    } else {
+      valueEnd = valueStart
+    }
 
     attrs.push({
       key,
