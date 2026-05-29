@@ -6,6 +6,7 @@ import {
   ServerOptions,
   TransportKind,
 } from 'vscode-languageclient/node'
+import { ConfigManager } from './configManager'
 
 let client: LanguageClient | undefined
 let output: vscode.OutputChannel
@@ -13,6 +14,8 @@ let output: vscode.OutputChannel
 export function activate(context: vscode.ExtensionContext) {
   output = vscode.window.createOutputChannel('SCS-Intellisense')
   context.subscriptions.push(output)
+
+  new ConfigManager()
 
   const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'))
 

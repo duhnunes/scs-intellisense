@@ -43,7 +43,16 @@
         "title": "SCS Intellisense: Clear Output",
         "category": "SCS Intellisense"
       }
-    ]
+    ],
+    "configuration": {
+      "properties": {
+        "scs-intellisense.semanticHighlighting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable semantic highlighting"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",
