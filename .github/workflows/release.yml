@@ -71,20 +71,20 @@ jobs:
           const s = fs.readFileSync('CHANGELOG.md','utf8');
           const m = s.match(/^\s*##\s*
 
-\[Unreleased\]
+          \[Unreleased\]
 
-\s*\n([\s\S]*?)(?=^\s*##\s+)/m);
-          console.log(m ? m[1].trim() : '');
-          NODE
+          \s*\n([\s\S]*?)(?=^\s*##\s+)/m);
+                    console.log(m ? m[1].trim() : '');
+                    NODE
 
-          NOTES=$(node /tmp/extract_changelog.js || true)
-          if [ -z "$NOTES" ]; then
-            NOTES=$(cat CHANGELOG.md)
-          fi
+                    NOTES=$(node /tmp/extract_changelog.js || true)
+                    if [ -z "$NOTES" ]; then
+                      NOTES=$(cat CHANGELOG.md)
+                    fi
 
-          echo "notes<<EOF" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "$NOTES" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+                    echo "notes<<EOF" >> "$GITHUB_OUTPUT"
+                    printf '%s\n' "$NOTES" >> "$GITHUB_OUTPUT"
+                    echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         id: create_release
