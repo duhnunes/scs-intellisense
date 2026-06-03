@@ -36,7 +36,6 @@
     "release-it": "^20.2.0"
   },
   "release-it": {
-    "initialVersion": "0.1.0",
     "git": {
       "requireCleanWorkingDir": false,
       "commitMessage": "chore: release v${version}",
