@@ -15,8 +15,8 @@
     "format:staged": "lint-staged",
     "package:client": "pnpm --filter ./apps/client run vsce:package",
     "compile": "pnpm run build && pnpm run package:client",
-    "release:workspaces": "pnpm --filter ./apps/server run release -- --dry-run && pnpm --filter ./apps/client run release -- --dry-run",
-    "release": "pnpm run release:workspaces && release-it --dry-run && pnpm run publish-vsce",
+    "release:workspaces": "pnpm --filter ./apps/server run release && pnpm --filter ./apps/client run release",
+    "release": "pnpm run release:workspaces && release-it && pnpm run publish-vsce",
     "publish-vsce": "dotenv -e .env -- pnpm dlx -y vsce publish --pat \"$VSCE_TOKEN\" --packagePath \"release/latest/*.vsix\""
   },
   "devDependencies": {
