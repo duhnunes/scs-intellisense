@@ -61,10 +61,10 @@ jobs:
         uses: actions/create-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
           draft: false
           prerelease: false
-          generte_release_notes: true
+          generate_release_notes: true
 
       - name: Upload VSIX to Release
         uses: actions/upload-release-asset@v2
@@ -105,3 +105,4 @@ jobs:
         env:
           VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
         run: pnpm dlx -y vsce publish --pat "$VSCE_TOKEN" --packagePath "${{ steps.manifest.outputs.vsix }}"
+
