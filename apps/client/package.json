@@ -1,6 +1,6 @@
 {
   "name": "scs-intellisense",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "SCS Intellisense",
   "description": "Extension to add intellisense for SCS Software files.",
   "author": "DuH Nunes",
@@ -25,7 +25,8 @@
   ],
   "icon": "public/icon.png",
   "categories": [
-    "Programming Languages", "Other"
+    "Programming Languages",
+    "Other"
   ],
   "engines": {
     "vscode": "^1.118.0"
@@ -39,14 +40,28 @@
     "languages": [
       {
         "id": "sii",
-        "aliases": ["SII", "sii", "SCS Software", "SCS"],
-        "extensions": [".sii"],
+        "aliases": [
+          "SII",
+          "sii",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".sii"
+        ],
         "configuration": "./language-configuration.json"
       },
       {
         "id": "sui",
-        "aliases": ["SUI", "sui", "SCS Software", "SCS"],
-        "extensions": [".sui"],
+        "aliases": [
+          "SUI",
+          "sui",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".sui"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -84,7 +99,8 @@
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
-    "vsce:package": "vsce package && node ../../scripts/release-artifact-manager.mjs"
+    "vsce:package": "vsce package && node ../../scripts/release-artifact-manager.mjs",
+    "release": "release-it"
   },
   "devDependencies": {
     "@scs-int/eslint-config": "workspace:^",
@@ -105,5 +121,11 @@
   },
   "vsce": {
     "dependencies": false
+  },
+  "release-it": {
+    "git": false,
+    "npm": {
+      "publish": false
+    }
   }
 }
