@@ -72,7 +72,7 @@ jobs:
 
           \[Unreleased\]
 
-/ { found=1; next }
+          / { found=1; next }
             /^\s*##\s*/ { if(found) exit }
             found { print }
           ' CHANGELOG.md | sed -e 's/^[[:space:]]\+$//g')
