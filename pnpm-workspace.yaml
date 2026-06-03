@@ -5,5 +5,6 @@ packages:
 allowBuilds:
   core-js: true
   esbuild: true
+  inotify: true
   movefile: true
   unrs-resolver: true

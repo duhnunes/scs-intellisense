@@ -5,3 +5,4 @@ apps/client/LICENSE.md
 apps/client/README.md
 /release/
 TODO.md
+.env

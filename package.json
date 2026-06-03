@@ -8,18 +8,60 @@
   "scripts": {
     "copy-server": "copyfiles -u 3 apps/server/dist/**/* apps/client/dist/",
     "copy-readme": "copyfiles ./README.md apps/client/",
-    "build": "pnpm i && pnpm -r run build && pnpm run copy-server && pnpm run copy-readme",
-    "dev": "pnpm --filter ./apps/client dev",
+    "copy-changelog": "copyfiles ./CHANGELOG.md apps/client/",
+    "build": "pnpm i && pnpm -r run build && pnpm run copy-server && pnpm run copy-readme && pnpm run copy-changelog",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "format:staged": "lint-staged",
     "package:client": "pnpm --filter ./apps/client run vsce:package",
-    "compile": "pnpm run build && pnpm run package:client"
+    "compile": "pnpm run build && pnpm run package:client",
+    "release": "pnpm run release:ci",
+    "release:ci": "release-it && pnpm run publish-vsce",
+    "publish-vsce": "dotenv -e .env -- pnpm dlx -y vsce publish --pat \"$VSCE_TOKEN\" --packagePath \"release/latest/*.vsix\""
   },
   "devDependencies": {
     "@scs-int/ts-config": "workspace:*",
     "copyfiles": "^2.4.1",
+    "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0",
     "husky": "^9.1.7",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@release-it/conventional-changelog": "^11.0.1",
+    "dev": "^0.1.5",
+    "release-it": "^20.2.0"
+  },
+  "release-it": {
+    "git": {
+      "commitMessage": "chore: release v${version}"
+    },
+    "github": {
+      "release": true
+    },
+    "npm": {
+      "publish": false,
+      "file": "./apps/client/package.json"
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "infile": "CHANGELOG.md",
+        "preset": {
+          "name": "conventionalcommits",
+          "types": [
+            {
+              "type": "feat",
+              "section": "Features"
+            },
+            {
+              "type": "fix",
+              "section": "Bug Fixes"
+            }
+          ]
+        }
+      }
+    }
   }
 }
