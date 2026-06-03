@@ -56,45 +56,15 @@ jobs:
           echo "vsix=$VSIX_PATH" >> "$GITHUB_OUTPUT"
           echo "vsix_name=$BASENAME" >> "$GITHUB_OUTPUT"
 
-      - name: Read changelog
-        id: changelog
-        run: |
-          set -euo pipefail
-          if [ ! -f CHANGELOG.md ]; then
-            echo "::warning::CHANGELOG.md not found, using empty notes"
-            echo "notes=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          NOTES=$(awk '
-            BEGIN {found=0}
-            /^\s*##\s*
-
-          \[Unreleased\]
-
-          / { found=1; next }
-            /^\s*##\s*/ { if(found) exit }
-            found { print }
-          ' CHANGELOG.md | sed -e 's/^[[:space:]]\+$//g')
-
-          if [ -z "$NOTES" ]; then
-            NOTES=$(cat CHANGELOG.md)
-          fi
-
-          echo "notes<<EOF" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "$NOTES" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-
-
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          body: ${{ steps.changelog.outputs.notes }}
           draft: false
           prerelease: false
+          generte_release_notes: true
 
       - name: Upload VSIX to Release
         uses: actions/upload-release-asset@v2
