@@ -56,7 +56,7 @@ jobs:
           echo "vsix=$VSIX_PATH" >> "$GITHUB_OUTPUT"
           echo "vsix_name=$BASENAME" >> "$GITHUB_OUTPUT"
 
-            - name: Read changelog
+      - name: Read changelog
         id: changelog
         run: |
           set -euo pipefail
@@ -70,7 +70,7 @@ jobs:
             BEGIN {found=0}
             /^\s*##\s*
 
-\[Unreleased\]
+          \[Unreleased\]
 
 / { found=1; next }
             /^\s*##\s*/ { if(found) exit }
