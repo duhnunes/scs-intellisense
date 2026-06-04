@@ -1,5 +1,6 @@
 {
   "name": "scs-intellisense",
+  "version": "0.0.3",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -81,6 +82,5 @@
         }
       }
     }
-  },
-  "version": "0.1.0"
+  }
 }
