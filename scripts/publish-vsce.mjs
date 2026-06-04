@@ -2,6 +2,7 @@
 
 import { spawnSync } from 'child_process';
 import { readdirSync } from 'fs'
+import { join } from 'path';
 
 
 const dir = join(process.cwd(), 'release', 'latest')
