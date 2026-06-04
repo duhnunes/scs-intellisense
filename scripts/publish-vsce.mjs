@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'child_process';
+import { dotenv } from 'dotenv';
 import { readdirSync } from 'fs'
 import { join } from 'path';
 
+dotenv.config({ path: '.env' })
 
 const dir = join(process.cwd(), 'release', 'latest')
 let files = []
