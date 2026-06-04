@@ -1,6 +1,6 @@
 {
   "name": "scs-int-server",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "author": "DuHNunes",
   "main": "./dist/server.js",
   "scripts": {
