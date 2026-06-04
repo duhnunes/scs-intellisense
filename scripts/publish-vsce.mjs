@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'child_process';
-import { dotenv } from 'dotenv';
+import  dotenv  from 'dotenv';
 import { readdirSync } from 'fs'
 import { join } from 'path';
 
