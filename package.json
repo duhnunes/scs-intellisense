@@ -42,7 +42,7 @@
     "github": {
       "release": true,
       "assets": [
-        "release/latest/scs-intellisense-${version}.vsix"
+        "./release/latest/*.vsix"
       ]
     },
     "npm": {
