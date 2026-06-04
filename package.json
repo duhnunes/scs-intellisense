@@ -15,7 +15,7 @@
     "compile": "pnpm run build && pnpm run package:client",
     "release:workspaces": "pnpm --filter ./apps/server run release && pnpm --filter ./apps/client run release",
     "release": "pnpm run release:workspaces && pnpm --filter ./apps/client run vsce:package && release-it && pnpm run publish-vsce",
-    "publish-vsce": "dotenv -e .env -- pnpm dlx vsce publish --pat \"$VSCE_TOKEN\" --packagePath \"release/latest/*.vsix\""
+    "publish-vsce": "node ./scripts/publish-vsce.mjs"
   },
   "devDependencies": {
     "@release-it/bumper": "^7.0.6",
@@ -82,6 +82,5 @@
         }
       }
     }
-  },
-  "version": "0.1.0"
+  }
 }
