@@ -31,7 +31,6 @@
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "@release-it/conventional-changelog": "^11.0.1",
-    "dev": "^0.1.5",
     "release-it": "^20.2.0"
   },
   "release-it": {
