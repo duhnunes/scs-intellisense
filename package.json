@@ -37,13 +37,13 @@
   "release-it": {
     "git": {
       "requireCleanWorkingDir": false,
-      "commitMessage": "chore: release v${version}",
+      "commitMessage": "chore: release v${version}"
+    },
+    "github": {
+      "release": true,
       "assets": [
         "release/latest/*.vsix"
       ]
-    },
-    "github": {
-      "release": true
     },
     "npm": {
       "publish": false
