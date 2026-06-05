@@ -127,27 +127,111 @@ export function parseAttributes(
           valueEnd = lineStartInDoc + line.length
         }
       } else {
-        // non-quoted value: end at inline comment or at first whitespace after token
+        // non-quoted value: handle paranthesized tuples specially,
+        // otherwise end at inline comment or at first whitespace after token
         const inlineCommentIdx = findInlineCommentIndex(line)
-        const tokenEndInLine = (() => {
-          // scan from relValueStartInLine until whitespace or comment
-          let i = relValueStartInLine
-          while (i < line.length) {
-            const ch = line[i]
-            if (ch === ' ' || ch === '\t') break
-            // stop if comment start (// or #)
-            if (ch === '/' && i + 1 < line.length && line[i + 1] === '/') break
-            if (ch === '#') break
-            i++
-          }
-          return i
-        })()
 
-        const endCandidate =
-          inlineCommentIdx !== -1
-            ? Math.min(tokenEndInLine, inlineCommentIdx)
-            : tokenEndInLine
-        valueEnd = lineStartInDoc + endCandidate
+        //If value start with '(' try to find matching ')' on same line
+        if (line[relValueStartInLine] === '(') {
+          // find the end of the first parenthesizes group, respecting nested parens and quoted substrings
+          let depth = 0
+          let foundIdx = -1
+          for (let i = relValueStartInLine; i < line.length; i++) {
+            const ch = line.charAt(i)
+            if (ch === '(') depth++
+            else if (ch === ')') {
+              depth--
+              if (depth === 0) {
+                foundIdx = i
+                break
+              }
+            } else if (ch === '"' || ch === "'") {
+              const quote = ch
+              i++
+              while (i < line.length) {
+                const c2 = line.charAt(i)
+                if (c2 === '\\') {
+                  i += 2
+                  continue
+                }
+                if (c2 === quote) break
+                i++
+              }
+            }
+          }
+          if (foundIdx !== -1) {
+            // Include first group
+            let endIdx = foundIdx + 1
+            // then, if immediately after there is another '(' (no intervening non-space chars),
+            // consume subsequent parenthesized groups like (a)(b)(c)
+            while (endIdx < line.length) {
+              // skip optional whitespace between groups
+              let j = endIdx
+              while (j < line.length && /\s/.test(line.charAt(j))) j++
+              if (j < line.length && line.charAt(j) === '(') {
+                // find matching ) for this next group
+                let d = 0
+                let found2 = -1
+                for (let k = j; k < line.length; k++) {
+                  const ch2 = line.charAt(k)
+                  if (ch2 === '(') d++
+                  else if (ch2 === ')') {
+                    d--
+                    if (d === 0) {
+                      found2 = k
+                      break
+                    }
+                  } else if (ch2 === '"' || ch2 === "'") {
+                    const q = ch2
+                    k++
+                    while (k < line.length) {
+                      const c3 = line.charAt(k)
+                      if (c3 === '\\') {
+                        k += 2
+                        continue
+                      }
+                      if (c3 === q) break
+                      k++
+                    }
+                  }
+                }
+                if (found2 !== -1) {
+                  endIdx = found2 + 1
+                  continue
+                } else {
+                  // unterminated next group: include until line end and break
+                  endIdx = line.length
+                  break
+                }
+              }
+              break
+            }
+            valueEnd = lineStartInDoc + endIdx
+          } else {
+            // fallback: no closing paren on same line -> until line end
+            valueEnd = lineStartInDoc + line.length
+          }
+        } else {
+          // fallback behavior: token until whitespace or comment
+          const tokenEndInLine = (() => {
+            let i = relValueStartInLine
+            while (i < line.length) {
+              const ch = line[i]
+              if (ch === ' ' || ch === '\t') break
+              if (ch === '/' && i + 1 < line.length && line[i + 1] === '/')
+                break
+              if (ch === '#') break
+              i++
+            }
+            return i
+          })()
+
+          const endCandidate =
+            inlineCommentIdx !== -1
+              ? Math.min(tokenEndInLine, inlineCommentIdx)
+              : tokenEndInLine
+          valueEnd = lineStartInDoc + endCandidate
+        }
       }
     } else {
       valueEnd = valueStart

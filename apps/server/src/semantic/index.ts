@@ -267,12 +267,29 @@ export function provideSemanticTokensForDocument(
           // vector (x, y, z)
           if (v.startsWith('(') && v.endsWith(')')) {
             const inner = v.slice(1, -1).trim()
-            if (
-              /^-?\d+(\.\d+)?([eE][+-]?\d+)?(\s*,\s*-?\d+(\.\d+)?([eE][+-]?\d+)?)*$/.test(
-                inner
-              )
+            const parts = inner
+              .split(',')
+              .map((p) => p.trim())
+              .filter(Boolean)
+            const allFloatLike = parts.every((p) =>
+              /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(p)
             )
+            const allIntLike = parts.every((p) => /^-?\d+$/.test(p))
+            if (allFloatLike) {
+              if (parts.length === 2) return 'float2'
+              if (parts.length === 3) return 'float3'
+              if (parts.length === 4) return 'float4'
               return 'float'
+            }
+            if (allIntLike) {
+              if (parts.length === 2) return 'fixed2'
+              if (parts.length === 3) return 'fixed3'
+              if (parts.length === 4) return 'fixed4'
+              return 'fixed'
+            }
+            if (v.startsWith('(') && v.includes(')(')) {
+              return 'placement'
+            }
             return 'string'
           }
           // fixed
@@ -308,7 +325,8 @@ export function provideSemanticTokensForDocument(
             effectiveType === 'int2' ||
             effectiveType.startsWith('s') ||
             effectiveType.startsWith('u') ||
-            effectiveType === 'quaternion')
+            effectiveType === 'quaternion' ||
+            effectiveType === 'placement')
         )
           tokenTypeForValue = 'number'
         else if (effectiveType === 'bool') tokenTypeForValue = 'keyword'
@@ -371,7 +389,79 @@ export function provideSemanticTokensForDocument(
 
           const tokIdx = tokenTypes.indexOf(tokenTypeForValue)
           if (tokIdx >= 0 && valEnd > valStart) {
-            queueToken(valStart, valEnd, tokIdx)
+            // If the value is a parenthesized tuple and token type is number,
+            // emit numeric tokens for each numeric element inside parentheses.
+            const raw = text.slice(valStart, valEnd)
+            if (raw.startsWith('(')) {
+              // Walk the raw alue and emit numeric tokens for any numeric substrings.
+              // Accept separators: comma, semicolon, whitepsace, and allow multiple groups like (a)(b)
+              let i = valStart
+              const end = valEnd
+              while (i < end) {
+                const ch = text.charAt(i)
+                if (ch === '(') {
+                  // enter group: scan until matching ')' and parse numbers inside
+                  let depth = 0
+                  const gStart = i + 1
+                  let gEnd = -1
+                  for (let k = i; k < end; k++) {
+                    const c = text.charAt(k)
+                    if (c === '(') depth++
+                    else if (c === ')') {
+                      depth--
+                      if (depth === 0) {
+                        gEnd = k
+                        break
+                      }
+                    } else if (c === '"' || c === "'") {
+                      const q = c
+                      k++
+                      while (k < end) {
+                        const c2 = text.charAt(k)
+                        if (c2 === '\\') {
+                          k += 2
+                          continue
+                        }
+                        if (c2 === q) break
+                        k++
+                      }
+                    }
+                  }
+                  if (gEnd === -1) {
+                    // unterminated group: stop scanning
+                    break
+                  }
+                  // scan numbers inside [gStart, gEnd]
+                  let j = gStart
+                  while (j < gEnd) {
+                    // skip whitespace and separators
+                    while (j < gEnd && /[,\s;]/.test(text.charAt(j))) j++
+                    if (j >= gEnd) break
+                    const numS = j
+                    let seenNum = false
+                    while (j < gEnd && /[0-9+\-.eE]/.test(text.charAt(j))) {
+                      seenNum = true
+                      j++
+                    }
+                    const numE = j
+                    if (seenNum && numE > numS) {
+                      queueToken(numS, numE, tokIdx)
+                    } else {
+                      // skip non-number char
+                      j++
+                    }
+                  }
+                  // advance i after this group
+                  i = gEnd + 1
+                  continue
+                }
+                // skip anything outside groups (commas, spaces, etc.)
+                i++
+              }
+            } else {
+              // default: emit whole value range
+              queueToken(valStart, valEnd, tokIdx)
+            }
           }
         }
       }
