@@ -72,16 +72,15 @@ export function provideSemanticTokensForDocument(
         if (inBlock) {
           if (ch === '*' && next === '/') {
             const end = i + 2
-            // find last pushed block start and replace its end (or push now)
+            // close the last opened block comment only if it is still open
             const last =
               commentRanges.length > 0
                 ? commentRanges[commentRanges.length - 1]
                 : undefined
             if (last && last.end === undefined) {
               last.end = end
-            } else {
-              commentRanges.push({ start: Math.max(0, i - 1), end })
             }
+            // if there is no open block comment, ignore stray '*/'
             inBlock = false
             i += 2
             continue
