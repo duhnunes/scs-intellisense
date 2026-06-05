@@ -17,6 +17,8 @@ export function parseAttributes(
   bodyStartOffset: number,
   className: string
 ): ParsedAttribute[] {
+  void className
+
   const lines = body.split(/\r?\n/)
   const attrs: ParsedAttribute[] = []
   let cursor = 0
@@ -93,7 +95,7 @@ export function parseAttributes(
     // compute valueEnd
     // - if value starts with quote, find closing quote (respecting escapes) on same line
     // - otherwise, value ends at first inline comment or at first whitespace after token
-    let valueEnd = valueStart
+    let valueEnd: number
     const relValueStartInLine = colonIndex + 1 + leadingSpaces
     if (relValueStartInLine < line.length) {
       const firstChar = line[relValueStartInLine]
