@@ -309,8 +309,15 @@ export function provideSemanticTokensForDocument(
             return 'float'
           // fixed  - decimal float: 1.0
           if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(v)) return 'float'
-          // token
-          if (/^[a-z0-9_.]+$/.test(v)) return 'token'
+          // owner_ptr (leading dot) and link_ptr/token (withou leading dot)
+          // owner_ptr: .some.nameless.unit
+          if (/^\.[a-z0-9_.]+$/.test(v)) return 'owner_ptr'
+          // link pointer or token: some.named.unit or simple tokenn
+          if (/^[a-z0-9_.]+$/.test(v)) {
+            // prefer link_ptr when contains a dot (named unit), otherwise token
+            if (v.includes('.')) return 'link_ptr'
+            return 'token'
+          }
           return 'string'
         }
 
@@ -484,9 +491,26 @@ export function provideSemanticTokensForDocument(
                 // skip anything outside groups (commas, spaces, etc.)
                 i++
               }
-            } else if (!raw.startsWith('(')) {
-              // default: emit whole value range
-              queueToken(valStart, valEnd, tokIdx)
+            } else {
+              // If this is a token/owner ptr/link_ptr (mapped to 'method'), emit only
+              // the alphanumeric/underscore segments and skip dots.
+              const methodTokenIdx = tokenTypes.indexOf('method')
+              if (tokIdx === methodTokenIdx) {
+                // scan from valStart to valEnd and emit only [a-z0-9_]+ spans
+                let p = valStart
+                while (p < valEnd) {
+                  // skip non-token chars (dots, spaces, quotes, etc.)
+                  while (p < valEnd && !/[a-z0-9_]/.test(text.charAt(p))) p++
+                  if (p >= valEnd) break
+                  const s = p
+                  while (p < valEnd && /[a-z0-9_]/.test(text.charAt(p))) p++
+                  const e = p
+                  // emit only when we actually consumed at least one char
+                  if (e > s) queueToken(s, e, methodTokenIdx)
+                }
+              } else {
+                queueToken(valStart, valEnd, tokIdx)
+              }
             }
           }
         }
