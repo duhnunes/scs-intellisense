@@ -389,7 +389,19 @@ export function provideSemanticTokensForDocument(
 
     tokensToEmit.sort((a, b) => {
       if (a.start !== b.start) return a.start - b.start
-      return a.end - b.end
+      if (a.end !== b.end) return a.end - b.end
+      // If same span, prefer non-comment tokens first, comment tokens last
+      if (
+        a.tokenTypeIndex === commentTokenIdx &&
+        b.tokenTypeIndex !== commentTokenIdx
+      )
+        return 1
+      if (
+        b.tokenTypeIndex === commentTokenIdx &&
+        a.tokenTypeIndex !== commentTokenIdx
+      )
+        return -1
+      return a.tokenTypeIndex - b.tokenTypeIndex
     })
 
     for (const te of tokensToEmit) {

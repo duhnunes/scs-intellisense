@@ -77,7 +77,15 @@ export function parseAttributes(
     const key = keyRaw.trim()
 
     const keyStart = lineStartInDoc + line.indexOf(key)
-    const keyEnd = keyStart + key.length
+    let keyEnd = keyStart + key.length
+    const relKeyEndInline = line.indexOf(key) + key.length
+    const postKey = line.slice(relKeyEndInline)
+    const bracketMatch = postKey.match(/^\s*\[\s*\]/)
+    let isArrayKey = false
+    if (bracketMatch) {
+      keyEnd += bracketMatch[0].length
+      isArrayKey = true
+    }
 
     // compute valueStart absolute
     const valueStart = lineStartInDoc + colonIndex + 1 + leadingSpaces
@@ -149,7 +157,7 @@ export function parseAttributes(
       keyRange: { start: keyStart, end: keyEnd },
       valueRange: { start: valueStart, end: valueEnd },
       arrayElementType: undefined,
-      isArray: false,
+      isArray: isArrayKey,
       description: '',
     })
   }
