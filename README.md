@@ -7,8 +7,8 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="badge license" />
-<img src="https://img.shields.io/badge/vscode-compatible-blue?style=flat" alt="vscode" />
+<img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="badge license" />
+<a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?style=for-the-badge" alt="build released" /></a>  
 
 </div>
 
@@ -31,7 +31,7 @@
 
 - **SiiNunit** - The **magic marker** that identifies a plain-text `.sii` file. It appears at the top of the file and marks the file as a serialized unit file.
 - **class_name** - The **unit type of class** being defined; it indicates the schema or category of the unit (for example `prefab_model`, `model_def`). It appears before the colon in the unit header.
-- **unit_name** - The **unique name** of the unit: a sequence of tokens separated by dots (e.g., `mod.namespace.item`). Use unique names per mod to avoid collisions. Anonymous units may use a leading dot.
+- **unit.name** - The **unique name** of the unit: a sequence of tokens separated by dots (e.g., `mod.namespace.item`). Use unique names per mod to avoid collisions. Anonymous units may use a leading dot.
 - **attribute** - The **property name** inside a unit block; an attribute is a **key + value** pair that holds the unit data.
 - **key** - The **attribute name** that identifies the property (e.g. `name` in `name: "Truck"`).
 - **value** - The **attribute value**. Value can be **strings**, **numbers**, **booleans**, **unit references**, **vectors (tuples)**, or other engine-specific formats. Use quotes for strings and parentheses for vectors.
@@ -41,8 +41,9 @@
 
 - **Semantic highlighting** for `.sii` and `.sui` files
 <!-- - **Completions** for class names, attributes and values (context-aware) -->
-- **`@include` directive**: recognized as a special key (no `:`)
+<!-- - **`@include` directive**: recognized as a special key (no `:`) -->
 - **Comment support**: `//`, `#` and `/* ... */`
+- **Icon** for each files `.sii` and `.sui`
 - **Auto-close brackets** for `{}`, `()`, `[]`
 
 

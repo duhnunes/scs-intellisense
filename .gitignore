@@ -6,3 +6,4 @@ apps/client/README.md
 /release/
 TODO.md
 .env
+*.psd
