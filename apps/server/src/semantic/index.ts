@@ -271,10 +271,22 @@ export function provideSemanticTokensForDocument(
               .split(',')
               .map((p) => p.trim())
               .filter(Boolean)
+            const ishexElement = (p: string) =>
+              /^&[0-9a-fA-F]{8}$/.test(p) || /^&[0-9a-fA-F]+$/.test(p)
+            const allHexOrFloatLike = parts.every(
+              (p) => ishexElement(p) || /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(p)
+            )
             const allFloatLike = parts.every((p) =>
               /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(p)
             )
             const allIntLike = parts.every((p) => /^-?\d+$/.test(p))
+
+            if (allHexOrFloatLike) {
+              if (parts.length === 2) return 'float2'
+              if (parts.length === 3) return 'float3'
+              if (parts.length === 4) return 'float4'
+              return 'float'
+            }
             if (allFloatLike) {
               if (parts.length === 2) return 'float2'
               if (parts.length === 3) return 'float3'
@@ -292,7 +304,10 @@ export function provideSemanticTokensForDocument(
             }
             return 'string'
           }
-          // fixed
+          // IEEE754 hex float: &3f800000 (common form) or &<hex+>
+          if (/^&[0-9a-fA-F]{8}$/.test(v) || /^&[0-9a-fA-F]+$/.test(v))
+            return 'float'
+          // fixed  - decimal float: 1.0
           if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(v)) return 'float'
           // token
           if (/^[a-z0-9_.]+$/.test(v)) return 'token'
@@ -427,10 +442,9 @@ export function provideSemanticTokensForDocument(
                       }
                     }
                   }
-                  if (gEnd === -1) {
-                    // unterminated group: stop scanning
-                    break
-                  }
+                  // unterminated group: stop scanning
+                  if (gEnd === -1) break
+
                   // scan numbers inside [gStart, gEnd]
                   let j = gStart
                   while (j < gEnd) {
@@ -439,9 +453,21 @@ export function provideSemanticTokensForDocument(
                     if (j >= gEnd) break
                     const numS = j
                     let seenNum = false
-                    while (j < gEnd && /[0-9+\-.eE]/.test(text.charAt(j))) {
-                      seenNum = true
-                      j++
+                    // If strats with '&', consume hex digits (IEEE hex float)
+                    if (j < gEnd && text.charAt(j) === '&') {
+                      let k = j + 1
+                      // consume 1+ hex digits (prefer 8 but accept variable length)
+                      while (k < gEnd && /[0-9a-fA-F]/.test(text.charAt(k))) k++
+                      if (k > j + 1) {
+                        seenNum = true
+                        j = k
+                      }
+                    } else {
+                      // decimal/float with optional sign and exponent
+                      while (j < gEnd && /[0-9+\-.eE]/.test(text.charAt(j))) {
+                        seenNum = true
+                        j++
+                      }
                     }
                     const numE = j
                     if (seenNum && numE > numS) {
@@ -458,7 +484,7 @@ export function provideSemanticTokensForDocument(
                 // skip anything outside groups (commas, spaces, etc.)
                 i++
               }
-            } else {
+            } else if (!raw.startsWith('(')) {
               // default: emit whole value range
               queueToken(valStart, valEnd, tokIdx)
             }
