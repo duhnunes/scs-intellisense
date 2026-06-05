@@ -7,8 +7,8 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="badge license" />
-<a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?style=for-the-badge" alt="build released" /></a>  
+<a href="./LICENSE.md" alt="license"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="badge license" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="build released" /></a>  
 
 </div>
 
