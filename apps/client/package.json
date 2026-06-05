@@ -36,6 +36,46 @@
   "capabilities": {
     "virtualWorkspaces": false
   },
+  "scripts": {
+    "vscode:prepublish": "pnpm run package",
+    "compile": "pnpm run check-types && pnpm run lint && node esbuild.cjs",
+    "package": "pnpm run check-types && pnpm run lint && node esbuild.cjs --production",
+    "build": "pnpm i && pnpm run check-types && pnpm run lint && node esbuild.cjs",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.cjs --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "vsce:package": "vsce package && node ../../scripts/release-artifact-manager.mjs",
+    "vsce:publish": "vsce publish",
+    "release": "release-it"
+  },
+  "devDependencies": {
+    "@scs-int/eslint-config": "workspace:^",
+    "@scs-int/ts-config": "workspace:*",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.9.1",
+    "@types/vscode": "^1.118.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.27.3",
+    "eslint": "^9.39.3",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "vsce": {
+    "dependencies": false
+  },
+  "release-it": {
+    "git": false,
+    "npm": {
+      "publish": false
+    }
+  },
   "contributes": {
     "languages": [
       {
@@ -87,46 +127,6 @@
           "markdownDescription": "Enable/disable semantic highlighting"
         }
       }
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "pnpm run package",
-    "compile": "pnpm run check-types && pnpm run lint && node esbuild.cjs",
-    "package": "pnpm run check-types && pnpm run lint && node esbuild.cjs --production",
-    "build": "pnpm i && pnpm run check-types && pnpm run lint && node esbuild.cjs",
-    "watch": "npm-run-all -p watch:*",
-    "watch:esbuild": "node esbuild.cjs --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "check-types": "tsc --noEmit",
-    "lint": "eslint src",
-    "vsce:package": "vsce package && node ../../scripts/release-artifact-manager.mjs",
-    "vsce:publish": "vsce publish",
-    "release": "release-it"
-  },
-  "devDependencies": {
-    "@scs-int/eslint-config": "workspace:^",
-    "@scs-int/ts-config": "workspace:*",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "^25.9.1",
-    "@types/vscode": "^1.118.0",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2",
-    "esbuild": "^0.27.3",
-    "eslint": "^9.39.3",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.1"
-  },
-  "dependencies": {
-    "vscode-languageclient": "^9.0.1"
-  },
-  "vsce": {
-    "dependencies": false
-  },
-  "release-it": {
-    "git": false,
-    "npm": {
-      "publish": false
     }
   }
 }
