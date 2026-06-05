@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/duhnunes/scs-intellisense/compare/0.1.0...0.1.1) (2026-06-05)
+
+### Bug Fixes
+
+* **parser:** remove redundant initial assignment for valueEnd in attribute parser ([de0e143](https://github.com/duhnunes/scs-intellisense/commit/de0e14340e9e2b2bd618ef94d8c0c02645b3a66b))
+* **semantic-highlighting:** correct block comment detectionn for /* ... */ ([c22959d](https://github.com/duhnunes/scs-intellisense/commit/c22959d34b0a5ab95dfced5599e940d68aad478c))
+* **semantic-highlighting:** include array brackets in keyRange and prefer comment tokens ([1a7c2d3](https://github.com/duhnunes/scs-intellisense/commit/1a7c2d360d6145aea1726043148f2a9610166355))
+
 ## 0.1.0 (2026-06-04)
 
 ### Features
