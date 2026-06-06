@@ -51,11 +51,12 @@
     },
     "plugins": {
       "@release-it/bumper": {
-        "files": [
+        "out": [
           "package.json",
-          "apps/*/package.json"
+          "apps/client/package.json",
+          "apps/server/package.json"
         ],
-        "updateVersion": true
+        "path": "version"
       },
       "@release-it/conventional-changelog": {
         "infile": "CHANGELOG.md",
