@@ -50,6 +50,9 @@
     "npm": {
       "publish": false
     },
+    "hooks": {
+      "after:bump": "pnpm --filter ./apps/client run vsce:package"
+    },
     "plugins": {
       "@release-it/bumper": {
         "out": ["apps/client/package.json", "apps/server/package.json"]
