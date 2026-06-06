@@ -70,7 +70,9 @@
   "vsce": {
     "dependencies": false
   },
-  "git": false,
+  "release-it": {
+    "git": false
+  },
   "contributes": {
     "languages": [
       {
