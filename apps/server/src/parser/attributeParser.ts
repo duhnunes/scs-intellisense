@@ -19,7 +19,10 @@ export function parseAttributes(
 ): ParsedAttribute[] {
   void className
 
-  const lines = body.split(/\r?\n/)
+  const bodyMasked = body.replace(/\/\*[\s\S]*?\*\//g, (m) =>
+    m.replace(/[^\n]/g, ' ')
+  )
+  const lines = bodyMasked.split(/\r?\n/)
   const attrs: ParsedAttribute[] = []
   let cursor = 0
   for (const rawLine of lines) {

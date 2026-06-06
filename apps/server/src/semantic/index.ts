@@ -63,45 +63,46 @@ export function provideSemanticTokensForDocument(
       const len = text.length
       let inSingle = false
       let inDouble = false
-      let inBlock = false
+      let blockDepth = 0
 
       while (i < len) {
-        const ch = text[i]
-        const next = i + 1 < len ? text[i + 1] : ''
+        const ch = text.charAt(i)
+        const next = i + 1 < len ? text.charAt(i + 1) : ''
 
-        if (inBlock) {
+        // handle closing of block comment first (when inside any block depth)
+        if (blockDepth > 0) {
           if (ch === '*' && next === '/') {
             const end = i + 2
-            // close the last opened block comment only if it is still open
-            const last =
-              commentRanges.length > 0
-                ? commentRanges[commentRanges.length - 1]
-                : undefined
-            if (last && last.end === undefined) {
-              last.end = end
+            // close the last opened block comment only when depth reaches 0
+            blockDepth--
+            if (blockDepth === 0) {
+              const last =
+                commentRanges.length > 0
+                  ? commentRanges[commentRanges.length - 1]
+                  : undefined
+              if (last && last.end === undefined) {
+                last.end = end
+              }
             }
-            // if there is no open block comment, ignore stray '*/'
-            inBlock = false
             i += 2
             continue
           }
           i++
           continue
         }
-
-        // handle string toggles (respect escapes)
-        if (!inSingle && ch === '"' && text[i - 1] !== '\\') {
+        // handle string toogles (respect escapes) only when not inside block comment
+        if (!inSingle && ch === '"' && text.charAt(i - 1) !== '\\') {
           inDouble = !inDouble
           i++
           continue
         }
-        if (!inDouble && ch === "'" && text[i - 1] !== '\\') {
+        if (!inDouble && ch === "'" && text.charAt(i - 1) !== '\\') {
           inSingle = !inSingle
           i++
           continue
         }
 
-        // if inside any string, skip comment detection
+        // If inside any string, skip comment detection
         if (inSingle || inDouble) {
           i++
           continue
@@ -111,7 +112,7 @@ export function provideSemanticTokensForDocument(
         if (ch === '/' && next === '/') {
           const start = i
           i += 2
-          while (i < len && text[i] !== '\n') i++
+          while (i < len && text.charAt(i) !== '\n') i++
           const end = i
           commentRanges.push({ start, end })
           continue
@@ -120,9 +121,10 @@ export function provideSemanticTokensForDocument(
         // block comment /*
         if (ch === '/' && next === '*') {
           const start = i
-          inBlock = true
-          // push start with temporary end; will be closed when '*/' found
-          commentRanges.push({ start })
+          blockDepth++
+          if (blockDepth === 1) {
+            commentRanges.push({ start })
+          }
           i += 2
           continue
         }
@@ -131,7 +133,7 @@ export function provideSemanticTokensForDocument(
         if (ch === '#') {
           const start = i
           i++
-          while (i < len && text[i] !== '\n') i++
+          while (i < len && text.charAt(i) !== '\n') i++
           const end = i
           commentRanges.push({ start, end })
           continue
