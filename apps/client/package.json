@@ -71,7 +71,10 @@
     "dependencies": false
   },
   "release-it": {
-    "git": false
+    "git": false,
+    "npm": {
+      "publish": false
+    }
   },
   "contributes": {
     "languages": [
