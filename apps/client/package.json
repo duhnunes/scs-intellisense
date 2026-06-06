@@ -47,7 +47,8 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
     "vsce:package": "vsce package && node ../../scripts/release-artifact-manager.mjs",
-    "vsce:publish": "vsce publish"
+    "vsce:publish": "vsce publish",
+    "release": "release-it"
   },
   "devDependencies": {
     "@scs-int/eslint-config": "workspace:^",
@@ -68,6 +69,12 @@
   },
   "vsce": {
     "dependencies": false
+  },
+  "github": {
+    "release": true
+  },
+  "npm": {
+    "publish": false
   },
   "contributes": {
     "languages": [
