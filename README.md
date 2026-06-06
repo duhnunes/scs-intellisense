@@ -1,14 +1,14 @@
 <h3 align="center">
 
 <img src="./apps/client/public/icon.png" width="200" alt="Logo" />  
-<p> SCS Intellisense extension for <a href="https://code.visualstudio.com">VSCode</a></p>
+<p> SCS Intellisense extension for <a href="https://code.visualstudio.com" target="_blank" rel="noopener noreferrer" style="color:#FF6A00;">VSCode</a></p>
 
 </h3>
 
 <div align="center">
 
-<a href="./LICENSE.md" alt="license"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="badge license" /></a>
-<a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="build released" /></a>  
+<a href="./LICENSE.md" alt="license" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/license-MIT-FF6A00?style=for-the-badge" alt="badge license" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="build released" /></a>  
 
 </div>
 
