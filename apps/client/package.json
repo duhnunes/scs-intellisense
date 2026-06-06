@@ -71,9 +71,6 @@
     "dependencies": false
   },
   "git": false,
-  "npm": {
-    "publish": false
-  },
   "contributes": {
     "languages": [
       {
