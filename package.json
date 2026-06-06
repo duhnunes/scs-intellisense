@@ -52,10 +52,7 @@
     },
     "plugins": {
       "@release-it/bumper": {
-        "out": {
-          "file": "package.json",
-          "path": ["apps/client/package.json", "apps/server/package.json"]
-        }
+        "out": ["apps/client/package.json", "apps/server/package.json"]
       },
       "@release-it/conventional-changelog": {
         "infile": "CHANGELOG.md",
