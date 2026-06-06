@@ -7,8 +7,7 @@
     "build": "pnpm i && pnpm run check-types && node esbuild.cjs",
     "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix",
     "lint:check": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --mx-wrnings=0",
-    "check-types": "tsc --noEmit",
-    "release": "release-it"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "vscode-languageserver": "^9.0.1",
