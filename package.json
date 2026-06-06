@@ -60,8 +60,8 @@
         "infile": "CHANGELOG.md",
         "header": "v${version}",
         "writerOpts": {
-        "headerPartial": "## [{{version}}] ({{date}})\n{{#if compareLink}}{{compareLink}}{{else}}{{#if repository.url}}[compare changes]({{repository.url}}/compare/{{previousTag}}...{{currentTag}}){{/if}}{{/if}}\n"
-      },
+          "headerPartial": "## [{{version}}] ({{date}})\n{{isPatch}}\n"
+        },
         "preset": {
           "name": "conventionalcommits",
           "types": [
