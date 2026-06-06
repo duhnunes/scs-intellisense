@@ -70,9 +70,7 @@
   "vsce": {
     "dependencies": false
   },
-  "github": {
-    "release": true
-  },
+  "git": false,
   "npm": {
     "publish": false
   },
