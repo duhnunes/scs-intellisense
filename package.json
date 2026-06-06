@@ -57,7 +57,7 @@
       "@release-it/conventional-changelog": {
         "infile": "CHANGELOG.md",
         "header": "# ChangeLOG",
-        "writeopts": {
+        "writerOpts": {
           "headerPartial": "## [{{version}}] ({{date}})\n[compare changes]({{compareUrl}})\n"
         },
         "preset": {
