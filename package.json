@@ -16,7 +16,7 @@
     "compile": "pnpm run build && pnpm run package:client",
     "release:workspaces": "pnpm --filter ./apps/server run release && pnpm --filter ./apps/client run release",
     "releaseall": "pnpm run release:workspaces && pnpm run vsce:package && release-it && pnpm run vsce:publish",
-    "release": "pnpm run vsce:package && release-it",
+    "release": "pnpm release-it && pnpm run vsce:package",
     "vsce:package": "pnpm --filter ./apps/client run vsce:package",
     "vsce:publish": "pnpm --filter ./apps/client/ vsce:publish"
   },
@@ -48,7 +48,8 @@
       ]
     },
     "npm": {
-      "publish": false
+      "publish": false,
+      "version": false
     },
     "plugins": {
       "@release-it/bumper": {

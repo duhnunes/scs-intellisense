@@ -69,12 +69,6 @@
   "vsce": {
     "dependencies": false
   },
-  "release-it": {
-    "git": false,
-    "npm": {
-      "publish": false
-    }
-  },
   "contributes": {
     "languages": [
       {
