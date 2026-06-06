@@ -50,6 +50,12 @@
       "publish": false
     },
     "plugins": {
+      "@release-it/bumper": {
+        "out": {
+          "file": "package.json",
+          "path": ["apps/client/", "apps/server/"]
+        }
+      },
       "@release-it/conventional-changelog": {
         "infile": "CHANGELOG.md",
         "preset": {
