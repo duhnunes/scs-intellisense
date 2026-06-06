@@ -57,7 +57,8 @@
           "package.json",
           "apps/client/package.json",
           "apps/server/package.json"
-        ]
+        ],
+        "dependencies": true
       },
       "@release-it/conventional-changelog": {
         "infile": "CHANGELOG.md",
