@@ -36,10 +36,12 @@
   "release-it": {
     "git": {
       "requireCleanWorkingDir": false,
-      "commitMessage": "chore: release v${version}"
+      "commitMessage": "chore: release v${version}",
+      "tagName": "v${version}"
     },
     "github": {
       "release": true,
+      "releaseName": "v${version}",
       "assets": [
         "./release/latest/*.vsix"
       ]
@@ -58,7 +60,7 @@
         "infile": "CHANGELOG.md",
         "header": "v${version}",
         "writerOpts": {
-          "headerPartial": "## [{{version}}] ({{date}})\n[compare changes]({{compareLink}})\n"
+          "headerPartial": "## [{{version}}] ({{date}})\n{{compareLink}}\n"
         },
         "preset": {
           "name": "conventionalcommits",
