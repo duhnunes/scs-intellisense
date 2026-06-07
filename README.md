@@ -1,6 +1,6 @@
 <div align="center">
   <img src="./apps/client/public/icon.png" width="200" alt="Logo" />  
-  <h3> SCS Intellisense extension for <a href="https://code.visualstudio.com" target="_blank" rel="noopener noreferrer" align="right"><img src="./.github/imgs/links/VSCode.svg" style="width:15%;" alt="header" /></a></h3>
+  <h3> SCS Intellisense extension for <a href="https://code.visualstudio.com" target="_blank" rel="noopener noreferrer" align="right"><img src="./.github/imgs/links/vscode.svg" style="width:10%;" alt="VSCode link" /></a></h3>
 </div>
 
 <div align="center">
@@ -10,19 +10,17 @@
 
 ## About
 
-**SCS Intellisense** provides semantic highlighting <!-- and completions --> for <a href="https://www.scssoft.com/" target="_blank" rel="noopener noreferrer">SCS Software</a> data files (`.sii`, `.sui`). It improves readability and speeds up editing by offering:  
+**SCS Intellisense** provides semantic highlighting <!-- and completions --> for <a href="https://www.scssoft.com/" target="_blank" rel="noopener noreferrer"><img src="./.github/imgs/links/scssoftware.svg" style="width:12%;" alt="SCS Software link" /></a> data files (`.sii`, `.sui`). It improves readability and speeds up editing by offering:  
 - Semantic token coloring for MagicMark, Classes, Attributes (Key and Values), strings, numbers, booleans and comments;
 - Auto-Close brackets;
 <!-- - Context-aware completions for class attributes and values;
 - Snippets for common constructs and directives; -->
 
 ### Sii Extructure
-> The structure is built as originally described in the <a href="https://modding.scssoft.com/wiki/Documentation/Engine/Units#Unit_definition_entry" target="_blank" rel="noopener noreferrer">documentation</a>.
+> The structure is built as originally described in the <a href="https://modding.scssoft.com/wiki/Documentation/Engine/Units#Unit_definition_entry" target="_blank" rel="noopener noreferrer"><img src="./.github/imgs/links/docummentation.svg" style="width:16%;" alt="SCS Documentation about Unit Definition Entry" /></a>.
 
 <div align="center">
-
-<img src="./.github/imgs/sii_file_diagram.png" alt="diagram" />
-
+  <img src="./.github/imgs/sii_file_diagram.png" alt="diagram" />
 </div>
 
 - **SiiNunit** - The **magic marker** that identifies a plain-text `.sii` file. It appears at the top of the file and marks the file as a serialized unit file.
@@ -62,6 +60,6 @@
 
 ## License
 
-Licensed under the [MIT](./LICENSE.md)
+Licensed under the <a href="./LICENSE.md"><img src="./.github/imgs/links/mit.svg" style="width:4%;" alt="License Doc" /></a>
 
 **Enjoy**
