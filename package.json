@@ -1,6 +1,6 @@
 {
   "name": "scs-intellisense-root",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -54,7 +54,10 @@
     },
     "plugins": {
       "@release-it/bumper": {
-        "out": ["apps/client/package.json", "apps/server/package.json"]
+        "out": [
+          "apps/client/package.json",
+          "apps/server/package.json"
+        ]
       },
       "@release-it/conventional-changelog": {
         "infile": "CHANGELOG.md",
