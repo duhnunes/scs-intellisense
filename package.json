@@ -58,9 +58,6 @@
       },
       "@release-it/conventional-changelog": {
         "infile": "CHANGELOG.md",
-        "writerOpts": {
-          "headerPartial": "## [{{version}}] ({{date}})\n[compare changes]({{linkCompare}})\n"
-        },
         "preset": {
           "name": "conventionalcommits",
           "types": [
