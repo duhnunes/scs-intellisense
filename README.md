@@ -1,23 +1,24 @@
 <div align="center">
   <img src="./apps/client/public/icon.png" width="200" alt="Logo" />  
-  <h3> SCS Intellisense extension for <a href="https://code.visualstudio.com" target="_blank" rel="noopener noreferrer" align="right"><img src="./.github/imgs/links/vscode.svg" style="width:10%;" alt="VSCode link" /></a></h3>
+  <h3> SCS Intellisense extension for <a href="https://code.visualstudio.com"><img src="./.github/imgs/links/vscode.svg" style="width:10%;" alt="VSCode link" /></a></h3>
 </div>
 
 <div align="center">
-  <a href="./LICENSE.md" alt="license" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/license-MIT-FF6A00?style=for-the-badge" alt="badge license" /></a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="build released" /></a>
+  <a href="./LICENSE.md" alt="license"><img src="https://img.shields.io/badge/license-MIT-FF6A00?style=for-the-badge" alt="badge license" /></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="build released" /></a>
 </div>
 
 ## About
 
-**SCS Intellisense** provides semantic highlighting <!-- and completions --> for <a href="https://www.scssoft.com/" target="_blank" rel="noopener noreferrer"><img src="./.github/imgs/links/scssoftware.svg" style="width:12%;" alt="SCS Software link" /></a> data files (`.sii`, `.sui`). It improves readability and speeds up editing by offering:  
-- Semantic token coloring for MagicMark, Classes, Attributes (Key and Values), strings, numbers, booleans and comments;
-- Auto-Close brackets;
+**SCS Intellisense** makes VSCode smarter for <a href="https://www.scssoft.com/"><img src="./.github/imgs/links/scssoftware.svg" style="width:12%;" alt="SCS Software link" /></a> files. It improves readability and speeds up editing by offering:  
+- Semantic highlighting token to coloring for MagicMark, Classes, Attributes and Comments
+- Each Value type have your semantic color: `string`, `number`, `boolean`, `token` and `@include` directive
+- Auto-Close brackets
 <!-- - Context-aware completions for class attributes and values;
 - Snippets for common constructs and directives; -->
 
 ### Sii Extructure
-> The structure is built as originally described in the <a href="https://modding.scssoft.com/wiki/Documentation/Engine/Units#Unit_definition_entry" target="_blank" rel="noopener noreferrer"><img src="./.github/imgs/links/docummentation.svg" style="width:16%;" alt="SCS Documentation about Unit Definition Entry" /></a>.
+> The structure is built as originally described in the <a href="https://modding.scssoft.com/wiki/Documentation/Engine/Units#Unit_definition_entry"><img src="./.github/imgs/links/docummentation.svg" style="width:16%;" alt="SCS Documentation about Unit Definition Entry" /></a>.
 
 <div align="center">
   <img src="./.github/imgs/sii_file_diagram.png" alt="diagram" />
@@ -30,14 +31,12 @@
 - **key** - The **attribute name** that identifies the property (e.g. `name` in `name: "Truck"`).
 - **value** - The **attribute value**. Value can be **strings**, **numbers**, **booleans**, **unit references**, **vectors (tuples)**, or other engine-specific formats. Use quotes for strings and parentheses for vectors.
 
-
 ## Features
 
-- **Semantic highlighting** for `.sii` and `.sui` files
+- **Semantic highlighting**
 <!-- - **Completions** for class names, attributes and values (context-aware) -->
 <!-- - **`@include` directive**: recognized as a special key (no `:`) -->
-- **Comment support**: `//`, `#` and `/* ... */`
-- **Icon** for each files `.sii` and `.sui`
+- **Icon** for each files
 - **Auto-close brackets** for `{}`, `()`, `[]`
 
 
