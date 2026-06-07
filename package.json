@@ -61,6 +61,9 @@
       },
       "@release-it/conventional-changelog": {
         "infile": "CHANGELOG.md",
+        "writerOpts": {
+          "headerPartial": "## [{{version}}] ({{date}})\n [compare changes](https://github.com/duhnunes/scs-intellisense/compare/{{previusTag}}...{{currentTag}})"
+        },
         "preset": {
           "name": "conventionalcommits",
           "types": [
