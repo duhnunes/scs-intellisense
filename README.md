@@ -14,8 +14,6 @@
 - Semantic highlighting token to coloring for MagicMark, Classes, Attributes and Comments
 - Each Value type have your semantic color: `string`, `number`, `boolean`, `token` and `@include` directive
 - Auto-Close brackets
-<!-- - Context-aware completions for class attributes and values;
-- Snippets for common constructs and directives; -->
 
 ### Sii Extructure
 > The structure is built as originally described in the <a href="https://modding.scssoft.com/wiki/Documentation/Engine/Units#Unit_definition_entry"><img src="./.github/imgs/links/docummentation.svg" style="width:16%;" alt="SCS Documentation about Unit Definition Entry" /></a>.
@@ -34,8 +32,6 @@
 ## Features
 
 - **Semantic highlighting**
-<!-- - **Completions** for class names, attributes and values (context-aware) -->
-<!-- - **`@include` directive**: recognized as a special key (no `:`) -->
 - **Icon** for each files
 - **Auto-close brackets** for `{}`, `()`, `[]`
 

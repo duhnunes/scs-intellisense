@@ -1,8 +1,8 @@
 ---
 name: "🐛 Bug Report"
 about: Report a reproducible bug or regression.
-title: 'Bug: '
-labels: 'Type: Bug'
+title: '[Bug]: '
+labels: 'bug'
 
 ---
 
@@ -21,7 +21,7 @@ Extension: `latest` <!-- Keep "latest" if you haven't updated the extension yet.
 2.
 
 <!-- 
-  Your bug will get fixed much faster if we can run your code and it doesn't have dependencies other than React. Issues without reproduction steps or code examples may be immediately closed as not actionable.
+  Your bug will get fixed much faster if we can reproduce your error. Issues without reproduction steps or screenshot may be immediately closed as not actionable.
 -->
 
 ## Screenshot:
