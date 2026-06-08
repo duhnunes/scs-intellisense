@@ -37,11 +37,11 @@
     "git": {
       "requireCleanWorkingDir": false,
       "commitMessage": "chore: release v${version}",
-      "tagName": "v${version}"
+      "tagName": "${version}"
     },
     "github": {
       "release": true,
-      "releaseName": "v${version}",
+      "releaseName": "v${version} - ${date}",
       "assets": [
         "./release/latest/*.vsix"
       ]
@@ -62,7 +62,7 @@
       "@release-it/conventional-changelog": {
         "infile": "CHANGELOG.md",
         "writerOpts": {
-          "headerPartial": "## [{{version}}] ({{date}})\n [compare changes](https://github.com/duhnunes/scs-intellisense/compare/{{previousTag}}...{{currentTag}})"
+          "headerPartial": "[compare changes](https://github.com/duhnunes/scs-intellisense/compare/{{previousTag}}...{{currentTag}})"
         },
         "preset": {
           "name": "conventionalcommits",
