@@ -9,9 +9,6 @@ labels: 'bug'
 <!-- 
   Please provide a clear and concise description of what the bug is. Include screenshots if needed.
 -->
-VSCode: `X.Y.Z`
-Extension: `latest` <!-- Keep "latest" if you haven't updated the extension yet. -->
-
 ## The current behavior
 
 
