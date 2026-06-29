@@ -115,12 +115,12 @@
     "commands": [
       {
         "command": "scsIntellisense.showOutput",
-        "title": "SCS Intellisense: Show Output",
+        "title": "Show Output",
         "category": "SCS Intellisense"
       },
       {
         "command": "scsIntellisense.clearOutput",
-        "title": "SCS Intellisense: Clear Output",
+        "title": "Clear Output",
         "category": "SCS Intellisense"
       }
     ],
