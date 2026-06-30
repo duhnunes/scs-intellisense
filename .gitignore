@@ -7,3 +7,4 @@ apps/client/README.md
 TODO.md
 .env
 *.psd
+!apps/client/public/extensions/icon.psd
