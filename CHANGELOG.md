@@ -1,5 +1,14 @@
 # Changelog
 
+[compare changes](https://github.com/duhnunes/scs-intellisense/compare/v0.2.0...0.3.0)
+### Features
+
+* **parser:** add ValidationError with precise diagnostics for class header parsing ([aeb2336](https://github.com/duhnunes/scs-intellisense/commit/aeb233681175279d5c3e4d93d402a251b712afea))
+
+### Bug Fixes
+
+* **parser:** enforce colon between className nd unitName ([bd90e1b](https://github.com/duhnunes/scs-intellisense/commit/bd90e1b1660a189b1b11f053c112169c08114206))
+
 ## [0.2.0](https://github.com/duhnunes/scs-intellisense/compare/0.1.1...v0.2.0) (2026-06-07)
 
 ### Features
