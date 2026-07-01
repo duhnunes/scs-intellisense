@@ -1,5 +1,7 @@
 # Changelog
 
+[compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.3.0...0.3.1)
+
 [compare changes](https://github.com/duhnunes/scs-intellisense/compare/v0.2.0...0.3.0)
 ### Features
 
