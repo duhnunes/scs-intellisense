@@ -67,6 +67,8 @@ export function parseDocument(
         const body = normalized.slice(bodyStart, bodyEnd)
         parseClasses(document, bodyStart, body, classes, diagnostics)
         return { magicMark: 'SiiNunit', classes }
+      } else {
+        return { magicMark: '', classes }
       }
     }
   }
@@ -76,6 +78,8 @@ export function parseDocument(
     return { magicMark: 'document.sui', classes }
   }
 
-  parseClasses(document, 0, normalized, classes, diagnostics)
-  return { magicMark: _mode === 'sii' ? 'document.sii' : 'document', classes }
+  // parseClasses(document, 0, normalized, classes, diagnostics)
+  // return { magicMark: _mode === 'sii' ? 'document.sii' : 'document', classes }
+  console.log(`[scs-intel] unsupported file mode: ${_mode}`)
+  return { magicMark: '', classes }
 }
