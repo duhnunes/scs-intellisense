@@ -50,11 +50,6 @@ export function parseClasses(
     const headerText = text.slice(cursor, braceIndex + 1)
 
     const headerTrimmed = headerText.trimStart()
-    const maybeClass = /^[A-Za-z0-9_.-]+\s*:/.exec(headerTrimmed)
-    if (!maybeClass) {
-      cursor = braceIndex + 1
-      continue
-    }
 
     try {
       const header = parseClassHeader(headerTrimmed, baseOffset + cursor)
