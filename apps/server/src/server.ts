@@ -10,6 +10,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { registerSemantic, semanticTokensLegend } from './semantic'
 import { getLogger, initLogger } from './logger'
+import { validateDocument } from './validation'
 
 const connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments(TextDocument)
@@ -68,6 +69,11 @@ connection.onCompletion((params) => {
     )
     return []
   }
+})
+
+documents.onDidChangeContent((change) => {
+  const diagnostics = validateDocument(change.document)
+  connection.sendDiagnostics({ uri: change.document.uri, diagnostics })
 })
 
 process.on('uncaughtException', (err) => {

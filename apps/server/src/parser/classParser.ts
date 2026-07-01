@@ -1,70 +1,113 @@
+import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver'
+import type { TextDocument } from 'vscode-languageserver-textdocument'
 import type { ParsedAttribute, ParsedClass } from '../interfaces/parser'
 import { parseAttributes } from './attributeParser'
 
-/**
- * parseClassesInto
- * - baseOffset: offset in the document where 'text' begins (to calculate absolute ranges)
- * - text: section to be parsed (this could be the SiiNunit body or the entire document)
- * - classesOut: array where the found classes will be pushed.
- */
+function parseClassHeader(text: string, offset: number) {
+  let i = 0
+  while (i < text.length && /\s/.test(text.charAt(i))) i++
+
+  const classStart = i
+  while (i < text.length && /[A-Za-z0-9_.-]/.test(text.charAt(i))) i++
+  if (i === classStart) throw new Error('Expected className')
+  const className = text.slice(classStart, i)
+
+  while (i < text.length && /\s/.test(text.charAt(i))) i++
+  if (i >= text.length || text[i] !== ':')
+    throw new Error("Expected ':' between className and unitName")
+  i++
+
+  while (i < text.length && /\s/.test(text.charAt(i))) i++
+
+  const unitStart = i
+  while (i < text.length && /[a-z0-9_.]/.test(text.charAt(i))) i++
+  if (i === unitStart) throw new Error('Invalid unitName format')
+  const unitName = text.slice(unitStart, i)
+
+  while (i < text.length && /\s/.test(text.charAt(i))) i++
+  if (text[i] !== '{') throw new Error("Expected '{' after unitName")
+
+  return {
+    className,
+    unitName,
+    bodyStart: offset + i,
+  }
+}
+
 export function parseClasses(
-  documentText: string,
+  document: TextDocument,
   baseOffset: number,
   text: string,
-  classesOut: ParsedClass[]
+  classesOut: ParsedClass[],
+  diagnostics: Diagnostic[]
 ) {
   // Scan to ClassName
-  const classHeaderRegex = /([A-Za-z0-9_.-]+)\s*:\s*([A-Za-z0-9_.-]+)\s*\{/g
-  let match
-  while ((match = classHeaderRegex.exec(text)) !== null) {
-    const [full, className, unitName] = match
-    const headerIndexInText = match.index
-    const headerIndexInDoc = baseOffset + headerIndexInText
+  let cursor = 0
+  while (cursor < text.length) {
+    const braceIndex = text.indexOf('{', cursor)
+    if (braceIndex === -1) break
 
-    if (!className || !unitName) continue
+    const headerText = text.slice(cursor, braceIndex + 1)
 
-    const classNameIndexInHeader = full.indexOf(className)
-    const unitNameIndexInHeader = full.indexOf(
-      unitName,
-      classNameIndexInHeader + className.length
-    )
+    const headerTrimmed = headerText.trimStart()
+    const maybeClass = /^[A-Za-z0-9_.-]+\s*:/.exec(headerTrimmed)
+    if (!maybeClass) {
+      cursor = braceIndex + 1
+      continue
+    }
 
-    const classNameStart = headerIndexInDoc + classNameIndexInHeader
-    const classNameEnd = classNameStart + className.length
+    try {
+      const header = parseClassHeader(headerTrimmed, baseOffset + cursor)
 
-    const unitNameStart = headerIndexInDoc + unitNameIndexInHeader
-    const unitNameEnd = unitNameStart + unitName.length
+      // className
+      const classNameStart = baseOffset + cursor
+      const classNameEnd = classNameStart + header.className.length
 
-    const braceOpenInText = headerIndexInText + full.lastIndexOf('{')
-    const braceOpenInDoc = baseOffset + braceOpenInText
-    const braceCloseInDoc = findMatchingBrace(documentText, braceOpenInDoc)
-    const bodyStart = braceOpenInDoc + 1
-    const bodyEnd =
-      braceCloseInDoc !== -1 ? braceCloseInDoc : documentText.length
-    const body = documentText.slice(bodyStart, bodyEnd)
+      // unitName
+      const unitNameIndexHeader = headerText.indexOf(header.unitName)
+      const unitNameStart = baseOffset + cursor + unitNameIndexHeader
+      const unitNameEnd = unitNameStart + header.unitName.length
 
-    const attributes: ParsedAttribute[] = parseAttributes(
-      documentText,
-      body,
-      bodyStart,
-      className
-    )
+      const braceCloseInDoc = findMatchingBrace(
+        document.getText(),
+        header.bodyStart
+      )
+      const bodyStart = header.bodyStart + 1
+      const bodyEnd =
+        braceCloseInDoc !== -1 ? braceCloseInDoc : document.getText().length
+      const body = document.getText().slice(bodyStart, bodyEnd)
 
-    classesOut.push({
-      className,
-      unitName,
-      attributes,
-      classNameStart,
-      classNameEnd,
-      unitNameStart,
-      unitNameEnd,
-      bodyStart,
-      bodyEnd,
-    })
+      const attributes: ParsedAttribute[] = parseAttributes(
+        document.getText(),
+        body,
+        bodyStart,
+        header.className
+      )
 
-    if (braceCloseInDoc !== -1) {
-      const nextPos = braceCloseInDoc - baseOffset + 1
-      classHeaderRegex.lastIndex = nextPos
+      classesOut.push({
+        className: header.className,
+        unitName: header.unitName,
+        attributes,
+        classNameStart,
+        classNameEnd,
+        unitNameStart,
+        unitNameEnd,
+        bodyStart,
+        bodyEnd,
+      })
+
+      cursor = bodyEnd - baseOffset + 1
+    } catch (err) {
+      diagnostics.push({
+        severity: DiagnosticSeverity.Error,
+        range: {
+          start: document.positionAt(baseOffset + cursor),
+          end: document.positionAt(baseOffset + cursor + headerText.length),
+        },
+        message: err instanceof Error ? err.message : String(err),
+        source: 'sii.schema',
+      })
+      cursor = braceIndex + 1
     }
   }
 }

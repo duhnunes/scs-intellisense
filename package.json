@@ -8,8 +8,7 @@
   ],
   "scripts": {
     "copy-server": "copyfiles -u 3 apps/server/dist/**/* apps/client/dist/",
-    "copy-readme": "copyfiles ./README.md apps/client/",
-    "build": "pnpm i && pnpm format && pnpm -r run build && pnpm run copy-server && pnpm run copy-readme",
+    "build": "pnpm i && pnpm format && pnpm -r run build && pnpm run copy-server",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "format:staged": "lint-staged",
     "package:client": "pnpm --filter ./apps/client run vsce:package",

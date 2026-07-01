@@ -8,6 +8,8 @@ import type {
 } from '../interfaces/parser'
 import { ScsFileExt as ScsExtEnum } from '../interfaces/parser'
 import { findMatchingBrace, parseClasses } from './classParser'
+import type { Diagnostic } from 'vscode-languageserver'
+import { TextDocument } from 'vscode-languageserver-textdocument'
 
 export function normalizeText(text: string): string {
   if (!text) return text
@@ -37,12 +39,11 @@ export function detectModeFromExt(
   return 'unknown'
 }
 
-/**
- *  parseDocument
- *  - text: raw document text (will be normalized)
- *  - options: uri/ext/mode hints
- */
-export function parseDocument(text: string, options?: ParseOptions) {
+export function parseDocument(
+  text: string,
+  options?: ParseOptions,
+  diagnostics: Diagnostic[] = []
+) {
   const normalized =
     options?.normalizeLineEndings === false ? text : normalizeText(text)
   const ext = (options?.ext ?? detectExtFromUri(options?.uri)) as
@@ -52,6 +53,7 @@ export function parseDocument(text: string, options?: ParseOptions) {
   const _mode = options?.mode ?? detectModeFromExt(ext)
 
   const classes: ParsedClass[] = []
+  const document = TextDocument.create(options?.uri ?? '', _mode, 0, normalized)
 
   if (_mode === 'sii') {
     const rootIndex = normalized.indexOf('SiiNunit')
@@ -63,17 +65,17 @@ export function parseDocument(text: string, options?: ParseOptions) {
         const bodyStart = braceOpen + 1
         const bodyEnd = braceClose !== -1 ? braceClose : normalized.length
         const body = normalized.slice(bodyStart, bodyEnd)
-        parseClasses(normalized, bodyStart, body, classes)
+        parseClasses(document, bodyStart, body, classes, diagnostics)
         return { magicMark: 'SiiNunit', classes }
       }
     }
   }
 
   if (_mode === 'sui') {
-    parseClasses(normalized, 0, normalized, classes)
+    parseClasses(document, 0, normalized, classes, diagnostics)
     return { magicMark: 'document.sui', classes }
   }
 
-  parseClasses(normalized, 0, normalized, classes)
+  parseClasses(document, 0, normalized, classes, diagnostics)
   return { magicMark: _mode === 'sii' ? 'document.sii' : 'document', classes }
 }
