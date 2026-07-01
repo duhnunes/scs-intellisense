@@ -40,7 +40,6 @@
     },
     "github": {
       "release": true,
-      "releaseName": "v${version} - ${date}",
       "assets": [
         "./release/latest/*.vsix"
       ]
