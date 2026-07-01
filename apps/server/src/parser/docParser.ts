@@ -75,7 +75,7 @@ export function parseDocument(
 
   if (_mode === 'sui') {
     parseClasses(document, 0, normalized, classes, diagnostics)
-    return { magicMark: 'document.sui', classes }
+    return { classes }
   }
 
   // parseClasses(document, 0, normalized, classes, diagnostics)

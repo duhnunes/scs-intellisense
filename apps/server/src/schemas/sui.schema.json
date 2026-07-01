@@ -1,0 +1,81 @@
+{
+  "$id": "https://github.com/duhnunes/scs-intellisense/blob/main/apps/server/src/schemas/sui.schema.json",
+  "title": "SCS SUI File",
+  "type": "object",
+  "properties": {
+    "classes": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["className", "unitName", "attributes"],
+        "properties": {
+          "className": { "type": "string" },
+          "unitName": {
+            "type": "string",
+            "pattern": "^\\.?[a-z0-9_]+(\\.[a-z0-9_]+)*$"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["key", "isArray"],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_]+(\\[\\])?$"
+                },
+                "isArray": { "type": "boolean" },
+                "description": { "type": "string" },
+                "type": { 
+                  "type": "string",
+                  "enum": [
+                    "string", "float", "float2", "float3", "float4", "placement", "fixed", "fixed2", "fixed3", "fixed4",
+                        "int2", "quaternion", "s16", "s32", "s64", "u16", "u32", "u64", "bool", "token", "owner_ptr",
+                        "link_ptr", "resource_tie"
+                  ]
+                },
+                "arrayElementType": {
+                  "type": "string",
+                  "enum": [
+                    "string", "float", "float2", "float3", "float4", "placement", "fixed", "fixed2", "fixed3", "fixed4",
+                        "int2", "quaternion", "s16", "s32", "s64", "u16", "u32", "u64", "bool", "token", "owner_ptr",
+                        "link_ptr", "resource_tie"
+                  ]
+                },
+                "keyRange": {
+                  "type": "object",
+                  "properties": {
+                    "start": { "type": "integer" },
+                    "end": { "type": "integer" }
+                  },
+                  "required": ["start", "end"]
+                },
+                "valueRange": {
+                  "type": "object",
+                  "properties": {
+                    "start": { "type": "integer" },
+                    "end": { "type": "integer" }
+                  },
+                  "required": ["start", "end"]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "classNameStart": { "type": "integer" },
+          "classNameEnd": { "type": "integer" },
+          "unitNameStart": { "type": "integer" },
+          "unitNameEnd": { "type": "integer" },
+          "bodyStart": { "type": "integer" },
+          "bodyEnd": { "type": "integer" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "diagnostics": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}
