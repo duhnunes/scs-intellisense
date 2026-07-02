@@ -2,12 +2,7 @@ import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
 import type { ParsedAttribute, ParsedClass } from '../interfaces/parser'
 import { parseAttributes } from './attributeParser'
-
-interface ValidationError {
-  message: string
-  start: number
-  end: number
-}
+import type { ValidationError } from '../interfaces/validation'
 
 function parseClassHeader(text: string, offset: number) {
   const errors: ValidationError[] = []
