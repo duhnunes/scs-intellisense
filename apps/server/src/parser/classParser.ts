@@ -10,25 +10,29 @@ interface ValidationError {
 }
 
 function parseClassHeader(text: string, offset: number) {
+  const errors: ValidationError[] = []
   let i = 0
   while (i < text.length && /\s/.test(text.charAt(i))) i++
 
   const classStart = i
   while (i < text.length && /[A-Za-z0-9_.-]/.test(text.charAt(i))) i++
   if (i === classStart) {
-    console.log('classStart:', classStart)
-    throw new Error('Expected className')
+    errors.push({
+      message: 'Expected className',
+      start: offset + classStart,
+      end: offset + classStart + 1,
+    })
   }
   const className = text.slice(classStart, i)
 
   while (i < text.length && /\s/.test(text.charAt(i))) i++
   if (i >= text.length || text[i] !== ':') {
     const colonPos = offset + i
-    throw <ValidationError>{
+    errors.push({
       message: "Expected ':' between className and unitName",
       start: colonPos,
       end: colonPos + 1,
-    }
+    })
   }
   i++
 
@@ -44,7 +48,13 @@ function parseClassHeader(text: string, offset: number) {
     text[i] !== '\n'
   )
     i++
-  if (i === unitStart) throw new Error('Invalid unitName format')
+  if (i === unitStart) {
+    errors.push({
+      message: 'Invalid unitName format',
+      start: offset + unitStart,
+      end: offset + unitStart + 1,
+    })
+  }
 
   const unitName = text.slice(unitStart, i)
   const tokens = unitName.split('.')
@@ -55,33 +65,33 @@ function parseClassHeader(text: string, offset: number) {
     const tokenEnd = tokenStart + token.length
 
     if (token.length > 12) {
-      throw <ValidationError>{
+      errors.push({
         message: `UnitName token exceeds 12 characters: "${token}"`,
         start: tokenStart,
         end: tokenEnd,
-      }
+      })
     }
     if (!/^[a-z0-9_]*$/.test(token)) {
       if (/[A-Z]/.test(token)) {
-        throw <ValidationError>{
+        errors.push({
           message: `UnitName token contains uppercase letters: "${token}"`,
           start: tokenStart,
           end: tokenEnd,
-        }
+        })
       } else {
-        throw <ValidationError>{
+        errors.push({
           message: `UnitName token contains invalid characters: "${token}"`,
           start: tokenStart,
           end: tokenEnd,
-        }
+        })
       }
     }
     if (token.length === 0 && idx !== 0) {
-      throw <ValidationError>{
+      errors.push({
         message: 'UnitName must not contain empty tokens (consecutive dots)',
         start: tokenStart,
         end: tokenEnd,
-      }
+      })
     }
 
     runningOffset += token.length + 1
@@ -89,13 +99,18 @@ function parseClassHeader(text: string, offset: number) {
 
   while (i < text.length && /\s/.test(text.charAt(i))) i++
   if (text[i] !== '{') {
-    throw new Error("Expected '{' after unitName")
+    errors.push({
+      message: "Expected '{' after unitName",
+      start: offset + unitStart,
+      end: offset + unitStart + 1,
+    })
   }
 
   return {
     className,
     unitName,
     bodyStart: offset + i,
+    errors,
   }
 }
 
@@ -116,6 +131,23 @@ export function parseClasses(
 
     try {
       const header = parseClassHeader(headerText, baseOffset + cursor)
+
+      header.errors.forEach((err) => {
+        diagnostics.push({
+          severity: DiagnosticSeverity.Error,
+          range: {
+            start: document.positionAt(err.start),
+            end: document.positionAt(err.end),
+          },
+          message: err.message,
+          source: 'sii.schema',
+        })
+      })
+
+      if (header.errors.length > 0) {
+        cursor = braceIndex + 1
+        continue
+      }
 
       // className
       const classNameStart = baseOffset + cursor
@@ -156,34 +188,16 @@ export function parseClasses(
 
       cursor = bodyEnd - baseOffset + 1
     } catch (err) {
-      if (
-        typeof err === 'object' &&
-        err !== null &&
-        'start' in err &&
-        'end' in err
-      ) {
-        const ve = err as ValidationError
-        diagnostics.push({
-          severity: DiagnosticSeverity.Error,
-          range: {
-            start: document.positionAt(ve.start),
-            end: document.positionAt(ve.end),
-          },
-          message: ve.message,
-          source: 'sii.schema',
-        })
-      } else {
-        const e = err as Error
-        diagnostics.push({
-          severity: DiagnosticSeverity.Error,
-          range: {
-            start: document.positionAt(baseOffset + cursor),
-            end: document.positionAt(baseOffset + cursor + headerText.length),
-          },
-          message: e.message,
-          source: 'sii.schema',
-        })
-      }
+      const e = err as Error
+      diagnostics.push({
+        severity: DiagnosticSeverity.Error,
+        range: {
+          start: document.positionAt(baseOffset + cursor),
+          end: document.positionAt(baseOffset + cursor + headerText.length),
+        },
+        message: e.message,
+        source: 'sii.schema',
+      })
 
       cursor = braceIndex + 1
     }

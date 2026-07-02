@@ -37,7 +37,6 @@
     "virtualWorkspaces": false
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run package",
     "compile": "pnpm run check-types && pnpm run lint && node esbuild.cjs",
     "package": "pnpm run check-types && pnpm run lint && node esbuild.cjs --production",
     "build": "pnpm i && pnpm run check-types && pnpm run lint && node esbuild.cjs",
