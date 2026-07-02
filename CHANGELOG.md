@@ -1,5 +1,20 @@
 # Changelog
 
+[compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.3.1...0.4.0)
+### Features
+
+* **parser:** accumulate and display multiple validation errors ([a4e89cb](https://github.com/duhnunes/scs-intellisense/commit/a4e89cb4261aaab3b77834bc9d599086cade6ff2))
+* **validation:** add support for .sui schema validation ([a6c3d95](https://github.com/duhnunes/scs-intellisense/commit/a6c3d957c35ee3efb0be7aaaeab28b11a22c3ed1))
+
+### Bug Fixes
+
+* **parse:** prevent header errors from leaking into class body parsing ([c491ae4](https://github.com/duhnunes/scs-intellisense/commit/c491ae415c4a2733c13e17187dc658f904b38424))
+* **validation:** align empty .sii handling with schema by returning empty magicMark and allowing empty clsses ([4a87e06](https://github.com/duhnunes/scs-intellisense/commit/4a87e06da0e58d3e17e6ac7f16ba4ee82ed5effe))
+* **validation:** allow numeric array indices in attribute keys ([3a1ca40](https://github.com/duhnunes/scs-intellisense/commit/3a1ca404dc8dba83ff1752999417f9b1bfcd6f68))
+* **validation:** allow unitName to start with dot. ([db4eac2](https://github.com/duhnunes/scs-intellisense/commit/db4eac2a0c95e22e0e17fc9071b373ad022822e7))
+* **validation:** fix to accept [] in keys ([03a83d8](https://github.com/duhnunes/scs-intellisense/commit/03a83d8752cd9cbefaa3df33a6b08d021535abff))
+* **validation:** ignore comments during document parsing ([e575430](https://github.com/duhnunes/scs-intellisense/commit/e57543046c1da6661edc084a756206f3c6b3f52a))
+
 [compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.3.0...0.3.1)
 
 [compare changes](https://github.com/duhnunes/scs-intellisense/compare/v0.2.0...0.3.0)
