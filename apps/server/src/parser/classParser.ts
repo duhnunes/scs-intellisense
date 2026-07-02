@@ -145,7 +145,13 @@ export function parseClasses(
       })
 
       if (header.errors.length > 0) {
-        cursor = braceIndex + 1
+        const bodyCloseInDoc = findMatchingBrace(
+          document.getText(),
+          header.bodyStart
+        )
+        const bodyEnd =
+          bodyCloseInDoc !== -1 ? bodyCloseInDoc : document.getText().length
+        cursor = bodyEnd - baseOffset + 1
         continue
       }
 
@@ -158,35 +164,37 @@ export function parseClasses(
       const unitNameStart = baseOffset + cursor + unitNameIndexHeader
       const unitNameEnd = unitNameStart + header.unitName.length
 
-      const braceCloseInDoc = findMatchingBrace(
-        document.getText(),
-        header.bodyStart
-      )
-      const bodyStart = header.bodyStart + 1
-      const bodyEnd =
-        braceCloseInDoc !== -1 ? braceCloseInDoc : document.getText().length
-      const body = document.getText().slice(bodyStart, bodyEnd)
+      if (header.errors.length === 0) {
+        const braceCloseInDoc = findMatchingBrace(
+          document.getText(),
+          header.bodyStart
+        )
+        const bodyStart = header.bodyStart + 1
+        const bodyEnd =
+          braceCloseInDoc !== -1 ? braceCloseInDoc : document.getText().length
+        const body = document.getText().slice(bodyStart, bodyEnd)
 
-      const attributes: ParsedAttribute[] = parseAttributes(
-        document.getText(),
-        body,
-        bodyStart,
-        header.className
-      )
+        const attributes: ParsedAttribute[] = parseAttributes(
+          document.getText(),
+          body,
+          bodyStart,
+          header.className
+        )
 
-      classesOut.push({
-        className: header.className,
-        unitName: header.unitName,
-        attributes,
-        classNameStart,
-        classNameEnd,
-        unitNameStart,
-        unitNameEnd,
-        bodyStart,
-        bodyEnd,
-      })
+        classesOut.push({
+          className: header.className,
+          unitName: header.unitName,
+          attributes,
+          classNameStart,
+          classNameEnd,
+          unitNameStart,
+          unitNameEnd,
+          bodyStart,
+          bodyEnd,
+        })
 
-      cursor = bodyEnd - baseOffset + 1
+        cursor = bodyEnd - baseOffset + 1
+      }
     } catch (err) {
       const e = err as Error
       diagnostics.push({
