@@ -27,7 +27,7 @@
               "properties": {
                 "key": {
                   "type": "string",
-                  "pattern": "^[A-Za-z0-9_]+(\\[\\])?$"
+                  "pattern": "^[A-Za-z0-9_]+(\\[\\d*\\])?$"
                 },
                 "isArray": { "type": "boolean" },
                 "description": { "type": "string" },
