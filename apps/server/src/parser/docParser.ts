@@ -39,6 +39,13 @@ export function detectModeFromExt(
   return 'unknown'
 }
 
+export function stripComments(text: string): string {
+  return text
+    .replace(/\/\/[^\n]*/g, (match) => ' '.repeat(match.length))
+    .replace(/#[^\n]*/g, (match) => ' '.repeat(match.length))
+    .replace(/\/\*[\s\S]*?\*\//g, (match) => ' '.repeat(match.length))
+}
+
 export function parseDocument(
   text: string,
   options?: ParseOptions,
@@ -46,6 +53,7 @@ export function parseDocument(
 ) {
   const normalized =
     options?.normalizeLineEndings === false ? text : normalizeText(text)
+  const withoutComments = stripComments(normalized)
   const ext = (options?.ext ?? detectExtFromUri(options?.uri)) as
     | ScsFileExt
     | ''
@@ -64,7 +72,7 @@ export function parseDocument(
         const braceClose = findMatchingBrace(normalized, braceOpen)
         const bodyStart = braceOpen + 1
         const bodyEnd = braceClose !== -1 ? braceClose : normalized.length
-        const body = normalized.slice(bodyStart, bodyEnd)
+        const body = withoutComments.slice(bodyStart, bodyEnd)
         parseClasses(document, bodyStart, body, classes, diagnostics)
         return { magicMark: 'SiiNunit', classes }
       } else {
