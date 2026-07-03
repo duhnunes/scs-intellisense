@@ -1,4 +1,5 @@
 import type { SemanticTokensBuilder } from 'vscode-languageserver'
+import type { TokenEntry } from '../interfaces/token'
 
 // helper: calculates line starts
 export function computeLineStarts(text: string) {
@@ -91,4 +92,20 @@ export function rangeIntersectsComments(
     else return true
   }
   return false
+}
+
+// helper: queueToken with validations
+export function queueToken(
+  tokens: TokenEntry[],
+  start: number,
+  end: number,
+  tokenTypeIndex: number,
+  textLength: number
+) {
+  if (typeof start !== 'number' || typeof end !== 'number') return
+  if (tokenTypeIndex == null || tokenTypeIndex < 0) return
+  if (start >= end) return
+  if (start < 0) start = 0
+  if (end > textLength) end = textLength
+  tokens.push({ start, end, tokenTypeIndex })
 }
