@@ -1,7 +1,9 @@
 import type { AttributeDef, SiiClass } from '@/src/interfaces/structure'
 
 export enum ScsFileExt {
+  // eslint-disable-next-line no-unused-vars
   SII = '.sii',
+  // eslint-disable-next-line no-unused-vars
   SUI = '.sui',
 }
 
@@ -25,6 +27,7 @@ export interface ParsedClass extends SiiClass {
   classNameEnd: number
   unitNameStart: number
   unitNameEnd: number
+  colonPos?: number
   bodyStart: number
   bodyEnd: number
   range?: { start: number; end: number }
