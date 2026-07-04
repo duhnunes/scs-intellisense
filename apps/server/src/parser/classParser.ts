@@ -3,6 +3,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument'
 import type { ParsedAttribute, ParsedClass } from '../interfaces/parser'
 import { parseAttributes } from './attributeParser'
 import type { ValidationError } from '../interfaces/validation'
+import { validateDocument } from '../validation'
 
 function parseClassHeader(text: string, offset: number) {
   const errors: ValidationError[] = []
@@ -20,16 +21,20 @@ function parseClassHeader(text: string, offset: number) {
   }
   const className = text.slice(classStart, i)
 
+  let colonPos: number | undefined
   while (i < text.length && /\s/.test(text.charAt(i))) i++
-  if (i >= text.length || text[i] !== ':') {
-    const colonPos = offset + i
+  if (i < text.length && text[i] === ':') {
+    colonPos = offset + i
+    i++
+  } else {
+    colonPos = offset + i
     errors.push({
       message: "Expected ':' between className and unitName",
       start: colonPos,
       end: colonPos + 1,
     })
+    i++
   }
-  i++
 
   while (i < text.length && /\s/.test(text.charAt(i))) i++
 
@@ -52,48 +57,9 @@ function parseClassHeader(text: string, offset: number) {
   }
 
   const unitName = text.slice(unitStart, i)
-  const tokens = unitName.split('.')
-
-  let runningOffset = unitStart
-  tokens.forEach((token, idx) => {
-    const tokenStart = offset + runningOffset
-    const tokenEnd = tokenStart + token.length
-
-    if (token.length > 12) {
-      errors.push({
-        message: `UnitName token exceeds 12 characters: "${token}"`,
-        start: tokenStart,
-        end: tokenEnd,
-      })
-    }
-    if (!/^[a-z0-9_]*$/.test(token)) {
-      if (/[A-Z]/.test(token)) {
-        errors.push({
-          message: `UnitName token contains uppercase letters: "${token}"`,
-          start: tokenStart,
-          end: tokenEnd,
-        })
-      } else {
-        errors.push({
-          message: `UnitName token contains invalid characters: "${token}"`,
-          start: tokenStart,
-          end: tokenEnd,
-        })
-      }
-    }
-    if (token.length === 0 && idx !== 0) {
-      errors.push({
-        message: 'UnitName must not contain empty tokens (consecutive dots)',
-        start: tokenStart,
-        end: tokenEnd,
-      })
-    }
-
-    runningOffset += token.length + 1
-  })
 
   while (i < text.length && /\s/.test(text.charAt(i))) i++
-  if (text[i] !== '{') {
+  if (i >= text.length || text[i] !== '{') {
     errors.push({
       message: "Expected '{' after unitName",
       start: offset + unitStart,
@@ -103,6 +69,7 @@ function parseClassHeader(text: string, offset: number) {
 
   return {
     className,
+    colonPos,
     unitName,
     bodyStart: offset + i,
     errors,
@@ -124,6 +91,11 @@ export function parseClasses(
 
     const headerText = text.slice(cursor, braceIndex + 1)
 
+    if (headerText.trimStart().startsWith('SiiNunit')) {
+      cursor = braceIndex + 1
+      continue
+    }
+
     try {
       const header = parseClassHeader(headerText, baseOffset + cursor)
 
@@ -135,7 +107,7 @@ export function parseClasses(
             end: document.positionAt(err.end),
           },
           message: err.message,
-          source: 'sii.schema',
+          source: 'sii.validation',
         })
       })
 
@@ -176,7 +148,7 @@ export function parseClasses(
           header.className
         )
 
-        classesOut.push({
+        const parsedClass: ParsedClass = {
           className: header.className,
           unitName: header.unitName,
           attributes,
@@ -184,9 +156,14 @@ export function parseClasses(
           classNameEnd,
           unitNameStart,
           unitNameEnd,
+          colonPos: header.colonPos,
           bodyStart,
           bodyEnd,
-        })
+        }
+
+        classesOut.push(parsedClass)
+
+        validateDocument(document, parsedClass, diagnostics)
 
         cursor = bodyEnd - baseOffset + 1
       }

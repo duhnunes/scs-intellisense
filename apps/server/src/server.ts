@@ -5,12 +5,16 @@ import {
   InitializeParams,
   TextDocumentSyncKind,
   type InitializeResult,
+  type Diagnostic,
 } from 'vscode-languageserver/node'
 
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { registerSemantic, semanticTokensLegend } from './semantic'
 import { getLogger, initLogger } from './logger'
 import { validateDocument } from './validation'
+import type { ParsedClass } from './interfaces/parser'
+import { parseClasses } from './parser/classParser'
+import { parseDocument } from './parser/docParser'
 
 const connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments(TextDocument)
@@ -71,8 +75,19 @@ connection.onCompletion((params) => {
   }
 })
 
+// Validation
 documents.onDidChangeContent((change) => {
-  const diagnostics = validateDocument(change.document)
+  const diagnostics: Diagnostic[] = []
+  const { classes } = parseDocument(
+    change.document.getText(),
+    { uri: change.document.uri },
+    diagnostics
+  )
+
+  classes.forEach((parsedClass) => {
+    validateDocument(change.document, parsedClass, diagnostics)
+  })
+
   connection.sendDiagnostics({ uri: change.document.uri, diagnostics })
 })
 
