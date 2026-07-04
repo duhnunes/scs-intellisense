@@ -39,6 +39,7 @@ export function scanClasses(
       if (searchEnd > text.length) searchEnd = text.length
     }
 
+    // className
     const occurrences = findAllOccurrences(
       text,
       cls.className,

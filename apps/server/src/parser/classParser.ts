@@ -103,6 +103,7 @@ function parseClassHeader(text: string, offset: number) {
 
   return {
     className,
+    colonPos: offset + classStart + className.length,
     unitName,
     bodyStart: offset + i,
     errors,
@@ -184,6 +185,7 @@ export function parseClasses(
           classNameEnd,
           unitNameStart,
           unitNameEnd,
+          colonPos: header.colonPos,
           bodyStart,
           bodyEnd,
         })
