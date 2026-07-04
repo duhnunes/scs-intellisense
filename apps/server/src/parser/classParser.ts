@@ -20,9 +20,10 @@ function parseClassHeader(text: string, offset: number) {
   }
   const className = text.slice(classStart, i)
 
+  let colonPos: number | undefined
   while (i < text.length && /\s/.test(text.charAt(i))) i++
   if (i >= text.length || text[i] !== ':') {
-    const colonPos = offset + i
+    colonPos = offset + i
     errors.push({
       message: "Expected ':' between className and unitName",
       start: colonPos,
@@ -103,7 +104,7 @@ function parseClassHeader(text: string, offset: number) {
 
   return {
     className,
-    colonPos: offset + classStart + className.length,
+    colonPos,
     unitName,
     bodyStart: offset + i,
     errors,
