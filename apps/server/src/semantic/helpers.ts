@@ -40,15 +40,21 @@ export function pushTokenByRange(
   let cur = startOffset
   while (cur < endOffset) {
     const startPos = offsetToPosition(lineStarts, cur)
-    const lineEndOffset =
+    const nextLineStart =
       startPos.line + 1 < lineStarts.length
         ? (lineStarts[startPos.line + 1] ?? Number.MAX_SAFE_INTEGER)
         : Number.MAX_SAFE_INTEGER
+    // The line-feed is not part of a semantic token. The source passed to
+    // this helper is normalized, so subtracting one excludes exactly it.
+    const lineEndOffset =
+      nextLineStart === Number.MAX_SAFE_INTEGER
+        ? nextLineStart
+        : nextLineStart - 1
     const chunkEnd = Math.min(endOffset, lineEndOffset)
     const length = chunkEnd - cur
     if (length > 0)
       builder.push(startPos.line, startPos.char, length, tokenTypeIndex, 0)
-    cur = chunkEnd
+    cur = chunkEnd > cur ? chunkEnd : nextLineStart
   }
 }
 

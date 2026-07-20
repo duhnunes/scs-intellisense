@@ -7,19 +7,11 @@ import {
 } from 'vscode-languageserver'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
 import { getLogger } from '../logger'
-import { computeLineStarts, pushTokenByRange } from './helpers'
-import {
-  detectExtFromUri,
-  detectModeFromExt,
-  normalizeText,
-  parseDocument,
-} from '../parser/docParser'
-import type { ParsedClass } from '../interfaces/parser'
-import { scanComments } from './scanners/comments'
-import { scanClasses } from './scanners/class'
-import { scanAttributes } from './scanners/attributes'
+import { detectExtFromUri, detectModeFromExt } from '../parser/docParser'
+import { isNumericValueType, readScsDocument } from '../sii'
+import type { SiiAttribute, SiiRange } from '../interfaces/sii'
 import type { TokenEntry } from '../interfaces/token'
-import { scanKeywords } from './scanners/keywords'
+import { computeLineStarts, pushTokenByRange, queueToken } from './helpers'
 
 // # TOKEN TYPES
 export const tokenTypes = [
@@ -40,79 +32,63 @@ export const semanticTokensLegend: SemanticTokensLegend = {
 
 const logger = getLogger()
 
+/**
+ * Semantic tokens are deliberately a projection of the shared SII reader.
+ * They must not parse source text independently.
+ */
 export function provideSemanticTokensForDocument(
   documentText: string,
   documentUri?: string
 ): SemanticTokens {
   try {
-    const text = normalizeText(documentText)
     const ext = detectExtFromUri(documentUri)
-    const mode = detectModeFromExt(ext)
-    void mode // waiting to use
-
-    const builder = new SemanticTokensBuilder()
-    const lineStarts = computeLineStarts(text)
-    const textLength = text.length
-
+    const detectedMode = detectModeFromExt(ext)
+    const mode = detectedMode === 'unknown' ? 'sii' : detectedMode
+    const document = readScsDocument(documentText, mode)
+    const textLength = document.text.length
+    const lineStarts = computeLineStarts(document.text)
     const tokensToEmit: TokenEntry[] = []
 
-    // Comments
-    const { ranges: commentRanges, tokens: commentTokens } = scanComments(
-      text,
-      textLength
-    )
-    tokensToEmit.push(...commentTokens)
-
-    // Keywords
-    tokensToEmit.push(...scanKeywords(text, commentRanges, textLength))
-
-    // Parse Classes
-    const parsed =
-      parseDocument(text, { uri: documentUri }) ??
-      ({
-        magicMark: '',
-        classes: [],
-      } as { magicMark: string; classes: ParsedClass[] })
-
-    tokensToEmit.push(
-      ...scanClasses(text, parsed.classes, commentRanges, textLength)
-    )
-    for (const cls of parsed.classes) {
-      tokensToEmit.push(
-        ...scanAttributes(text, cls.attributes, commentRanges, textLength)
-      )
+    const commentToken = tokenTypes.indexOf('comment')
+    for (const comment of document.comments) {
+      queueRange(tokensToEmit, comment.range, commentToken, textLength)
     }
 
-    // Sort tokens
-    const commentTokenIdx = tokenTypes.indexOf('comment')
-    tokensToEmit.sort((a, b) => {
-      if (a.start !== b.start) return a.start - b.start
-      if (a.end !== b.end) return a.end - b.end
-      // If same span, prefer non-comment tokens first, comment tokens last
-      if (
-        a.tokenTypeIndex === commentTokenIdx &&
-        b.tokenTypeIndex !== commentTokenIdx
-      )
-        return 1
-      if (
-        b.tokenTypeIndex === commentTokenIdx &&
-        a.tokenTypeIndex !== commentTokenIdx
-      )
-        return -1
-      return a.tokenTypeIndex - b.tokenTypeIndex
-    })
-
-    for (const te of tokensToEmit) {
-      pushTokenByRange(
-        builder,
-        lineStarts,
-        te.start,
-        te.end,
-        te.tokenTypeIndex,
+    const keywordToken = tokenTypes.indexOf('keyword')
+    if (document.magicMark) {
+      queueRange(
+        tokensToEmit,
+        document.magicMark.range,
+        keywordToken,
         textLength
       )
     }
 
+    const classToken = tokenTypes.indexOf('class')
+    for (const unit of document.units) {
+      queueRange(tokensToEmit, unit.classNameRange, classToken, textLength)
+      for (const attribute of unit.attributes) {
+        queueAttributeTokens(tokensToEmit, attribute, textLength)
+      }
+    }
+
+    tokensToEmit.sort((left, right) => {
+      if (left.start !== right.start) return left.start - right.start
+      if (left.end !== right.end) return left.end - right.end
+      return left.tokenTypeIndex - right.tokenTypeIndex
+    })
+
+    const builder = new SemanticTokensBuilder()
+    for (const token of tokensToEmit) {
+      pushTokenByRange(
+        builder,
+        lineStarts,
+        token.start,
+        token.end,
+        token.tokenTypeIndex,
+        textLength
+      )
+    }
     return builder.build() as SemanticTokens
   } catch (err) {
     const details =
@@ -154,4 +130,50 @@ export function registerSemantic(
       return { data: [] } as SemanticTokens
     }
   })
+}
+
+function queueAttributeTokens(
+  tokens: TokenEntry[],
+  attribute: SiiAttribute,
+  textLength: number
+): void {
+  const keyToken = tokenTypes.indexOf(
+    attribute.kind === 'include' ? 'keyword' : 'parameter'
+  )
+  queueRange(tokens, attribute.keyRange, keyToken, textLength)
+
+  const valueToken = getValueTokenType(attribute)
+  if (valueToken < 0 || attribute.valueRange.start >= attribute.valueRange.end)
+    return
+
+  if (attribute.valueParts.length > 0) {
+    for (const part of attribute.valueParts) {
+      queueRange(tokens, part.range, valueToken, textLength)
+    }
+    return
+  }
+
+  queueRange(tokens, attribute.valueRange, valueToken, textLength)
+}
+
+function getValueTokenType(attribute: SiiAttribute): number {
+  if (isNumericValueType(attribute.valueType))
+    return tokenTypes.indexOf('number')
+  if (attribute.valueType === 'bool') return tokenTypes.indexOf('keyword')
+  if (
+    attribute.valueType === 'token' ||
+    attribute.valueType === 'owner_ptr' ||
+    attribute.valueType === 'link_ptr'
+  )
+    return tokenTypes.indexOf('method')
+  return tokenTypes.indexOf('string')
+}
+
+function queueRange(
+  tokens: TokenEntry[],
+  range: SiiRange,
+  tokenTypeIndex: number,
+  textLength: number
+): void {
+  queueToken(tokens, range.start, range.end, tokenTypeIndex, textLength)
 }

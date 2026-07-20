@@ -1,22 +1,20 @@
-import { URI } from 'vscode-uri'
 import path from 'node:path'
+import type { Diagnostic } from 'vscode-languageserver'
+import { TextDocument } from 'vscode-languageserver-textdocument'
+import { URI } from 'vscode-uri'
+import { maskSiiComments, normalizeSiiText, readScsDocument } from '../sii'
+import type { SiiAttribute, SiiDocument, SiiUnit } from '../interfaces/sii'
 import type {
-  ParsedClass,
   ParseOptions,
+  ParsedAttribute,
+  ParsedClass,
   ScsFileExt,
   ScsFileMode,
 } from '../interfaces/parser'
 import { ScsFileExt as ScsExtEnum } from '../interfaces/parser'
-import { findMatchingBrace, parseClasses } from './classParser'
-import type { Diagnostic } from 'vscode-languageserver'
-import { TextDocument } from 'vscode-languageserver-textdocument'
 
-export function normalizeText(text: string): string {
-  if (!text) return text
-  let t = text.replace(/\r\n/g, '\n')
-  if (t.charCodeAt(0) === 0xfeff) t = t.slice(1)
-  return t
-}
+/** @deprecated Use `normalizeSiiText` from `src/sii` in new consumers. */
+export const normalizeText = normalizeSiiText
 
 export function detectExtFromUri(documentUri?: string): ScsFileExt | '' {
   if (!documentUri) return ''
@@ -39,55 +37,81 @@ export function detectModeFromExt(
   return 'unknown'
 }
 
+/** @deprecated Use `maskSiiComments` from `src/sii` in new consumers. */
 export function stripComments(text: string): string {
-  return text
-    .replace(/\/\/[^\n]*/g, (match) => ' '.repeat(match.length))
-    .replace(/#[^\n]*/g, (match) => ' '.repeat(match.length))
-    .replace(/\/\*[\s\S]*?\*\//g, (match) => ' '.repeat(match.length))
+  return maskSiiComments(text)
 }
 
+/**
+ * Compatibility adapter for current validation consumers.
+ * New features should call `readSiiDocument`/`readScsDocument` directly so
+ * they receive comments, source ranges and parser issues in one result.
+ */
 export function parseDocument(
   text: string,
   options?: ParseOptions,
   diagnostics: Diagnostic[] = []
-) {
-  const normalized =
-    options?.normalizeLineEndings === false ? text : normalizeText(text)
-  const withoutComments = stripComments(normalized)
+): { magicMark: string; classes: ParsedClass[] } | { classes: ParsedClass[] } {
   const ext = (options?.ext ?? detectExtFromUri(options?.uri)) as
     | ScsFileExt
     | ''
     | undefined
-  const _mode = options?.mode ?? detectModeFromExt(ext)
+  const mode = options?.mode ?? detectModeFromExt(ext)
+  if (mode === 'unknown') return { magicMark: '', classes: [] }
 
-  const classes: ParsedClass[] = []
-  const document = TextDocument.create(options?.uri ?? '', _mode, 0, normalized)
+  const parsed = readScsDocument(text, mode, {
+    normalizeLineEndings: options?.normalizeLineEndings,
+  })
+  appendDiagnostics(parsed, options?.uri, diagnostics)
+  const classes = parsed.units.map(toParsedClass)
 
-  if (_mode === 'sii') {
-    const rootIndex = normalized.indexOf('SiiNunit')
-    if (rootIndex !== -1) {
-      const braceOpen = normalized.indexOf('{', rootIndex)
-      if (braceOpen !== -1) {
-        // parse the body of SiiNunit
-        const braceClose = findMatchingBrace(normalized, braceOpen)
-        const bodyStart = braceOpen + 1
-        const bodyEnd = braceClose !== -1 ? braceClose : normalized.length
-        const body = withoutComments.slice(bodyStart, bodyEnd)
-        parseClasses(document, bodyStart, body, classes, diagnostics)
-        return { magicMark: 'SiiNunit', classes }
-      } else {
-        return { magicMark: '', classes }
-      }
-    }
+  return mode === 'sii'
+    ? { magicMark: parsed.magicMark?.text ?? '', classes }
+    : { classes }
+}
+
+function appendDiagnostics(
+  parsed: SiiDocument,
+  uri: string | undefined,
+  diagnostics: Diagnostic[]
+): void {
+  if (parsed.issues.length === 0) return
+  const document = TextDocument.create(uri ?? '', parsed.mode, 0, parsed.text)
+  for (const issue of parsed.issues) {
+    diagnostics.push({
+      severity: 1,
+      range: {
+        start: document.positionAt(issue.range.start),
+        end: document.positionAt(issue.range.end),
+      },
+      message: issue.message,
+      source: 'sii.reader',
+    })
   }
+}
 
-  if (_mode === 'sui') {
-    parseClasses(document, 0, normalized, classes, diagnostics)
-    return { classes }
+function toParsedClass(unit: SiiUnit): ParsedClass {
+  return {
+    className: unit.className,
+    unitName: unit.unitName,
+    attributes: unit.attributes.map(toParsedAttribute),
+    classNameStart: unit.classNameRange.start,
+    classNameEnd: unit.classNameRange.end,
+    unitNameStart: unit.unitNameRange.start,
+    unitNameEnd: unit.unitNameRange.end,
+    bodyStart: unit.bodyRange.start,
+    bodyEnd: unit.bodyRange.end,
   }
+}
 
-  // parseClasses(document, 0, normalized, classes, diagnostics)
-  // return { magicMark: _mode === 'sii' ? 'document.sii' : 'document', classes }
-  console.log(`[scs-intel] unsupported file mode: ${_mode}`)
-  return { magicMark: '', classes }
+function toParsedAttribute(attribute: SiiAttribute): ParsedAttribute {
+  return {
+    key: attribute.key,
+    type: attribute.valueType,
+    isArray: attribute.isArray,
+    arrayElementType: undefined,
+    description: '',
+    keyRange: attribute.keyRange,
+    valueRange: attribute.valueRange,
+  }
 }
