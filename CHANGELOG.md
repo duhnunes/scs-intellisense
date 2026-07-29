@@ -1,5 +1,18 @@
 # Changelog
 
+[compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.4.0...0.5.0)
+### Features
+
+* **parser:** add colon position tracking in class header ([0c020cf](https://github.com/duhnunes/scs-intellisense/commit/0c020cf8a9fd70a3816317f8536482e5eda419e9))
+* **praser:** capture colonPos correctly in class header ([d83488a](https://github.com/duhnunes/scs-intellisense/commit/d83488ae795b6077db2eda51001b12af38f96e82))
+* **semantic:** modularize scanners for comments, keywords, classes and attributes ([38c11ef](https://github.com/duhnunes/scs-intellisense/commit/38c11efdf858ecf2bf628b60c5d817659c203549))
+* **server:** support partial SII parsing for live semantic highlighting ([5e4c088](https://github.com/duhnunes/scs-intellisense/commit/5e4c088b5cfa392f1dd31ace0fddb5d28fec7178))
+
+### Refactors
+
+* centralize SII/SUI document reading ([2b3e377](https://github.com/duhnunes/scs-intellisense/commit/2b3e3771bbd9e6e07bbcdbfb71f209a27ad41000))
+* **server:** remove AJV and use SII reader for validation ([028e41f](https://github.com/duhnunes/scs-intellisense/commit/028e41f2892b3b3d8cdcb0868cdf78f59adc68ad))
+
 [compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.3.1...0.4.0)
 ### Features
 

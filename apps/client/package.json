@@ -1,6 +1,6 @@
 {
   "name": "scs-intellisense",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "displayName": "SCS IntelliSense (SCS Software)",
   "description": "Extension to add intellisense for SCS Software files.",
   "author": "DuH Nunes",
