@@ -249,13 +249,14 @@ class SiiReader {
 
   private readUnit(): SiiUnit | undefined {
     const start = this.positionValue
-    const classNameRange = this.readNameRange()
+    const classNameRange = this.readClassNameRange()
     if (!classNameRange) {
       this.issue('Expected className', start, start + 1)
       return undefined
     }
 
     const className = this.text.slice(classNameRange.start, classNameRange.end)
+    this.validateClassName(className, classNameRange.start)
     this.skipHorizontalTrivia()
     const colonStart = this.positionValue
     if (!this.consume(':')) {
@@ -495,12 +496,40 @@ class SiiReader {
     return range(start, end)
   }
 
-  private readNameRange(): SiiRange | undefined {
+  /**
+   * Reads the className "raw", i.e. greedily up to whitespace/`:`/`{`/`}`,
+   * regardless of whether every character is actually valid. This mirrors
+   * readUnitNameRange() and is deliberate: if we stopped at the first
+   * invalid character (e.g. '@'), the cursor would get stuck right on top
+   * of it, `:` would never be found, and recoverToNextLine() would end up
+   * swallowing the real ':', unitName and opening '{' on that line —
+   * desyncing brace matching for the rest of the document. Reading the
+   * whole malformed token keeps the parser (and therefore highlighting)
+   * in sync; validateClassName() below still reports the bad characters.
+   */
+  private readClassNameRange(): SiiRange | undefined {
     const start = this.positionValue
-    while (isNameCharacter(this.current())) this.positionValue++
+    while (
+      this.positionValue < this.masked.length &&
+      !isWhitespace(this.current()) &&
+      this.current() !== ':' &&
+      this.current() !== '{' &&
+      this.current() !== '}'
+    )
+      this.positionValue++
     return this.positionValue > start
       ? range(start, this.positionValue)
       : undefined
+  }
+
+  private validateClassName(className: string, start: number): void {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(className)) {
+      this.issue(
+        `Invalid className: "${className}"`,
+        start,
+        start + className.length
+      )
+    }
   }
 
   private readUnitNameRange(): SiiRange | undefined {
