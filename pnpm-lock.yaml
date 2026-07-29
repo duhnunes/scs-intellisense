@@ -91,9 +91,6 @@ importers:
 
   apps/server:
     dependencies:
-      ajv:
-        specifier: ^8.20.0
-        version: 8.20.0
       vscode-languageserver:
         specifier: ^9.0.1
         version: 9.0.1
@@ -1851,6 +1848,7 @@ packages:
   git-raw-commits@5.0.1:
     resolution: {integrity: sha512-Y+csSm2GD/PCSh6Isd/WiMjNAydu0VBiG9J7EdQsNA5P9uXvLayqjmTsNlK5Gs9IhblFZqOU0yid5Il5JPoLiQ==}
     engines: {node: '>=18'}
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-up@8.1.1:
