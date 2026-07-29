@@ -264,7 +264,17 @@ class SiiReader {
         colonStart,
         colonStart + 1
       )
-      return undefined
+      return {
+        kind: 'unit',
+        className,
+        unitName: '',
+        range: range(start, this.positionValue),
+        classNameRange,
+        colonRange: range(colonStart, colonStart + 1),
+        unitNameRange: range(this.positionValue, this.positionValue),
+        bodyRange: range(this.positionValue, this.positionValue),
+        attributes: [],
+      }
     }
 
     this.skipHorizontalTrivia()
@@ -275,7 +285,17 @@ class SiiReader {
         this.positionValue,
         this.positionValue + 1
       )
-      return undefined
+      return {
+        kind: 'unit',
+        className,
+        unitName: '',
+        range: range(start, this.positionValue),
+        classNameRange,
+        colonRange: range(colonStart, colonStart + 1),
+        unitNameRange: range(this.positionValue, this.positionValue),
+        bodyRange: range(this.positionValue, this.positionValue),
+        attributes: [],
+      }
     }
 
     const unitName = this.text.slice(unitNameRange.start, unitNameRange.end)
@@ -285,7 +305,17 @@ class SiiReader {
     const bodyOpen = this.positionValue
     if (!this.consume('{')) {
       this.issue("Expected '{' after unitName", bodyOpen, bodyOpen + 1)
-      return undefined
+      return {
+        kind: 'unit',
+        className,
+        unitName,
+        range: range(start, this.positionValue),
+        classNameRange,
+        colonRange: range(colonStart, colonStart + 1),
+        unitNameRange,
+        bodyRange: range(bodyOpen, bodyOpen),
+        attributes: [],
+      }
     }
 
     const attributes = this.readAttributes()
