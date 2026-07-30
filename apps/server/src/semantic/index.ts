@@ -9,7 +9,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument'
 import { getLogger } from '../logger'
 import { detectExtFromUri, detectModeFromExt } from '../parser/docParser'
 import { isNumericValueType, readScsDocument } from '../sii'
-import type { SiiAttribute, SiiRange } from '../interfaces/sii'
+import type { SiiAttribute, SiiRange } from '../interfaces/structure'
 import type { TokenEntry } from '../interfaces/token'
 import { computeLineStarts, pushTokenByRange, queueToken } from './helpers'
 

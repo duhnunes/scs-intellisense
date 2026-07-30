@@ -22,4 +22,4 @@ export type {
   SiiUnit,
   SiiValuePart,
   SiiValueType,
-} from '../interfaces/sii'
+} from '../interfaces/structure'

@@ -1,4 +1,4 @@
-import type { AttributeDef, SiiClass } from '@/src/interfaces/structure'
+import type { AttributeDef, SiiClass } from './structure'
 
 export enum ScsFileExt {
   // eslint-disable-next-line no-unused-vars

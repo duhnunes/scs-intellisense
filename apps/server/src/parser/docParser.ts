@@ -3,7 +3,7 @@ import type { Diagnostic } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
 import { maskSiiComments, normalizeSiiText, readScsDocument } from '../sii'
-import type { SiiAttribute, SiiDocument, SiiUnit } from '../interfaces/sii'
+import type { SiiAttribute, SiiDocument, SiiUnit } from '../interfaces/structure'
 import type {
   ParseOptions,
   ParsedAttribute,

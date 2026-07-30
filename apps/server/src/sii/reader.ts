@@ -8,7 +8,7 @@ import type {
   SiiIssue,
   SiiRange,
   SiiUnit,
-} from '../interfaces/sii'
+} from '../interfaces/structure'
 
 export function normalizeSiiText(text: string): string {
   if (!text) return text

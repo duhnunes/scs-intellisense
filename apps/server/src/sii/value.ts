@@ -1,4 +1,4 @@
-import type { SiiRange, SiiValuePart, SiiValueType } from '../interfaces/sii'
+import type { SiiRange, SiiValuePart, SiiValueType } from '../interfaces/structure'
 
 const DECIMAL_NUMBER = '[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?'
 const DECIMAL_NUMBER_RE = new RegExp(`^${DECIMAL_NUMBER}$`)
