@@ -256,7 +256,6 @@ class SiiReader {
     }
 
     const className = this.text.slice(classNameRange.start, classNameRange.end)
-    this.validateClassName(className, classNameRange.start)
     this.skipHorizontalTrivia()
     const colonStart = this.positionValue
     if (!this.consume(':')) {
@@ -300,7 +299,6 @@ class SiiReader {
     }
 
     const unitName = this.text.slice(unitNameRange.start, unitNameRange.end)
-    this.validateUnitName(unitName, unitNameRange.start)
 
     this.skipTrivia()
     const bodyOpen = this.positionValue
@@ -505,7 +503,10 @@ class SiiReader {
    * swallowing the real ':', unitName and opening '{' on that line —
    * desyncing brace matching for the rest of the document. Reading the
    * whole malformed token keeps the parser (and therefore highlighting)
-   * in sync; validateClassName() below still reports the bad characters.
+   * in sync. Whether the captured text is actually a *valid* className is
+   * a business-rule concern, not a tokenization one — see
+   * validateClassName() in validation/rules.ts, which runs against the
+   * classNameRange this method returns.
    */
   private readClassNameRange(): SiiRange | undefined {
     const start = this.positionValue
@@ -522,16 +523,11 @@ class SiiReader {
       : undefined
   }
 
-  private validateClassName(className: string, start: number): void {
-    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(className)) {
-      this.issue(
-        `Invalid className: "${className}"`,
-        start,
-        start + className.length
-      )
-    }
-  }
-
+  /**
+   * Reads the unitName raw, the same way readClassNameRange() does.
+   * Validity (token length, casing, allowed characters) is checked later
+   * in validation/rules.ts against the returned range, not here.
+   */
   private readUnitNameRange(): SiiRange | undefined {
     const start = this.positionValue
     while (
@@ -544,32 +540,6 @@ class SiiReader {
     return this.positionValue > start
       ? range(start, this.positionValue)
       : undefined
-  }
-
-  private validateUnitName(unitName: string, start: number): void {
-    let offset = start
-    for (const token of unitName.split('.')) {
-      const tokenRange = range(offset, offset + token.length)
-      if (token.length > 12)
-        this.issues.push({
-          message: `UnitName token exceeds 12 characters: "${token}"`,
-          range: tokenRange,
-        })
-      if (!/^[a-z0-9_]*$/.test(token)) {
-        this.issues.push({
-          message: /[A-Z]/.test(token)
-            ? `UnitName token contains uppercase letters: "${token}"`
-            : `UnitName token contains invalid characters: "${token}"`,
-          range: tokenRange,
-        })
-      }
-      if (token.length === 0 && offset !== start)
-        this.issues.push({
-          message: 'UnitName must not contain empty tokens (consecutive dots)',
-          range: tokenRange,
-        })
-      offset += token.length + 1
-    }
   }
 
   private skipHorizontalTrivia(): void {

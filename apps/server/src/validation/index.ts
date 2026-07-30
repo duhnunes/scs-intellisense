@@ -2,9 +2,10 @@ import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { readScsDocument } from '../sii'
 import { detectExtFromUri, detectModeFromExt } from '../parser/docParser'
+import type { SiiIssue } from '../interfaces/structure'
+import { validateSiiDocument } from './rules'
 
 export function validateDocument(doc: TextDocument): Diagnostic[] {
-  const diagnostics: Diagnostic[] = []
   const ext = detectExtFromUri(doc.uri)
   const mode = detectModeFromExt(ext)
   const parsed = readScsDocument(
@@ -12,17 +13,18 @@ export function validateDocument(doc: TextDocument): Diagnostic[] {
     mode === 'unknown' ? 'sii' : mode
   )
 
-  for (const issue of parsed.issues) {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Error,
-      range: {
-        start: doc.positionAt(issue.range.start),
-        end: doc.positionAt(issue.range.end),
-      },
-      message: issue.message,
-      source: 'sii.reader',
-    })
-  }
+  // Structural issues come straight from the reader (e.g. a missing '{');
+  // business-rule issues come from rules.ts, running against the tree the
+  // reader already built. This is the merge point for both.
+  const issues: SiiIssue[] = [...parsed.issues, ...validateSiiDocument(parsed)]
 
-  return diagnostics
+  return issues.map((issue) => ({
+    severity: DiagnosticSeverity.Error,
+    range: {
+      start: doc.positionAt(issue.range.start),
+      end: doc.positionAt(issue.range.end),
+    },
+    message: issue.message,
+    source: 'sii.reader',
+  }))
 }
