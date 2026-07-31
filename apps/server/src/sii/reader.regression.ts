@@ -1,6 +1,7 @@
 import { readScsDocument } from './reader'
 
-const document = readScsDocument('SiiNunit\n{\nclass_name\n', 'sii')
+const prefix = 'SiiNunit\n{\n'
+const document = readScsDocument(`${prefix}class_name\n`, 'sii')
 const unit = document.units[0]
 
 if (!unit) {
@@ -14,8 +15,8 @@ if (unit.className !== 'class_name') {
 }
 
 if (
-  unit.classNameRange.start !== 0 ||
-  unit.classNameRange.end !== 'class_name'.length
+  unit.classNameRange.start !== prefix.length ||
+  unit.classNameRange.end !== prefix.length + 'class_name'.length
 ) {
   throw new Error('Expected classNameRange to cover the typed class name')
 }

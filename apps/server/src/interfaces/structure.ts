@@ -92,6 +92,20 @@ export interface SiiUnit {
   attributes: SiiAttribute[]
 }
 
+/**
+ * A top-level `@include "path.sui"` directive — one that appears as a
+ * sibling of unit definitions, directly inside the SiiNunit root, rather
+ * than inside a unit's body (where it's represented as an SiiAttribute
+ * with kind 'include' instead).
+ */
+export interface SiiInclude {
+  kind: 'include'
+  path: string
+  range: SiiRange
+  keyRange: SiiRange
+  valueRange: SiiRange
+}
+
 export interface SiiIssue {
   message: string
   range: SiiRange
@@ -112,6 +126,7 @@ export interface SiiDocument {
   magicMark?: SiiMagicMark
   rootRange?: SiiRange
   units: SiiUnit[]
+  includes: SiiInclude[]
   comments: SiiComment[]
   issues: SiiIssue[]
 }

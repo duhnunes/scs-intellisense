@@ -72,6 +72,12 @@ export function provideSemanticTokensForDocument(
       }
     }
 
+    const stringToken = tokenTypes.indexOf('string')
+    for (const include of document.includes) {
+      queueRange(tokensToEmit, include.keyRange, keywordToken, textLength)
+      queueRange(tokensToEmit, include.valueRange, stringToken, textLength)
+    }
+
     tokensToEmit.sort((left, right) => {
       if (left.start !== right.start) return left.start - right.start
       if (left.end !== right.end) return left.end - right.end

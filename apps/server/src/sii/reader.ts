@@ -5,6 +5,7 @@ import type {
   SiiComment,
   SiiCommentKind,
   SiiDocument,
+  SiiInclude,
   SiiIssue,
   SiiRange,
   SiiUnit,
@@ -111,12 +112,13 @@ export function readSiiDocument(
     })
   }
 
-  const units = reader.readUnits(true)
+  const { units, includes } = reader.readUnits(true)
   const rootEnd = reader.position
   return reader.document({
     magicMark: { text: 'SiiNunit', range: range(magicStart, magicStart + 8) },
     rootRange: range(rootOpen, rootEnd),
     units,
+    includes,
   })
 }
 
@@ -137,8 +139,8 @@ export function readScsDocument(
 function readSuiDocument(input: string, options: ReadSiiOptions): SiiDocument {
   const text = prepareText(input, options)
   const reader = new SiiReader(text, 'sui')
-  const units = reader.readUnits(false)
-  return reader.document({ units })
+  const { units, includes } = reader.readUnits(false)
+  return reader.document({ units, includes })
 }
 
 function prepareText(input: string, options: ReadSiiOptions): string {
@@ -168,12 +170,15 @@ class SiiReader {
   }
 
   document(
-    values: Partial<Pick<SiiDocument, 'magicMark' | 'rootRange' | 'units'>> = {}
+    values: Partial<
+      Pick<SiiDocument, 'magicMark' | 'rootRange' | 'units' | 'includes'>
+    > = {}
   ): SiiDocument {
     return {
       mode: this.mode,
       text: this.text,
       units: values.units ?? [],
+      includes: values.includes ?? [],
       comments: this.comments,
       issues: this.issues,
       ...(values.magicMark ? { magicMark: values.magicMark } : {}),
@@ -216,8 +221,12 @@ class SiiReader {
     return true
   }
 
-  readUnits(stopAtClosingBrace: boolean): SiiUnit[] {
+  readUnits(stopAtClosingBrace: boolean): {
+    units: SiiUnit[]
+    includes: SiiInclude[]
+  } {
     const units: SiiUnit[] = []
+    const includes: SiiInclude[] = []
 
     while (this.positionValue < this.masked.length) {
       this.skipTrivia()
@@ -226,10 +235,20 @@ class SiiReader {
       if (this.current() === '}') {
         if (stopAtClosingBrace) {
           this.positionValue++
-          return units
+          return { units, includes }
         }
         this.issue("Unexpected '}'", this.positionValue, this.positionValue + 1)
         this.positionValue++
+        continue
+      }
+
+      // `@include` can appear as a sibling of unit definitions, directly
+      // inside the SiiNunit root — not just inside a unit's body (that
+      // case is handled separately, in readAttribute()). It must be
+      // recognized here, before readUnit() ever sees it, or the reader
+      // tries to parse "@include" itself as a className.
+      if (this.isIncludeDirective()) {
+        includes.push(this.readTopLevelInclude())
         continue
       }
 
@@ -244,7 +263,7 @@ class SiiReader {
         this.positionValue,
         this.positionValue
       )
-    return units
+    return { units, includes }
   }
 
   private readUnit(): SiiUnit | undefined {
@@ -421,6 +440,26 @@ class SiiReader {
     const start = this.positionValue
     this.positionValue += '@include'.length
     return range(start, this.positionValue)
+  }
+
+  /**
+   * Reads a root-level `@include "path.sui"`. Shares the same keyword and
+   * value readers as the attribute-level include (readAttribute()), so a
+   * `.sui` path is tokenized identically no matter where it appears.
+   */
+  private readTopLevelInclude(): SiiInclude {
+    const start = this.positionValue
+    const keyRange = this.readIncludeRange()
+    this.skipHorizontalTrivia()
+    const valueRange = this.readValueRange()
+    const rawValue = this.text.slice(valueRange.start, valueRange.end)
+    return {
+      kind: 'include',
+      path: rawValue.replace(/^["']|["']$/g, ''),
+      range: range(start, valueRange.end),
+      keyRange,
+      valueRange,
+    }
   }
 
   private isIncludeDirective(): boolean {

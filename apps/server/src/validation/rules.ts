@@ -19,12 +19,15 @@ import type {
 export function validateSiiDocument(document: SiiDocument): SiiIssue[] {
   const issues: SiiIssue[] = []
   for (const unit of document.units) {
-    issues.push(...validateUnit(unit))
+    issues.push(...validateUnit(unit, document.text))
+  }
+  for (const include of document.includes) {
+    issues.push(...validateIncludePlacement(include.range, document.text))
   }
   return issues
 }
 
-function validateUnit(unit: SiiUnit): SiiIssue[] {
+function validateUnit(unit: SiiUnit, text: string): SiiIssue[] {
   const issues = validateClassName(unit.className, unit.classNameRange)
 
   // A zero-length unitNameRange means the reader never actually reached a
@@ -33,6 +36,12 @@ function validateUnit(unit: SiiUnit): SiiIssue[] {
   // there's nothing of substance here to run a business rule against.
   if (unit.unitNameRange.end > unit.unitNameRange.start) {
     issues.push(...validateUnitName(unit.unitName, unit.unitNameRange))
+  }
+
+  for (const attribute of unit.attributes) {
+    if (attribute.kind === 'include') {
+      issues.push(...validateIncludePlacement(attribute.range, text))
+    }
   }
 
   return issues
@@ -85,4 +94,26 @@ function validateUnitName(
   }
 
   return issues
+}
+
+/**
+ * Per the SCS docs, `@include` must appear at the very start of a new line
+ * with no whitespace before it — indenting it, or writing it after other
+ * content on the same line, silently fails to include anything in-game.
+ * Covers both the top-level `@include` (SiiInclude) and the in-body one
+ * (an SiiAttribute with kind 'include') since both share this rule.
+ */
+function validateIncludePlacement(
+  includeRange: SiiRange,
+  text: string
+): SiiIssue[] {
+  const before = includeRange.start > 0 ? text[includeRange.start - 1] : '\n'
+  if (before === '\n') return []
+  return [
+    {
+      message:
+        '@include must be at the start of a new line with no leading whitespace',
+      range: includeRange,
+    },
+  ]
 }
