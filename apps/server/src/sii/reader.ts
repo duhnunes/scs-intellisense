@@ -277,26 +277,24 @@ class SiiReader {
     const className = this.text.slice(classNameRange.start, classNameRange.end)
     this.skipHorizontalTrivia()
     const colonStart = this.positionValue
-    if (!this.consume(':')) {
+    if (this.consume(':')) {
+      this.skipHorizontalTrivia()
+    } else {
       this.issue(
         "Expected ':' between className and unitName",
         colonStart,
         colonStart + 1
       )
-      return {
-        kind: 'unit',
-        className,
-        unitName: '',
-        range: range(start, this.positionValue),
-        classNameRange,
-        colonRange: range(colonStart, colonStart + 1),
-        unitNameRange: range(this.positionValue, this.positionValue),
-        bodyRange: range(this.positionValue, this.positionValue),
-        attributes: [],
-      }
-    }
 
-    this.skipHorizontalTrivia()
+      if (
+        this.positionValue < this.masked.length &&
+        !isPossibleUnitNameStart(this.current()) &&
+        this.current() !== '{' &&
+        !isWhitespace(this.current())
+      )
+        this.positionValue++
+      this.skipHorizontalTrivia()
+    }
     const unitNameRange = this.readUnitNameRange()
     if (!unitNameRange) {
       this.issue(
@@ -652,6 +650,10 @@ function maskComments(text: string, comments: SiiComment[]): string {
 
 function isWhitespace(character: string): boolean {
   return /\s/.test(character)
+}
+
+function isPossibleUnitNameStart(character: string): boolean {
+  return /[A-Za-z0-9_.]/.test(character)
 }
 
 function isHorizontalWhitespace(character: string): boolean {

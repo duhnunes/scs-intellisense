@@ -52,12 +52,36 @@ function validateClassName(
   classNameRange: SiiRange
 ): SiiIssue[] {
   if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(className)) return []
-  return [
-    {
-      message: `Invalid className: "${className}"`,
-      range: classNameRange,
-    },
-  ]
+
+  const issues: SiiIssue[] = []
+
+  // Point at each individual character that isn't allowed, instead of
+  // underlining the whole identifier — "pref@b_model" should only flag
+  // the "@", not "pref@b_model" in full.
+  for (const match of className.matchAll(/[^A-Za-z0-9_]/g)) {
+    if (match.index === undefined) continue
+    issues.push({
+      message: `Invalid character in className: "${match[0]}"`,
+      range: {
+        start: classNameRange.start + match.index,
+        end: classNameRange.start + match.index + 1,
+      },
+    })
+  }
+
+  // A leading digit is a separate problem from "disallowed character" —
+  // digits ARE allowed in a className, just not as the first character.
+  if (/^[0-9]/.test(className)) {
+    issues.push({
+      message: 'className must not start with a digit',
+      range: {
+        start: classNameRange.start,
+        end: classNameRange.start + 1,
+      },
+    })
+  }
+
+  return issues
 }
 
 function validateUnitName(
@@ -84,11 +108,20 @@ function validateUnitName(
         range: tokenRange,
       })
 
-    if (token.length === 0 && offset !== unitNameRange.start)
+    if (token.length === 0 && offset !== unitNameRange.start) {
+      // A zero-length range has nothing for an editor to underline, so it
+      // falls back to highlighting whatever token happens to be nearby.
+      // Point at the actual redundant dot(s) instead — the '.' that ended
+      // the previous token through the '.' that starts the next one.
+      const dotsRange: SiiRange = {
+        start: offset - 1,
+        end: Math.min(offset + 1, unitNameRange.end),
+      }
       issues.push({
         message: 'UnitName must not contain empty tokens (consecutive dots)',
-        range: tokenRange,
+        range: dotsRange,
       })
+    }
 
     offset += token.length + 1
   }

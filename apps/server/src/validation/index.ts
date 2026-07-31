@@ -13,6 +13,13 @@ export function validateDocument(doc: TextDocument): Diagnostic[] {
     mode === 'unknown' ? 'sii' : mode
   )
 
+  const normalizedDoc = TextDocument.create(
+    doc.uri,
+    doc.languageId,
+    doc.version,
+    parsed.text
+  )
+
   // Structural issues come straight from the reader (e.g. a missing '{');
   // business-rule issues come from rules.ts, running against the tree the
   // reader already built. This is the merge point for both.
@@ -21,8 +28,8 @@ export function validateDocument(doc: TextDocument): Diagnostic[] {
   return issues.map((issue) => ({
     severity: DiagnosticSeverity.Error,
     range: {
-      start: doc.positionAt(issue.range.start),
-      end: doc.positionAt(issue.range.end),
+      start: normalizedDoc.positionAt(issue.range.start),
+      end: normalizedDoc.positionAt(issue.range.end),
     },
     message: issue.message,
     source: 'sii.reader',
