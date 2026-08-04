@@ -1,153 +1,205 @@
 import type { Connection } from 'vscode-languageserver'
-import { createLogger as createServerLogger } from './errors'
 
-type Logger = ReturnType<typeof createServerLogger>
+export type LogSeverity = 'error' | 'warning' | 'info'
 
-let _logger: Logger | null = null
+export interface LogRange {
+  start: number
+  end: number
+}
 
-const reported = new Map<string, Set<string>>()
+export interface LogPayload {
+  timestamp: string
+  severity: LogSeverity
+  code?: string
+  message: string
+  details?: string
+  file?: string
+  range?: LogRange | null
+}
 
-const batchQueue: any[] = []
-let flushTimer: NodeJS.Timeout | null = null
-const flushIntervalMs = 5000 // 5s
+export interface Logger {
+  info(
+    code: string | undefined,
+    message: string,
+    details?: string,
+    file?: string,
+    range?: LogRange | null
+  ): void
+  warn(
+    code: string | undefined,
+    message: string,
+    details?: string,
+    file?: string,
+    range?: LogRange | null
+  ): void
+  error(
+    code: string | undefined,
+    message: string,
+    details?: string,
+    file?: string,
+    range?: LogRange | null
+  ): void
+  /**
+   * Same as warn(), but deduplicated per (file, code+message — or an
+   * explicit `id`) and batched: repeated calls within a short window
+   * collapse into a single notification instead of one per call. Meant
+   * for warnings that could otherwise fire many times in a row (e.g.
+   * once per line of a large file).
+   */
+  warnOnce(
+    code: string | undefined,
+    message: string,
+    details?: string,
+    file?: string,
+    range?: LogRange | null,
+    id?: string
+  ): void
+  /** Resets warnOnce's dedup memory for one file, or globally if
+   *  omitted. Call this when a file closes, or its content changes
+   *  enough that previously-reported warnings may no longer apply. */
+  clearReportedForFile(file?: string): void
+}
 
-function scheduleFlush(connection?: Connection) {
+const BATCH_FLUSH_INTERVAL_MS = 5000
+
+interface BatchedWarning {
+  code: string
+  message: string
+  details?: string
+  file?: string
+}
+
+let connection: Connection | undefined
+const reportedOnce = new Map<string, Set<string>>()
+const batchQueue: BatchedWarning[] = []
+let flushTimer: NodeJS.Timeout | undefined
+
+export function initLogger(conn: Connection): Logger {
+  connection = conn
+  return getLogger()
+}
+
+export function getLogger(): Logger {
+  if (!connection) return consoleFallbackLogger
+
+  const conn = connection
+  return {
+    info: (code, message, details, file, range) =>
+      send(conn, 'info', code, message, details, file, range),
+    warn: (code, message, details, file, range) =>
+      send(conn, 'warning', code, message, details, file, range),
+    error: (code, message, details, file, range) =>
+      send(conn, 'error', code, message, details, file, range),
+    warnOnce: (code, message, details, file, _range, id) =>
+      queueWarnOnce(conn, code, message, details, file, id),
+    clearReportedForFile,
+  }
+}
+
+/**
+ * The single place a log payload actually gets sent. Only through the
+ * custom `scsIntellisense/log` notification — extension.ts formats and
+ * writes it into the shared "SCS-Intellisense" output channel.
+ *
+ * Deliberately does NOT also call `connection.console.*`: the client
+ * points its own LSP console at that same channel
+ * (`LanguageClientOptions.outputChannel` in extension.ts), so doing both
+ * printed every message twice, each with different formatting — that
+ * was the original bug this file used to have.
+ */
+function send(
+  conn: Connection,
+  severity: LogSeverity,
+  code: string | undefined,
+  message: string,
+  details?: string,
+  file?: string,
+  range?: LogRange | null
+): void {
+  const payload: LogPayload = {
+    timestamp: new Date().toISOString(),
+    severity,
+    code,
+    message,
+    details,
+    file,
+    range,
+  }
+  try {
+    conn.sendNotification('scsIntellisense/log', payload)
+  } catch (err) {
+    // The one case this DOES fall back to connection.console: the
+    // notification channel itself is broken, so there's nowhere else
+    // left to report that.
+    conn.console.error(
+      `[scs-intellisense] failed to send log notification: ${String(err)}`
+    )
+  }
+}
+
+function queueWarnOnce(
+  conn: Connection,
+  code: string | undefined,
+  message: string,
+  details: string | undefined,
+  file: string | undefined,
+  id: string | undefined
+): void {
+  const fileKey = file ?? '__global__'
+  const dedupeKey = id ?? `${code ?? 'WARN'}:${message}`
+
+  let seen = reportedOnce.get(fileKey)
+  if (!seen) {
+    seen = new Set()
+    reportedOnce.set(fileKey, seen)
+  }
+  if (seen.has(dedupeKey)) return
+  seen.add(dedupeKey)
+
+  batchQueue.push({ code: code ?? 'WARN', message, details, file })
+  scheduleFlush(conn)
+}
+
+function scheduleFlush(conn: Connection): void {
   if (flushTimer) return
   flushTimer = setTimeout(() => {
-    flushTimer = null
-    if (batchQueue.length === 0) return
-    const items = batchQueue.splice(0, batchQueue.length)
-    // send a single notification with the batch summary
-    try {
-      if (connection) {
-        connection.sendNotification('scsIntellisense/log', {
-          timestamp: new Date().toISOString(),
-          severity: 'warning',
-          code: 'BATCH_WARNINGS',
-          message: `Batch of ${items.length} warnings`,
-          details: items
-            .map(
-              (i) =>
-                `${i.code} ${i.file ? '[' + i.file + ']' : ''} - ${i.message}${i.details ? `\n${i.details}` : ''}`
-            )
-            .join('\n\n'),
-        })
-      } else {
-        // fallback to console
-        console.warn(
-          '[sii:logger] batch warnings:\n' +
-            items
-              .map((i) => `${i.code} ${i.file ?? ''} - ${i.message}`)
-              .join('\n')
-        )
-      }
-    } catch (e) {
-      console.error('[sii:logger] failed to flush batch', e)
-    }
-  }, flushIntervalMs)
+    flushTimer = undefined
+    flushBatch(conn)
+  }, BATCH_FLUSH_INTERVAL_MS)
 }
 
-export function initLogger(connection: Connection) {
-  if (!_logger) {
-    _logger = createServerLogger(connection)
-    ;(_logger as any)._connection = connection
-  }
-  return _logger
+function flushBatch(conn: Connection): void {
+  if (batchQueue.length === 0) return
+  const items = batchQueue.splice(0, batchQueue.length)
+  send(
+    conn,
+    'warning',
+    'BATCH_WARNINGS',
+    `Batch of ${items.length} warning${items.length === 1 ? '' : 's'}`,
+    items
+      .map(
+        (item) =>
+          `${item.code}${item.file ? ` [${item.file}]` : ''} - ${item.message}${item.details ? `\n${item.details}` : ''}`
+      )
+      .join('\n\n')
+  )
 }
 
-export function getLogger() {
-  if (_logger) {
-    const connection = (_logger as any)._connection as Connection | undefined
-    return {
-      info: _logger.info.bind(_logger),
-      warn: _logger.warn.bind(_logger),
-      error: _logger.error.bind(_logger),
+function clearReportedForFile(file?: string): void {
+  reportedOnce.delete(file ?? '__global__')
+}
 
-      warnOnce(
-        code: string | undefined,
-        message: string,
-        details?: string,
-        file?: string,
-        range?: { start: number; end: number } | null,
-        id?: string
-      ) {
-        const fileKey = file ?? '__global__'
-        const key = id ?? `${code ?? 'WARN'}:${message}`
-        let set = reported.get(fileKey)
-        if (!set) {
-          set = new Set<string>()
-          reported.set(fileKey, set)
-        }
-        if (set.has(key)) return
-        set.add(key)
-
-        batchQueue.push({ code: code ?? 'WARN', message, details, file, range })
-        scheduleFlush((_logger as any)?._connection ?? undefined)
-      },
-
-      clearReportedForFile(file?: string) {
-        const fileKey = file ?? '__global__'
-        reported.delete(fileKey)
-      },
-    } as Logger & {
-      warnOnce: (
-        code: string | undefined,
-        message: string,
-        details?: string,
-        file?: string,
-        range?: { start: number; end: number } | null,
-        id?: string
-      ) => void
-      clearReportedForFile?: (file?: string) => void
-    }
-  }
-
-  return {
-    info: (
-      code: string | undefined,
-      message: string,
-      details?: string,
-      file?: string,
-      range?: { start: number; end: number } | null
-    ) => {
-      try {
-        console.log(`[sii:logger:fallback] ${code ?? ''} ${message}`)
-      } catch (e) {}
-    },
-    warn: (
-      code: string | undefined,
-      message: string,
-      details?: string,
-      file?: string,
-      range?: { start: number; end: number } | null
-    ) => {
-      try {
-        console.warn(`[sii:logger:fallback] ${code ?? ''} ${message}`)
-      } catch (e) {}
-    },
-    error: (
-      code: string | undefined,
-      message: string,
-      details?: string,
-      file?: string,
-      range?: { start: number; end: number } | null
-    ) => {
-      try {
-        console.error(`[sii:logger:fallback] ${code ?? ''} ${message}`)
-      } catch (e) {}
-    },
-    warnOnce: (
-      code: string | undefined,
-      message: string,
-      details?: string,
-      file?: string,
-      range?: { start: number; end: number } | null,
-      id?: string
-    ) => {
-      try {
-        console.warn(`[sii:logger:fallback:once] ${code ?? ''} ${message}`)
-      } catch (e) {}
-    },
-    clearReportedForFile: (file?: string) => {},
-  } as any
+/** Used only if something calls getLogger() before initLogger() has run
+ *  — shouldn't happen in practice (server.ts always initializes first),
+ *  but degrades to plain console output instead of throwing. */
+const consoleFallbackLogger: Logger = {
+  info: (code, message) =>
+    console.log(`[scs-intellisense:fallback] ${code ?? ''} ${message}`),
+  warn: (code, message) =>
+    console.warn(`[scs-intellisense:fallback] ${code ?? ''} ${message}`),
+  error: (code, message) =>
+    console.error(`[scs-intellisense:fallback] ${code ?? ''} ${message}`),
+  warnOnce: (code, message) =>
+    console.warn(`[scs-intellisense:fallback:once] ${code ?? ''} ${message}`),
+  clearReportedForFile: () => {},
 }
