@@ -4,6 +4,8 @@ import {
   ProposedFeatures,
   InitializeParams,
   TextDocumentSyncKind,
+  CompletionItemKind,
+  type CompletionItem,
   type InitializeResult,
 } from 'vscode-languageserver/node'
 
@@ -12,6 +14,16 @@ import { registerSemantic, semanticTokensLegend } from './semantic'
 import { getLogger, initLogger } from './logger'
 import { validateDocument } from './validation'
 import { SchemaClient, type SchemaClientLogger } from './schema/client'
+import { readScsDocument } from './sii'
+import { detectExtFromUri, detectModeFromExt } from './parser/docParser'
+import {
+  buildClassNameCompletionItems,
+  isClassNamePosition,
+} from './completion/className'
+import {
+  buildAttributeKeyCompletionItems,
+  findAttributeKeyPosition,
+} from './completion/attributeKey'
 
 const connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments(TextDocument)
@@ -105,7 +117,7 @@ connection.onRequest('scsIntellisense/refreshSchema', async () => {
   }
 })
 
-connection.onCompletion((params) => {
+connection.onCompletion(async (params) => {
   try {
     const doc = documents.get(params.textDocument.uri)
     if (!doc) {
@@ -118,10 +130,62 @@ connection.onCompletion((params) => {
       return []
     }
 
-    // const offset = doc.offsetAt(params.position)
-    // const items = provideCompletionItems(doc.getText(), offset)
+    const ext = detectExtFromUri(doc.uri)
+    const mode = detectModeFromExt(ext)
+    const parsed = readScsDocument(
+      doc.getText(),
+      mode === 'unknown' ? 'sii' : mode
+    )
 
-    // return items
+    // Same reasoning as validation/vaIndex.ts: `parsed`'s ranges are
+    // relative to the normalized (CRLF -> LF) text, so the client's
+    // position has to be resolved against that same normalized text —
+    // not against `doc` directly — or the position drifts on any
+    // Windows-saved .sii file.
+    const normalizedDoc = TextDocument.create(
+      doc.uri,
+      doc.languageId,
+      doc.version,
+      parsed.text
+    )
+    const offset = normalizedDoc.offsetAt(params.position)
+
+    if (!schemaClient) {
+      logger.warn(
+        'COMPLETION_NO_SCHEMA_CLIENT',
+        'Completion requested before schema client was ready'
+      )
+      return []
+    }
+
+    if (isClassNamePosition(parsed, offset)) {
+      return buildClassNameCompletionItems(schemaClient.getManifest()).map(
+        (item): CompletionItem => ({
+          label: item.label,
+          kind: CompletionItemKind.Class,
+          detail: item.detail,
+          documentation: item.documentation,
+        })
+      )
+    }
+
+    const unit = findAttributeKeyPosition(parsed, offset)
+    if (unit) {
+      // First real (non-mocked) use of the lazy per-class fetch: this
+      // is the only completion path that ever needs a specific class's
+      // full attribute list, not just what's already in the manifest.
+      const schema = await schemaClient.getSchemaContent(unit.className)
+      return buildAttributeKeyCompletionItems(schema).map(
+        (item): CompletionItem => ({
+          label: item.label,
+          kind: CompletionItemKind.Property,
+          detail: item.detail,
+          documentation: item.documentation,
+        })
+      )
+    }
+
+    return []
   } catch (error) {
     const details =
       error && (error as Error).stack ? (error as Error).stack : String(error)

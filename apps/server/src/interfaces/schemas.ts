@@ -23,10 +23,33 @@ export interface SchemaManifest {
 }
 
 /**
- * The full per-class schema document fetched lazily from a manifest
- * entry's `url`. Shape is intentionally loose for now — attribute-level
- * consumers (completion of attribute_key, token validation, hover) will
- * refine this once that work starts; this module only needs to fetch,
- * cache, and hand back whatever JSON is there.
+ * One attribute definition inside a schema file's `key` map. Matches
+ * scs-schema's actual JSON shape (confirmed against a real fetched file,
+ * e.g. animated_model_data.json) — NOT the earlier speculative
+ * AttributeDef in interfaces/structure.ts, which predates having seen
+ * real data and doesn't match it (array shape vs. this record shape,
+ * field names, etc).
  */
-export type SchemaDocument = Record<string, unknown>
+export interface SchemaAttributeDef {
+  description: string
+  isArray: boolean
+  /** Present (non-null) when isArray is false. */
+  type: string[] | null
+  /** Present (non-null) when isArray is true. */
+  arrayElementType: string[] | null
+}
+
+/**
+ * The full per-class schema document fetched lazily from a manifest
+ * entry's `url`. The database isn't 100% populated yet (per duhnunes),
+ * so consumers should treat every field here as possibly missing or
+ * malformed on any given class, not just absent entirely.
+ */
+export interface SchemaFileContent {
+  meta: {
+    version: string
+    description: string
+  }
+  scope: string
+  key: Record<string, SchemaAttributeDef>
+}

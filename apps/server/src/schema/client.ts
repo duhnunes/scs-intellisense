@@ -1,10 +1,10 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import type {
-  SchemaDocument,
+  SchemaFileContent,
   SchemaManifest,
   SchemaManifestEntry,
-} from '../interfaces/schemas.js'
+} from '../interfaces/schemas'
 
 const DEFAULT_MANIFEST_URL =
   'https://raw.githubusercontent.com/duhnunes/scs-schema/refs/heads/master/data/manifest.json'
@@ -58,7 +58,7 @@ export class SchemaClient {
   private manifest: SchemaManifest | undefined
   private readonly inFlightSchemaFetches = new Map<
     string,
-    Promise<SchemaDocument | undefined>
+    Promise<SchemaFileContent | undefined>
   >()
 
   constructor(options: SchemaClientOptions) {
@@ -173,11 +173,11 @@ export class SchemaClient {
    */
   async getSchemaContent(
     className: string
-  ): Promise<SchemaDocument | undefined> {
+  ): Promise<SchemaFileContent | undefined> {
     const entry = this.getSchemaEntry(className)
     if (!entry) return undefined
 
-    const cached = await this.readJsonFile<SchemaDocument>(
+    const cached = await this.readJsonFile<SchemaFileContent>(
       this.schemaCachePath(entry)
     )
     if (cached) return cached
@@ -194,7 +194,7 @@ export class SchemaClient {
 
   private async fetchAndCacheSchema(
     entry: SchemaManifestEntry
-  ): Promise<SchemaDocument | undefined> {
+  ): Promise<SchemaFileContent | undefined> {
     let response: Response
     try {
       response = await this.fetchImpl(entry.url)
@@ -212,9 +212,9 @@ export class SchemaClient {
       return undefined
     }
 
-    let content: SchemaDocument
+    let content: SchemaFileContent
     try {
-      content = (await response.json()) as SchemaDocument
+      content = (await response.json()) as SchemaFileContent
     } catch (err) {
       this.logger.error(
         `Schema response for "${entry.name}" was not valid JSON`,
