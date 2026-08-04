@@ -15,8 +15,6 @@ export function activate(context: vscode.ExtensionContext) {
   output = vscode.window.createOutputChannel('SCS-Intellisense')
   context.subscriptions.push(output)
 
-  new ConfigManager()
-
   const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'))
 
   const serverOptions: ServerOptions = {
@@ -30,6 +28,12 @@ export function activate(context: vscode.ExtensionContext) {
       { scheme: 'file', language: 'sui' },
     ],
     outputChannel: output,
+    // The server has no `vscode` API of its own (it's a plain Node
+    // process), so the one thing it needs from us — where to read/write
+    // its schema cache — has to be handed over explicitly here.
+    initializationOptions: {
+      globalStoragePath: context.globalStorageUri.fsPath,
+    },
     // synchronize: {
     //   fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{sii,sui}')
     // }
@@ -44,6 +48,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(client)
   client.start()
+
+  // ConfigManager registers the "refresh schema" command, which needs to
+  // send a request through `client` — so it's created only once `client`
+  // exists, not before.
+  new ConfigManager(context, client)
 
   const registerLogHandler = () => {
     try {

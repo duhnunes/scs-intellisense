@@ -121,6 +121,11 @@
         "command": "scsIntellisense.clearOutput",
         "title": "Clear Output",
         "category": "SCS Intellisense"
+      },
+      {
+        "command": "scsIntellisense.refreshSchema",
+        "title": "Refresh Schema Database",
+        "category": "SCS Intellisense"
       }
     ],
     "capabilities": {},
