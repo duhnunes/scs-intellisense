@@ -114,6 +114,27 @@ export function readSiiDocument(
 
   const { units, includes } = reader.readUnits(true)
   const rootEnd = reader.position
+
+  // readUnits() stops the moment it finds the root's matching '}' — but
+  // per the file format, that brace should be the last meaningful thing
+  // in the file (aside from a trailing blank line, which the docs
+  // explicitly recommend). Silently ignoring anything left over would
+  // just make part of a file mysteriously do nothing, with no
+  // explanation — most commonly because a second "SiiNunit { ... }"
+  // block got pasted in by mistake. skipTrivia() already treats masked
+  // comments as whitespace, so a trailing comment alone won't trigger
+  // this.
+  reader.skipTrivia()
+  if (reader.position < text.length) {
+    reader.issue(
+      text.startsWith('SiiNunit', reader.position)
+        ? 'Duplicate SiiNunit block — only one is allowed per file'
+        : 'Unexpected content after the SiiNunit closing brace',
+      reader.position,
+      text.length
+    )
+  }
+
   return reader.document({
     magicMark: { text: 'SiiNunit', range: range(magicStart, magicStart + 8) },
     rootRange: range(rootOpen, rootEnd),
@@ -285,7 +306,20 @@ class SiiReader {
         colonStart,
         colonStart + 1
       )
-
+      // Recover instead of bailing out: a stray character typed where
+      // ':' should be (e.g. ';') isn't part of the className OR the
+      // unitName, so skip past just that one character and keep reading
+      // the header as normal. Without this, readUnits() would retry
+      // readUnit() from this exact spot, re-tokenizing leftover
+      // fragments of this same line (the stray char, then
+      // "prefab.house.dorime") as bogus new class names, and eventually
+      // swallow the real '{' via recoverToNextLine() — the same kind of
+      // brace desync the className '@' fix addressed earlier.
+      // If the current character could plausibly start a unitName on
+      // its own (a letter/digit/underscore, or the leading '.' of a
+      // nameless unit) there's nothing extraneous to skip — e.g.
+      // "prefab_model prefab.house.dorime {" with just a missing colon
+      // and no stray character at all.
       if (
         this.positionValue < this.masked.length &&
         !isPossibleUnitNameStart(this.current()) &&

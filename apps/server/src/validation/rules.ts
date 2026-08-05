@@ -24,6 +24,7 @@ export function validateSiiDocument(document: SiiDocument): SiiIssue[] {
   for (const include of document.includes) {
     issues.push(...validateIncludePlacement(include.range, document.text))
   }
+  issues.push(...validateDuplicateUnitNames(document.units))
   return issues
 }
 
@@ -124,6 +125,50 @@ function validateUnitName(
     }
 
     offset += token.length + 1
+  }
+
+  return issues
+}
+
+/**
+ * Per the SCS docs, two units sharing the same name make the whole mod
+ * fail to load ("if some mod is using name vehicle.dummy.truck and you
+ * also use this, your mod will fail to load"). This can only catch
+ * collisions between units visible right here in the same file — it has
+ * no way to know about a name already used by another file or another
+ * mod (that would need the workspace-wide index that's still future
+ * work), but a same-file duplicate is a mistake either way.
+ *
+ * Nameless units (unitName starting with '.') are deliberately exempt:
+ * the whole point of a nameless unit is that it's never referenced by
+ * name from elsewhere, so the load-failure case the docs describe
+ * doesn't apply to them.
+ */
+function validateDuplicateUnitNames(units: SiiUnit[]): SiiIssue[] {
+  const unitsByName = new Map<string, SiiUnit[]>()
+
+  for (const unit of units) {
+    const name = unit.unitName
+    if (!name || name.startsWith('.')) continue
+    // A zero-length unitNameRange means the reader never actually reached
+    // a unitName for this unit — already reported as a structural issue,
+    // nothing to compare here.
+    if (unit.unitNameRange.end <= unit.unitNameRange.start) continue
+
+    const group = unitsByName.get(name)
+    if (group) group.push(unit)
+    else unitsByName.set(name, [unit])
+  }
+
+  const issues: SiiIssue[] = []
+  for (const [name, group] of unitsByName) {
+    if (group.length < 2) continue
+    for (const unit of group) {
+      issues.push({
+        message: `Duplicate unit name "${name}" — used by ${group.length} units in this file`,
+        range: unit.unitNameRange,
+      })
+    }
   }
 
   return issues
