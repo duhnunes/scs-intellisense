@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import type {
   SchemaFileContent,
@@ -162,6 +162,15 @@ export class SchemaClient {
     this.logger.info(
       `Schema manifest updated to version ${incoming.version} (${Object.keys(incoming.schemas).length} classes)`
     )
+
+    // Content-addressed cache files are never overwritten in place (see
+    // schemaCacheFileName) — safe against a crash mid-write, but it also
+    // means an updated or removed class just leaves its old cached file
+    // behind forever unless something cleans up. Now that the manifest
+    // just changed, this is the one moment that's actually true: sweep
+    // out anything on disk that no current entry points to.
+    await this.pruneStaleSchemaCache()
+
     return true
   }
 
@@ -249,12 +258,65 @@ export class SchemaClient {
   }
 
   private schemaCachePath(entry: SchemaManifestEntry): string {
+    return path.join(this.schemasDir(), this.schemaCacheFileName(entry))
+  }
+
+  private schemaCacheFileName(entry: SchemaManifestEntry): string {
     // Keyed by hash, not by name: content-addressed, so a schema update
-    // (new hash) never serves stale cached content under the old name,
-    // and old cache entries just go unused rather than needing explicit
-    // invalidation.
+    // (new hash) never serves stale cached content under the old name.
+    // This does mean the old file becomes orphaned once the hash
+    // changes — pruneStaleSchemaCache() is what actually cleans those up.
     const safeHash = entry.hash.replace(/[^a-zA-Z0-9]/g, '_')
-    return path.join(this.schemasDir(), `${entry.name}.${safeHash}.json`)
+    return `${entry.name}.${safeHash}.json`
+  }
+
+  /**
+   * Deletes any cached schema file that no longer corresponds to a
+   * current manifest entry — either its class was updated (new hash, old
+   * file orphaned) or removed from the manifest entirely (no entry
+   * points to it anymore). Only called right after a manifest change, so
+   * a file matching the CURRENT hash of a class that hasn't changed is
+   * never touched — that content is still exactly as valid as when it
+   * was fetched.
+   */
+  private async pruneStaleSchemaCache(): Promise<void> {
+    if (!this.manifest) return
+
+    const expectedFileNames = new Set(
+      Object.values(this.manifest.schemas).map((entry) =>
+        this.schemaCacheFileName(entry)
+      )
+    )
+
+    let cachedFileNames: string[]
+    try {
+      cachedFileNames = await readdir(this.schemasDir())
+    } catch (err) {
+      this.logger.warn(`Failed to list schema cache dir for pruning: ${err}`)
+      return
+    }
+
+    const staleFileNames = cachedFileNames.filter(
+      (fileName) =>
+        fileName.endsWith('.json') && !expectedFileNames.has(fileName)
+    )
+    if (staleFileNames.length === 0) return
+
+    await Promise.all(
+      staleFileNames.map(async (fileName) => {
+        try {
+          await unlink(path.join(this.schemasDir(), fileName))
+        } catch (err) {
+          this.logger.warn(
+            `Failed to remove stale schema cache file "${fileName}": ${err}`
+          )
+        }
+      })
+    )
+
+    this.logger.info(
+      `Pruned ${staleFileNames.length} stale schema cache file(s)`
+    )
   }
 
   private async readJsonFile<T>(filePath: string): Promise<T | undefined> {
