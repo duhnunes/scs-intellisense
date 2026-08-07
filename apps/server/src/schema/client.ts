@@ -11,6 +11,12 @@ const DEFAULT_MANIFEST_URL =
 
 const MANIFEST_CACHE_FILE = 'manifest.json'
 const SCHEMAS_CACHE_DIR = 'schemas'
+const DEFAULT_NEGATIVE_CACHE_TTL_MS = 5 * 60 * 1000
+const DEFAULT_FETCH_TIMEOUT_MS = 8000
+
+/** Sentinel used only internally to tell "the wait timed out" apart from
+ *  "the fetch resolved to undefined" when racing the two. */
+const TIMED_OUT = Symbol('scs-schema-fetch-timed-out')
 
 export interface SchemaClientLogger {
   info(message: string): void
@@ -27,6 +33,17 @@ export interface SchemaClientOptions {
   logger?: SchemaClientLogger
   /** Injectable for tests; defaults to the platform's global fetch. */
   fetchImpl?: typeof fetch
+  /** How long a failed schema fetch is remembered before retrying, even
+   *  if the manifest's hash for that class hasn't changed. Default 5
+   *  minutes. Configurable mainly so tests don't have to wait 5 real
+   *  minutes. */
+  negativeCacheTtlMs?: number
+  /** How long a single getSchemaContent() call waits for a fetch before
+   *  giving up on THIS request only. The underlying fetch is never
+   *  cancelled — it keeps running in the background and still gets
+   *  cached (or negative-cached) whenever it actually resolves, so the
+   *  next request benefits even if this one didn't. Default 8s. */
+  fetchTimeoutMs?: number
 }
 
 const noopLogger: SchemaClientLogger = {
@@ -54,18 +71,30 @@ export class SchemaClient {
   private readonly manifestUrl: string
   private readonly logger: SchemaClientLogger
   private readonly fetchImpl: typeof fetch
+  private readonly negativeCacheTtlMs: number
+  private readonly fetchTimeoutMs: number
 
   private manifest: SchemaManifest | undefined
   private readonly inFlightSchemaFetches = new Map<
     string,
     Promise<SchemaFileContent | undefined>
   >()
+  /** hash -> when the fetch for that exact content last failed. Keyed by
+   *  hash (not className) so a real fix in scs-schema — which always
+   *  produces a new hash, since CDN URLs are pinned to a commit SHA —
+   *  clears this automatically, with no TTL needed for that case. The
+   *  TTL below only covers a *transient* failure (e.g. the CDN edge
+   *  hiccuping) where the hash never changed at all. */
+  private readonly failedSchemaFetches = new Map<string, number>()
 
   constructor(options: SchemaClientOptions) {
     this.cacheDir = options.cacheDir
     this.manifestUrl = options.manifestUrl ?? DEFAULT_MANIFEST_URL
     this.logger = options.logger ?? noopLogger
     this.fetchImpl = options.fetchImpl ?? fetch
+    this.negativeCacheTtlMs =
+      options.negativeCacheTtlMs ?? DEFAULT_NEGATIVE_CACHE_TTL_MS
+    this.fetchTimeoutMs = options.fetchTimeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS
   }
 
   /**
@@ -110,6 +139,14 @@ export class SchemaClient {
    * Returns true if the manifest actually changed.
    */
   async refreshManifest(force = false): Promise<boolean> {
+    if (force) {
+      // A forced refresh means "check again right now" — that intent
+      // should also cover schemas that failed before, not just the
+      // manifest itself. Otherwise the manual command wouldn't actually
+      // retry a schema still within its cooldown.
+      this.failedSchemaFetches.clear()
+    }
+
     let response: Response
     try {
       response = await this.fetchImpl(this.manifestUrl, {
@@ -191,14 +228,66 @@ export class SchemaClient {
     )
     if (cached) return cached
 
-    const inFlight = this.inFlightSchemaFetches.get(entry.hash)
-    if (inFlight) return inFlight
+    const failedAt = this.failedSchemaFetches.get(entry.hash)
+    if (failedAt !== undefined) {
+      const age = Date.now() - failedAt
+      if (age < this.negativeCacheTtlMs) {
+        // Still within the cooldown for this exact content (same hash)
+        // — don't hammer the CDN again on every keystroke for something
+        // that just failed. A hash change (a real scs-schema fix) skips
+        // this entirely, since it's a different key.
+        return undefined
+      }
+      // Cooldown expired — worth trying again in case it was transient.
+      this.failedSchemaFetches.delete(entry.hash)
+    }
 
-    const fetchPromise = this.fetchAndCacheSchema(entry).finally(() => {
-      this.inFlightSchemaFetches.delete(entry.hash)
+    const inFlight = this.inFlightSchemaFetches.get(entry.hash)
+    const workPromise =
+      inFlight ??
+      this.fetchAndCacheSchema(entry)
+        .then((content) => {
+          // fetchAndCacheSchema() returns undefined for every failure
+          // case (network error, non-ok response, invalid JSON) — one
+          // place to record the outcome, rather than instrumenting each
+          // of those branches individually.
+          if (content) this.failedSchemaFetches.delete(entry.hash)
+          else this.failedSchemaFetches.set(entry.hash, Date.now())
+          return content
+        })
+        .finally(() => {
+          this.inFlightSchemaFetches.delete(entry.hash)
+        })
+
+    if (!inFlight) this.inFlightSchemaFetches.set(entry.hash, workPromise)
+
+    // This bounds how long THIS specific request waits — it does not
+    // cancel workPromise. A fetch that's simply slow, or a connection
+    // that never responds at all (proxies can swallow a request without
+    // ever erroring), would otherwise block every completion request
+    // for that class indefinitely, including ones that arrive later.
+    // workPromise keeps running regardless, still lands in the disk
+    // cache (or the negative cache) whenever it actually resolves, so
+    // the next request after this one benefits either way.
+    const result = await Promise.race([
+      workPromise,
+      this.waitTimedOut(this.fetchTimeoutMs),
+    ])
+
+    if (result === TIMED_OUT) {
+      this.logger.warn(
+        `Schema fetch for "${entry.name}" is taking longer than ${this.fetchTimeoutMs}ms — giving up on this request only; it'll still be cached once it finishes`
+      )
+      return undefined
+    }
+
+    return result
+  }
+
+  private waitTimedOut(ms: number): Promise<typeof TIMED_OUT> {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(TIMED_OUT), ms)
     })
-    this.inFlightSchemaFetches.set(entry.hash, fetchPromise)
-    return fetchPromise
   }
 
   private async fetchAndCacheSchema(
@@ -281,6 +370,13 @@ export class SchemaClient {
    */
   private async pruneStaleSchemaCache(): Promise<void> {
     if (!this.manifest) return
+
+    const expectedHashes = new Set(
+      Object.values(this.manifest.schemas).map((entry) => entry.hash)
+    )
+    for (const hash of this.failedSchemaFetches.keys()) {
+      if (!expectedHashes.has(hash)) this.failedSchemaFetches.delete(hash)
+    }
 
     const expectedFileNames = new Set(
       Object.values(this.manifest.schemas).map((entry) =>
