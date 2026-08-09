@@ -15,6 +15,15 @@ import type {
  * resolved, so a rule can be added, changed, or unit-tested without ever
  * touching the parser/cursor logic (and without risking the brace-sync
  * issues that motivated pulling this out in the first place).
+ *
+ * Every rule below is a certainty ("this fails to load"), not a judgment
+ * call — that's why none of them set `severity` on the SiiIssue they
+ * return (it defaults to 'error', see interfaces/structure.ts). A future
+ * rule that's closer to "this is unusual, but I'm not certain it's wrong"
+ * — e.g. an attribute_key that doesn't exist on the class's schema —
+ * should set `severity: 'warning'` instead. That's the only change
+ * needed; diagnostic/index.ts already maps it to the right
+ * DiagnosticSeverity automatically.
  */
 export function validateSiiDocument(document: SiiDocument): SiiIssue[] {
   const issues: SiiIssue[] = []
@@ -25,6 +34,7 @@ export function validateSiiDocument(document: SiiDocument): SiiIssue[] {
     issues.push(...validateIncludePlacement(include.range, document.text))
   }
   issues.push(...validateDuplicateUnitNames(document.units))
+  issues.push(...validateTrailingNewline(document.text))
   return issues
 }
 
@@ -192,6 +202,28 @@ function validateIncludePlacement(
       message:
         '@include must be at the start of a new line with no leading whitespace',
       range: includeRange,
+    },
+  ]
+}
+
+/**
+ * Per the SCS docs: "It's always good to add one blank line at the end
+ * of file." Unlike everything else in this file, this doesn't break
+ * loading — it's a recommendation, not a requirement — so this is the
+ * first rule that actually sets `severity: 'warning'` instead of
+ * relying on the 'error' default.
+ */
+function validateTrailingNewline(text: string): SiiIssue[] {
+  if (text.length === 0 || text.endsWith('\n')) return []
+
+  return [
+    {
+      message: 'File should end with a blank line, per SCS conventions',
+      // A zero-length range at the very end has nothing for an editor
+      // to underline (same reasoning as the empty-unitName-token fix)
+      // — point at the last real character instead.
+      range: { start: text.length - 1, end: text.length },
+      severity: 'warning',
     },
   ]
 }

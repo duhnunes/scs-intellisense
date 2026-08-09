@@ -106,9 +106,15 @@ export interface SiiInclude {
   valueRange: SiiRange
 }
 
+export type SiiSeverity = 'error' | 'warning' | 'information' | 'hint'
+
 export interface SiiIssue {
   message: string
   range: SiiRange
+  /** Defaults to 'error' when omitted — every issue reader.ts and
+   *  rules.ts produce today is a certainty ("this breaks the mod"), so
+   *  none of them set this explicitly yet. */
+  severity?: SiiSeverity
 }
 
 export interface SiiMagicMark {
