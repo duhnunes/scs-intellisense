@@ -5,14 +5,16 @@ import {
   InitializeParams,
   TextDocumentSyncKind,
   CompletionItemKind,
+  MarkupKind,
   type CompletionItem,
+  type Hover,
   type InitializeResult,
 } from 'vscode-languageserver/node'
 
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { registerSemantic, semanticTokensLegend } from './semantic'
 import { getLogger, initLogger } from './logger'
-import { validateDocument } from './validation'
+import { getDiagnostics } from './diagnostic'
 import { SchemaClient, type SchemaClientLogger } from './schema/client'
 import { readScsDocument } from './sii'
 import { detectExtFromUri, detectModeFromExt } from './parser/docParser'
@@ -24,6 +26,11 @@ import {
   buildAttributeKeyCompletionItems,
   findAttributeKeyPosition,
 } from './completion/attributeKey'
+import { buildClassNameHover, findClassNameAtPosition } from './hover/className'
+import {
+  buildAttributeKeyHover,
+  findAttributeKeyAtPosition,
+} from './hover/attributeKey'
 
 const connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments(TextDocument)
@@ -59,6 +66,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
         resolveProvider: false,
         triggerCharacters: [],
       },
+      hoverProvider: true,
     },
   }
   result.capabilities.semanticTokensProvider = {
@@ -200,9 +208,75 @@ connection.onCompletion(async (params) => {
 })
 
 documents.onDidChangeContent((change) => {
-  const diagnostics = validateDocument(change.document)
+  const diagnostics = getDiagnostics(change.document)
   connection.sendDiagnostics({ uri: change.document.uri, diagnostics })
 })
+
+connection.onHover(async (params): Promise<Hover | null> => {
+  try {
+    const doc = documents.get(params.textDocument.uri)
+    if (!doc) return null
+
+    const ext = detectExtFromUri(doc.uri)
+    const mode = detectModeFromExt(ext)
+    const parsed = readScsDocument(
+      doc.getText(),
+      mode === 'unknown' ? 'sii' : mode
+    )
+
+    // Same CRLF-safety reasoning as onCompletion and getDiagnostics:
+    // `parsed`'s ranges are relative to the normalized text, so the
+    // position has to be resolved against that same text.
+    const normalizedDoc = TextDocument.create(
+      doc.uri,
+      doc.languageId,
+      doc.version,
+      parsed.text
+    )
+    const offset = normalizedDoc.offsetAt(params.position)
+
+    const className = findClassNameAtPosition(parsed, offset)
+    if (className) {
+      // class_name hover only ever needs the manifest, already in
+      // memory — no fetch, same data completion already uses for
+      // class_name.
+      const hover = buildClassNameHover(className, schemaClient?.getManifest())
+      return hover ? toHoverResult(hover.markdown) : null
+    }
+
+    const attribute = findAttributeKeyAtPosition(parsed, offset)
+    if (attribute) {
+      if (!schemaClient) return null
+      // Same lazy per-class fetch completion's attribute_key path
+      // already uses — cached after the first hover/completion for
+      // this class, whichever happens first.
+      const schema = await schemaClient.getSchemaContent(attribute.className)
+      const hover = buildAttributeKeyHover(attribute.key, schema)
+      return hover ? toHoverResult(hover.markdown) : null
+    }
+
+    return null
+  } catch (error) {
+    const details =
+      error && (error as Error).stack ? (error as Error).stack : String(error)
+    logger.error(
+      'ON_HOVER_ERROR',
+      'onHover error',
+      details,
+      params.textDocument?.uri
+    )
+    return null
+  }
+})
+
+function toHoverResult(markdown: string): Hover {
+  return {
+    contents: {
+      kind: MarkupKind.Markdown,
+      value: markdown,
+    },
+  }
+}
 
 process.on('uncaughtException', (err) => {
   logger.error(
