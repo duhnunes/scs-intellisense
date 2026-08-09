@@ -77,7 +77,7 @@ export function buildAttributeKeyCompletionItems(
   }))
 }
 
-function formatAttributeType(def: SchemaAttributeDef): string {
+export function formatAttributeType(def: SchemaAttributeDef): string {
   const types = def.isArray ? def.arrayElementType : def.type
   const joined = types && types.length > 0 ? types.join(' | ') : 'unknown'
   return def.isArray ? `${joined}[]` : joined
