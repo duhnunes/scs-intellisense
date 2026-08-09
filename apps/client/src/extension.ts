@@ -12,7 +12,7 @@ let client: LanguageClient | undefined
 let output: vscode.OutputChannel
 
 export function activate(context: vscode.ExtensionContext) {
-  output = vscode.window.createOutputChannel('SCS-Intellisense')
+  output = vscode.window.createOutputChannel('SCS IntelliSense')
   context.subscriptions.push(output)
 
   const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'))
@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   client = new LanguageClient(
     'scsintellisense',
-    'SCS-Intellisense',
+    'SCS IntelliSense',
     serverOptions,
     clientOptions
   )
@@ -122,7 +122,7 @@ export function activate(context: vscode.ExtensionContext) {
     })
   )
 
-  vscode.window.showInformationMessage('SCS-Intellisense client started')
+  console.log('SCS Intellisense client started')
 }
 
 export function deactivate(): Thenable<void> | undefined {

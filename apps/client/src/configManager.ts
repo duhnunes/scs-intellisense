@@ -65,19 +65,19 @@ export class ConfigManager {
 
       if (!result.ok) {
         vscode.window.showErrorMessage(
-          `SCS-Intellisense: failed to update the schema database — ${result.message}`
+          `SCS IntelliSense: failed to update the schema database — ${result.message}`
         )
         return
       }
 
       vscode.window.showInformationMessage(
         result.changed
-          ? 'SCS-Intellisense: schema database updated.'
-          : 'SCS-Intellisense: schema database is already up to date.'
+          ? 'SCS IntelliSense: schema database updated.'
+          : 'SCS IntelliSense: schema database is already up to date.'
       )
     } catch (err) {
       vscode.window.showErrorMessage(
-        `SCS-Intellisense: failed to update the schema database — ${String(err)}`
+        `SCS IntelliSense: failed to update the schema database — ${String(err)}`
       )
     }
   }
