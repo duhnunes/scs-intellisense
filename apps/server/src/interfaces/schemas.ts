@@ -24,18 +24,30 @@ export interface SchemaManifest {
 
 /**
  * One attribute definition inside a schema file's `key` map. Matches
- * scs-schema's actual JSON shape (confirmed against a real fetched file,
- * e.g. animated_model_data.json) — NOT the earlier speculative
- * AttributeDef in interfaces/structure.ts, which predates having seen
- * real data and doesn't match it (array shape vs. this record shape,
- * field names, etc).
+ * scs-schema's actual JSON shape (confirmed against real fetched files —
+ * animated_model_data.json, sign_model.sii, trigger_action.sii).
+ *
+ * `type` and `arrayElementType` are NOT mutually exclusive — an
+ * attribute can have both at once. What they mean depends on which SII
+ * array convention this attribute supports:
+ *  - `type` only, `arrayElementType: null` (e.g. "name") — this
+ *    attribute is never an array: only `key: value` is valid, and
+ *    `type` is the value's allowed type(s).
+ *  - `arrayElementType` only, `type: null` (e.g. "str_params") — this
+ *    attribute ONLY exists as a dynamic array: only `key[]: value`
+ *    (repeated) is valid, never a bare `key: value`.
+ *  - Both set (e.g. "stand_classes") — this attribute supports the
+ *    *counted* array form: `key: N` (a count, validated against
+ *    `type`) followed by `key[0]` through `key[N-1]` (each validated
+ *    against `arrayElementType`).
+ * `isArray` is true whenever `arrayElementType` is set (either of the
+ * last two cases above) — it doesn't by itself distinguish "counted"
+ * from "dynamic"; that's what having `type` alongside it tells you.
  */
 export interface SchemaAttributeDef {
   description: string
   isArray: boolean
-  /** Present (non-null) when isArray is false. */
   type: string[] | null
-  /** Present (non-null) when isArray is true. */
   arrayElementType: string[] | null
 }
 
