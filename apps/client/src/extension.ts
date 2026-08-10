@@ -22,6 +22,8 @@ export function activate(context: vscode.ExtensionContext) {
     debug: { module: serverModule, transport: TransportKind.ipc },
   }
 
+  const extConfig = vscode.workspace.getConfiguration('scs-intellisense')
+
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
       { scheme: 'file', language: 'sii' },
@@ -29,10 +31,22 @@ export function activate(context: vscode.ExtensionContext) {
     ],
     outputChannel: output,
     // The server has no `vscode` API of its own (it's a plain Node
-    // process), so the one thing it needs from us — where to read/write
-    // its schema cache — has to be handed over explicitly here.
+    // process), so anything it needs from us — cache location, initial
+    // settings — has to be handed over explicitly here. Only
+    // globalStoragePath and this initial snapshot go through this path;
+    // diagnostics.enabledSeverities changes later on are forwarded live
+    // by ConfigManager via a notification instead (see configManager.ts).
+    // schema.fetchTimeoutMs only ever comes from here — changing it
+    // requires a window reload, so there's no live-update path for it.
     initializationOptions: {
       globalStoragePath: context.globalStorageUri.fsPath,
+      enabledSeverities: extConfig.get('diagnostics.enabledSeverities', [
+        'error',
+        'warning',
+        'information',
+        'hint',
+      ]),
+      fetchTimeoutMs: extConfig.get('schema.fetchTimeoutMs', 8000),
     },
     // synchronize: {
     //   fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{sii,sui}')

@@ -31,6 +31,7 @@ import {
   buildAttributeKeyHover,
   findAttributeKeyAtPosition,
 } from './hover/attributeKey'
+import type { SiiSeverity } from './interfaces/structure'
 
 const connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments(TextDocument)
@@ -44,6 +45,17 @@ registerSemantic(connection, documents)
 // Completion, hover, and future attribute validation all consult this —
 // none of them should ever call fetch() or touch the disk cache directly.
 let schemaClient: SchemaClient | undefined
+
+// Which diagnostic severities to actually report — controlled by the
+// client's scs-intellisense.diagnostics.enabledSeverities setting.
+// Starts with everything enabled; onInitialize overwrites this with the
+// client's real starting value before any document is ever validated.
+let enabledSeverities: SiiSeverity[] = [
+  'error',
+  'warning',
+  'information',
+  'hint',
+]
 
 /** For other server modules (completion, hover, ...) to consult the
  *  schema once it's ready. Returns undefined until onInitialize has run
@@ -75,14 +87,25 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     range: false,
   }
 
-  const globalStoragePath = (
-    params.initializationOptions as { globalStoragePath?: string } | undefined
-  )?.globalStoragePath
+  const initOptions = params.initializationOptions as
+    | {
+        globalStoragePath?: string
+        enabledSeverities?: SiiSeverity[]
+        fetchTimeoutMs?: number
+      }
+    | undefined
+
+  if (initOptions?.enabledSeverities) {
+    enabledSeverities = initOptions.enabledSeverities
+  }
+
+  const globalStoragePath = initOptions?.globalStoragePath
 
   if (globalStoragePath) {
     schemaClient = new SchemaClient({
       cacheDir: globalStoragePath,
       logger: schemaLogger,
+      fetchTimeoutMs: initOptions?.fetchTimeoutMs,
     })
     // Fire-and-forget: server startup (and the capabilities response
     // above) must never block on disk I/O or a network round-trip.
@@ -207,8 +230,27 @@ connection.onCompletion(async (params) => {
   }
 })
 
+// Live update from the client whenever
+// scs-intellisense.diagnostics.enabledSeverities changes — re-runs
+// diagnostics for every currently-open document immediately, rather
+// than waiting for the next edit to each one.
+connection.onNotification(
+  'scsIntellisense/updateDiagnosticSettings',
+  (payload: { enabledSeverities?: SiiSeverity[] }) => {
+    if (!payload?.enabledSeverities) return
+    enabledSeverities = payload.enabledSeverities
+
+    for (const doc of documents.all()) {
+      connection.sendDiagnostics({
+        uri: doc.uri,
+        diagnostics: getDiagnostics(doc, enabledSeverities),
+      })
+    }
+  }
+)
+
 documents.onDidChangeContent((change) => {
-  const diagnostics = getDiagnostics(change.document)
+  const diagnostics = getDiagnostics(change.document, enabledSeverities)
   connection.sendDiagnostics({ uri: change.document.uri, diagnostics })
 })
 

@@ -137,6 +137,21 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Enable/disable semantic highlighting"
+        },
+        "scs-intellisense.diagnostics.enabledSeverities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["error", "warning", "information", "hint"]
+          },
+          "default": ["error", "warning", "information", "hint"],
+          "markdownDescription": "Which diagnostic severities SCS IntelliSense should report. Uncheck any you'd like hidden — for example, uncheck `warning` to keep only load-breaking `error` diagnostics."
+        },
+        "scs-intellisense.schema.fetchTimeoutMs": {
+          "type": "number",
+          "default": 8000,
+          "minimum": 1000,
+          "markdownDescription": "How long (in milliseconds) a single completion/hover request waits for the schema database before giving up on *that* request. The fetch itself is never cancelled — it keeps running in the background and gets cached regardless, so the next request benefits even if this one timed out. Requires a window reload to take effect."
         }
       }
     },

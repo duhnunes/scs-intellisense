@@ -5,7 +5,17 @@ import { detectExtFromUri, detectModeFromExt } from '../parser/docParser'
 import type { SiiIssue, SiiSeverity } from '../interfaces/structure'
 import { validateSiiDocument } from './rules'
 
-export function getDiagnostics(doc: TextDocument): Diagnostic[] {
+const DEFAULT_ENABLED_SEVERITIES: SiiSeverity[] = [
+  'error',
+  'warning',
+  'information',
+  'hint',
+]
+
+export function getDiagnostics(
+  doc: TextDocument,
+  enabledSeverities: SiiSeverity[] = DEFAULT_ENABLED_SEVERITIES
+): Diagnostic[] {
   const ext = detectExtFromUri(doc.uri)
   const mode = detectModeFromExt(ext)
   const parsed = readScsDocument(
@@ -23,7 +33,10 @@ export function getDiagnostics(doc: TextDocument): Diagnostic[] {
   // Structural issues come straight from the reader (e.g. a missing '{');
   // business-rule issues come from rules.ts, running against the tree the
   // reader already built. This is the merge point for both.
-  const issues: SiiIssue[] = [...parsed.issues, ...validateSiiDocument(parsed)]
+  const issues: SiiIssue[] = [
+    ...parsed.issues,
+    ...validateSiiDocument(parsed),
+  ].filter((issue) => enabledSeverities.includes(issue.severity ?? 'error'))
 
   return issues.map((issue) => ({
     severity: toDiagnosticSeverity(issue.severity),
