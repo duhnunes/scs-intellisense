@@ -1,60 +1,38 @@
 <div align="center">
-  <img src="./apps/client/public/icon.png" width="200" alt="Logo" />  
-  <h3> SCS Intellisense extension for <a href="https://code.visualstudio.com"><img src="./.github/imgs/links/vscode.svg" style="width:10%;" alt="VSCode link" /></a></h3>
+  <img src="./apps/client/public/icon.png" width="160" alt="SCS IntelliSense logo" />
+  <h1>SCS IntelliSense</h1>
+  <p>VS Code support for SCS Software mod files</p>
 </div>
 
 <div align="center">
-  <a href="./LICENSE.md" alt="license"><img src="https://img.shields.io/badge/license-MIT-FF6A00?style=for-the-badge" alt="badge license" /></a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="build released" /></a>
+  <a href="./LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-FF6A00?style=for-the-badge" alt="MIT License" /></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="Latest release" /></a>
 </div>
 
-## About
+## What it is
 
-**SCS Intellisense** makes VSCode smarter for <a href="https://www.scssoft.com/"><img src="./.github/imgs/links/scssoftware.svg" style="width:12%;" alt="SCS Software link" /></a> files. It improves readability and speeds up editing by offering:  
-- Semantic highlighting token to coloring for MagicMark, Classes, Attributes and Comments
-- Each Value type have your semantic color: `string`, `number`, `boolean`, `token` and `@include` directive
-- Auto-Close brackets
+**SCS IntelliSense** is a **VS Code extension** that improves editing files used by **SCS Software mods**. It brings modern language support to these formats, making the files easier to read and edit.
 
-### Sii Extructure
-> The structure is built as originally described in the <a href="https://modding.scssoft.com/wiki/Documentation/Engine/Units#Unit_definition_entry"><img src="./.github/imgs/links/docummentation.svg" style="width:16%;" alt="SCS Documentation about Unit Definition Entry" /></a>.
+## Why it matters
 
-<div align="center">
-  <img src="./.github/imgs/sii_file_diagram.png" alt="diagram" />
-</div>
+The extension is built around a parser that reads **SCS documents** and turns them into a structured tree. This tree is the base for the sistems.
 
-- **SiiNunit** - The **magic marker** that identifies a plain-text `.sii` file. It appears at the top of the file and marks the file as a serialized unit file.
-- **class_name** - The **unit type of class** being defined; it indicates the schema or category of the unit (for example `prefab_model`, `model_def`). It appears before the colon in the unit header.
-- **unit.name** - The **unique name** of the unit: a sequence of tokens separated by dots (e.g., `mod.namespace.item`). Use unique names per mod to avoid collisions. Anonymous units may use a leading dot.
-- **attribute** - The **property name** inside a unit block; an attribute is a **key + value** pair that holds the unit data.
-- **key** - The **attribute name** that identifies the property (e.g. `name` in `name: "Truck"`).
-- **value** - The **attribute value**. Value can be **strings**, **numbers**, **booleans**, **unit references**, **vectors (tuples)**, or other engine-specific formats. Use quotes for strings and parentheses for vectors.
+When the file structure is correct, the extension can provide accurate feedback and make modding faster.
 
-## Features
+## Main features
 
-- **Semantic highlighting**
-- **Icon** for each files
-- **Auto-close brackets** for `{}`, `()`, `[]`
+- 🎨 Semantic Highlighting for SCS syntax
+- 💡 Completion to `attribute_key` and `class_name`
+- 🔍 Inline diagnostics while editing
+- 🖱️ Hover details for supported nodes
+- 📂 File Icons for supported formats
 
+## Project structure
 
-## Tested themes
-1. **Dark**
-  - `Dark 2026` (VSCode)
-  - `Catppuccin Frappé`
-  - `Catppuccin Macchiato`
-  - `Catppuccin Mocha` (developed theme)
-  - `Dracula Theme` & `Dracula Theme Soft`
-  - `Abyss`
-  - `Dark Modern`
-  - `Dark+`
+- `apps/client` — the VS Code extension UI and activation logic
+- `apps/server` — the language server that parses files and provides editor features
+<!-- - `apps/web` — documentation site and content
 
-2. **Light**
-  - `Catppuccin Latte`
-  - Should work with the light variants of the themes listed above.
+## Docs
 
-*Note*: <u>`Dark (Visual Studio)`</u> and <u>`Light (Visual Studio)`</u> do not provide highlighting in all scopes.
-
-## License
-
-Licensed under the <a href="./LICENSE.md"><img src="./.github/imgs/links/mit.svg" style="width:4%;" alt="License Doc" /></a>
-
-**Enjoy**
+The project documentation lives in `apps/web/content/docs` and explains how the extension works, including the reader, hover, diagnostics, and other systems. -->
