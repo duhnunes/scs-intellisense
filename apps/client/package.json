@@ -125,6 +125,15 @@
         }
       },
       {
+        "id": "pma",
+        "aliases": ["pma", "PMA", "SCS Software", "SCS"],
+        "extensions": [".pma"],
+        "icon": {
+          "dark": "./public/extensions/pma.png",
+          "light": "./public/extensions/pma.png"
+        }
+      },
+      {
         "id": "pit",
         "aliases": ["pit", "PIT", "SCS Software", "SCS"],
         "extensions": [".pit"],
