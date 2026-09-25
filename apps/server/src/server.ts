@@ -71,29 +71,44 @@ const schemaLogger: SchemaClientLogger = {
 }
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
-  const result: InitializeResult = {
-    capabilities: {
-      textDocumentSync: TextDocumentSyncKind.Incremental,
-      completionProvider: {
-        resolveProvider: false,
-        triggerCharacters: [],
-      },
-      hoverProvider: true,
-    },
-  }
-  result.capabilities.semanticTokensProvider = {
-    legend: semanticTokensLegend,
-    full: true,
-    range: false,
-  }
-
   const initOptions = params.initializationOptions as
     | {
         globalStoragePath?: string
         enabledSeverities?: SiiSeverity[]
         fetchTimeoutMs?: number
+        completionEnabled?: boolean
+        hoverEnabled?: boolean
       }
     | undefined
+
+  const result: InitializeResult = {
+    capabilities: {
+      textDocumentSync: TextDocumentSyncKind.Incremental,
+    },
+  }
+
+  // EXPERIMENTAL, off by default — the client only sends `true` here if
+  // the user explicitly opted in via scs-intellisense.completion.enabled
+  // / .hover.enabled. Not declaring the capability at all (rather than
+  // declaring it and having the handlers just return [] / null) means
+  // VSCode never even sends a completion/hover request for this
+  // language while the feature is off, instead of a wasted round-trip.
+  if (initOptions?.completionEnabled) {
+    result.capabilities.completionProvider = {
+      resolveProvider: false,
+      triggerCharacters: [],
+    }
+  }
+
+  if (initOptions?.hoverEnabled) {
+    result.capabilities.hoverProvider = true
+  }
+
+  result.capabilities.semanticTokensProvider = {
+    legend: semanticTokensLegend,
+    full: true,
+    range: false,
+  }
 
   if (initOptions?.enabledSeverities) {
     enabledSeverities = initOptions.enabledSeverities

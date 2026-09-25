@@ -45,11 +45,16 @@ export function buildClassNameHover(
   const entry = manifest?.schemas[className]
   if (!entry) return undefined
 
-  const description = entry.description?.trim()
+  const lines: string[] = [`**${entry.name}**`]
+  if (entry.superclass) lines.push(`*extends ${entry.superclass}*`)
 
-  return {
-    markdown: description
-      ? `**${entry.name}**\n\n${description}`
-      : `**${entry.name}**\n\n*No description available yet.*`,
+  lines.push('')
+  lines.push(entry.description?.trim() || '*No description available yet.*')
+
+  if (entry.documentationStatus === 'wip') {
+    lines.push('')
+    lines.push('⚠️ Documentation for this class is still a work in progress.')
   }
+
+  return { markdown: lines.join('\n') }
 }

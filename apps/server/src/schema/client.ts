@@ -111,7 +111,7 @@ export class SchemaClient {
     if (cached) {
       this.manifest = cached
       this.logger.info(
-        `Loaded cached schema manifest (version ${cached.version}, ${Object.keys(cached.schemas).length} classes)`
+        `Loaded cached schema manifest (generated ${cached.generatedAt}, ${Object.keys(cached.schemas).length} classes)`
       )
     } else {
       this.logger.info('No cached schema manifest on disk yet')
@@ -197,7 +197,7 @@ export class SchemaClient {
     }
 
     this.logger.info(
-      `Schema manifest updated to version ${incoming.version} (${Object.keys(incoming.schemas).length} classes)`
+      `Schema manifest updated (generated ${incoming.generatedAt}, ${Object.keys(incoming.schemas).length} classes)`
     )
 
     // Content-addressed cache files are never overwritten in place (see
@@ -435,5 +435,11 @@ export function manifestHasChanged(
   incoming: SchemaManifest
 ): boolean {
   if (!current) return true
-  return current.version !== incoming.version
+  // No dedicated content-version counter exists anymore: formatVersion
+  // is a constant describing the MANIFEST'S OWN SHAPE (only bumped when
+  // that shape changes, essentially never), and generatedAt changes on
+  // every single build run regardless of whether any class actually
+  // changed — neither one reflects "did the content change". Comparing
+  // the schemas map itself is the only signal that actually means that.
+  return JSON.stringify(current.schemas) !== JSON.stringify(incoming.schemas)
 }

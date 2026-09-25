@@ -1,15 +1,15 @@
-import type { SchemaManifest } from '../interfaces/schemas'
+import type { SchemaManifest, SchemaManifestEntry } from '../interfaces/schemas'
 import type { SiiDocument } from '../interfaces/structure'
 
 /**
  * Whether `offset` is a position where completing a `class_name` makes
  * sense — i.e. directly inside the SiiNunit root, not inside some unit's
- * body (that's attribute_key territory, not built yet) and not already
- * past the className into the unitName part of a header.
+ * body (that's attribute_key territory) and not already past the
+ * className into the unitName part of a header.
  *
  * Deliberately checks against the tree the reader already produced
  * rather than re-scanning text itself — same principle as
- * validation/rules.ts: this is a *consumer* of the parsed structure, not
+ * diagnostic/rules.ts: this is a *consumer* of the parsed structure, not
  * another place that tokenizes.
  */
 export function isClassNamePosition(
@@ -63,8 +63,9 @@ export interface ClassNameCompletionItem {
 
 /**
  * Builds completion items straight from the manifest already in memory —
- * no fetch, no CDN lookup. `scope`/`description` are exactly what the
- * manifest already carries per class.
+ * no fetch, no CDN lookup. Everything here (description, superclass,
+ * documentationStatus) is exactly what the manifest already carries per
+ * class.
  */
 export function buildClassNameCompletionItems(
   manifest: SchemaManifest | undefined
@@ -73,7 +74,16 @@ export function buildClassNameCompletionItems(
 
   return Object.values(manifest.schemas).map((entry) => ({
     label: entry.name,
-    detail: entry.scope,
-    documentation: entry.description || undefined,
+    detail: entry.superclass ? `extends ${entry.superclass}` : '',
+    documentation: buildDocumentation(entry),
   }))
+}
+
+function buildDocumentation(entry: SchemaManifestEntry): string | undefined {
+  const parts: string[] = []
+  if (entry.description) parts.push(entry.description)
+  if (entry.documentationStatus === 'wip') {
+    parts.push('⚠️ Documentation for this class is still a work in progress.')
+  }
+  return parts.length > 0 ? parts.join('\n\n') : undefined
 }

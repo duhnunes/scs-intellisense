@@ -60,6 +60,10 @@ export interface AttributeKeyCompletionItem {
  * deliberately defensive: a missing/malformed `key` map just yields no
  * items rather than throwing.
  *
+ * Filters out `internalOnly` attributes — the docs say these shouldn't
+ * be set manually in a definition, so suggesting them for completion
+ * would just invite exactly the mistake the docs warn against.
+ *
  * Deliberately does NOT filter out attribute keys already present on
  * the unit — whether a repeated key is valid depends on the array
  * conventions (`attr[]`, `attr[n]`) that are still being figured out,
@@ -70,11 +74,22 @@ export function buildAttributeKeyCompletionItems(
 ): AttributeKeyCompletionItem[] {
   if (!schema?.key || typeof schema.key !== 'object') return []
 
-  return Object.entries(schema.key).map(([key, def]) => ({
-    label: key,
-    detail: formatAttributeType(def),
-    documentation: def.description || undefined,
-  }))
+  return Object.entries(schema.key)
+    .filter(([, def]) => !def.internalOnly)
+    .map(([key, def]) => ({
+      label: key,
+      detail: formatAttributeType(def),
+      documentation: buildDocumentation(def),
+    }))
+}
+
+function buildDocumentation(def: SchemaAttributeDef): string | undefined {
+  const parts: string[] = []
+  if (def.required) parts.push('**Required**')
+  if (def.description) parts.push(def.description)
+  if (def.versionNote) parts.push(`⚠️ ${def.versionNote}`)
+  if (def.notes) parts.push(def.notes)
+  return parts.length > 0 ? parts.join('\n\n') : undefined
 }
 
 export function formatAttributeType(def: SchemaAttributeDef): string {

@@ -1,67 +1,106 @@
 /**
- * One entry in scs-schema's manifest.json — one per class_name. The
- * manifest already carries `scope`/`description`, so completion and
- * hover for class_name itself never need to fetch the individual schema
- * URL — only the full attribute list (fetched lazily from `url`) does.
+ * One entry in scs-schema's manifest.json — one per class_name.
+ * `superclass`/`documentationStatus` come free with the manifest (no
+ * fetch needed), so completion/hover for class_name itself can show
+ * "extends X" or a WIP warning without ever touching the per-class URL
+ * — only the full attribute list (fetched lazily from `url`) needs
+ * that.
  */
 export interface SchemaManifestEntry {
-  id: string
   name: string
-  path: string
-  url: string
-  metaVersion: string
-  hash: string
-  size: number
   description: string
-  scope: string
+  url: string
+  hash: string
+  metaVersion: string
+  size: number
+  /** Direct parent class only, or null for a root class (the source
+   *  file's superclass was the literal "unit"). */
+  superclass: string | null
+  documentationStatus: 'wip' | 'complete'
 }
 
 export interface SchemaManifest {
-  version: string
+  formatVersion: string
   generatedAt: string
   schemas: Record<string, SchemaManifestEntry>
 }
 
 /**
- * One attribute definition inside a schema file's `key` map. Matches
- * scs-schema's actual JSON shape (confirmed against real fetched files —
- * animated_model_data.json, sign_model.sii, trigger_action.sii).
+ * One attribute definition inside a schema file's `key` map — the full
+ * scs-schema v2 shape (12 fields), not the earlier 4-field version.
  *
- * `type` and `arrayElementType` are NOT mutually exclusive — an
- * attribute can have both at once. What they mean depends on which SII
- * array convention this attribute supports:
- *  - `type` only, `arrayElementType: null` (e.g. "name") — this
- *    attribute is never an array: only `key: value` is valid, and
- *    `type` is the value's allowed type(s).
- *  - `arrayElementType` only, `type: null` (e.g. "str_params") — this
- *    attribute ONLY exists as a dynamic array: only `key[]: value`
- *    (repeated) is valid, never a bare `key: value`.
- *  - Both set (e.g. "stand_classes") — this attribute supports the
- *    *counted* array form: `key: N` (a count, validated against
- *    `type`) followed by `key[0]` through `key[N-1]` (each validated
- *    against `arrayElementType`).
- * `isArray` is true whenever `arrayElementType` is set (either of the
- * last two cases above) — it doesn't by itself distinguish "counted"
- * from "dynamic"; that's what having `type` alongside it tells you.
+ * `type` and `arrayElementType` are NOT mutually exclusive — see
+ * CONTRIBUTING.md in scs-schema for the full "scalar-only / array-only /
+ * counted-array" breakdown. `isArray` is true whenever the attribute
+ * supports either array form; `type` alone still describes the scalar
+ * form when one also exists.
  */
 export interface SchemaAttributeDef {
   description: string
-  isArray: boolean
   type: string[] | null
+  isArray: boolean
   arrayElementType: string[] | null
+  required: boolean
+  /** Free-text "Added in X" / "Removed in Y" note, exactly as the wiki
+   *  phrases it. Display-only — never compared programmatically. */
+  versionNote: string | null
+  /** Valid literal values, for a `token` attribute the wiki enumerates.
+   *  null for any other type, or when not documented. */
+  values: string[] | null
+  /** Which class_name(s) an owner_ptr/link_ptr is expected to point to,
+   *  when the wiki names them. */
+  pointsTo: string[] | null
+  /** File extension(s) expected, without the leading dot, for ANY
+   *  attribute whose value is a file path — not just resource_tie ones
+   *  (most such attributes are typed 'string', see scs-schema's docs). */
+  expectedExtensions: string[] | null
+  /** True only if the description explicitly mentions the
+   *  @@localization@@ template syntax. */
+  supportsLocalization: boolean
+  /** True if the wiki says this is engine/save-game managed and
+   *  shouldn't be set manually in a definition. */
+  internalOnly: boolean
+  notes: string
+  /** Only present in the flattened data/dist/ output (never in a
+   *  hand-authored source file) — which ancestor class this attribute
+   *  was inherited from. Absent for attributes the class defines
+   *  itself. */
+  inheritedFrom?: string
+}
+
+/** A family of attributes the docs describe collectively instead of
+ *  naming individually (e.g. accessory_interior_data's ~70 interior
+ *  animation attributes). Rare — most classes have an empty array here. */
+export interface SchemaDynamicAttributeGroup {
+  pattern: string
+  description: string
+  type: string[] | null
+  notes: string
+  inheritedFrom?: string
 }
 
 /**
  * The full per-class schema document fetched lazily from a manifest
- * entry's `url`. The database isn't 100% populated yet (per duhnunes),
- * so consumers should treat every field here as possibly missing or
- * malformed on any given class, not just absent entirely.
+ * entry's `url` — always the flattened data/dist/ shape (inherited
+ * attributes already merged in), never the hand-authored source shape.
+ * The database isn't 100% populated yet, so consumers should treat
+ * every field here as possibly missing or malformed on any given class,
+ * not just absent entirely.
  */
 export interface SchemaFileContent {
   meta: {
     version: string
-    description: string
+    documentationStatus: 'wip' | 'complete'
   }
   scope: string
+  description: string
+  superclass: string
+  versionNote: string | null
+  allowsSiiNunitRoot: boolean
+  /** Root-first ancestor chain, e.g. ["accessory_data",
+   *  "accessory_addon_data"] — informational, consumers don't need to
+   *  walk it themselves since `key` already has everything merged in. */
+  inheritsFrom: string[]
   key: Record<string, SchemaAttributeDef>
+  dynamicAttributeGroups: SchemaDynamicAttributeGroup[]
 }

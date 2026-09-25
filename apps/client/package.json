@@ -264,6 +264,16 @@
           "default": 8000,
           "minimum": 1000,
           "markdownDescription": "How long (in milliseconds) a single completion/hover request waits for the schema database before giving up on *that* request. The fetch itself is never cancelled — it keeps running in the background and gets cached regardless, so the next request benefits even if this one timed out. Requires a window reload to take effect."
+        },
+        "scs-intellisense.completion.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "**EXPERIMENTAL** — Enable `class_name` and `attribute_key` completion, backed by the community schema database. Off by default while this feature is still being validated. Requires a window reload to take effect."
+        },
+        "scs-intellisense.hover.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "**EXPERIMENTAL** — Enable hover information for `class_name` and `attribute_key`, backed by the community schema database. Off by default while this feature is still being validated. Requires a window reload to take effect."
         }
       }
     },

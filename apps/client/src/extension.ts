@@ -47,6 +47,12 @@ export function activate(context: vscode.ExtensionContext) {
         'hint',
       ]),
       fetchTimeoutMs: extConfig.get('schema.fetchTimeoutMs', 8000),
+      // EXPERIMENTAL, off by default — same static, reload-to-change
+      // pattern as fetchTimeoutMs. The server uses these to decide
+      // whether to even declare the completionProvider/hoverProvider
+      // capabilities at all, not just whether to act on requests.
+      completionEnabled: extConfig.get('completion.enabled', false),
+      hoverEnabled: extConfig.get('hover.enabled', false),
     },
     // synchronize: {
     //   fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{sii,sui}')

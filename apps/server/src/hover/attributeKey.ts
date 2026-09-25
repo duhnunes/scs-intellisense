@@ -1,5 +1,8 @@
 import { formatAttributeType } from '../completion/attributeKey'
-import type { SchemaFileContent } from '../interfaces/schemas'
+import type {
+  SchemaAttributeDef,
+  SchemaFileContent,
+} from '../interfaces/schemas'
 import type { SiiDocument } from '../interfaces/structure'
 
 /**
@@ -60,11 +63,53 @@ export function buildAttributeKeyHover(
   if (!def) return undefined
 
   const type = formatAttributeType(def)
-  const description = def.description?.trim()
+  const lines: string[] = [
+    `**${key}**: \`${type}\`${def.required ? ' — *required*' : ''}`,
+  ]
 
-  return {
-    markdown: description
-      ? `**${key}**: \`${type}\`\n\n${description}`
-      : `**${key}**: \`${type}\`\n\n*No description available yet.*`,
+  lines.push('')
+  lines.push(def.description?.trim() || '*No description available yet.*')
+
+  const extras = buildExtraLines(def)
+  if (extras.length > 0) {
+    lines.push('')
+    lines.push(...extras)
   }
+
+  if (def.versionNote) {
+    lines.push('')
+    lines.push(`⚠️ ${def.versionNote}`)
+  }
+
+  if (def.internalOnly) {
+    lines.push('')
+    lines.push(
+      '⚠️ Engine/save-game managed — should not be set manually in a definition.'
+    )
+  }
+
+  if (def.notes) {
+    lines.push('')
+    lines.push(def.notes)
+  }
+
+  return { markdown: lines.join('\n') }
+}
+
+function buildExtraLines(def: SchemaAttributeDef): string[] {
+  const lines: string[] = []
+
+  if (def.values && def.values.length > 0) {
+    lines.push(`Valid values: ${def.values.map((v) => `\`${v}\``).join(', ')}`)
+  }
+  if (def.pointsTo && def.pointsTo.length > 0) {
+    lines.push(`Points to: ${def.pointsTo.map((c) => `\`${c}\``).join(', ')}`)
+  }
+  if (def.expectedExtensions && def.expectedExtensions.length > 0) {
+    lines.push(
+      `Expected file extension(s): ${def.expectedExtensions.map((e) => `.${e}`).join(', ')}`
+    )
+  }
+
+  return lines
 }
