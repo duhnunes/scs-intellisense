@@ -7,6 +7,7 @@ import {
   CompletionItemKind,
   MarkupKind,
   type CompletionItem,
+  type DocumentSymbol,
   type Hover,
   type InitializeResult,
 } from 'vscode-languageserver/node'
@@ -31,6 +32,7 @@ import {
   buildAttributeKeyHover,
   findAttributeKeyAtPosition,
 } from './hover/attributeKey'
+import { buildDocumentSymbols } from './symbols/documentSymbols'
 import type { SiiSeverity } from './interfaces/structure'
 
 const connection = createConnection(ProposedFeatures.all)
@@ -84,6 +86,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
   const result: InitializeResult = {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
+      // Not experimental, not schema-dependent — always on. Powers the
+      // Outline view, breadcrumbs, and "Go to Symbol in Editor".
+      documentSymbolProvider: true,
     },
   }
 
@@ -183,7 +188,7 @@ connection.onCompletion(async (params) => {
       mode === 'unknown' ? 'sii' : mode
     )
 
-    // Same reasoning as validation/vaIndex.ts: `parsed`'s ranges are
+    // Same reasoning as diagnostic/index.ts: `parsed`'s ranges are
     // relative to the normalized (CRLF -> LF) text, so the client's
     // position has to be resolved against that same normalized text —
     // not against `doc` directly — or the position drifts on any
@@ -323,6 +328,40 @@ connection.onHover(async (params): Promise<Hover | null> => {
       params.textDocument?.uri
     )
     return null
+  }
+})
+
+connection.onDocumentSymbol((params): DocumentSymbol[] => {
+  try {
+    const doc = documents.get(params.textDocument.uri)
+    if (!doc) return []
+
+    const ext = detectExtFromUri(doc.uri)
+    const mode = detectModeFromExt(ext)
+    const parsed = readScsDocument(
+      doc.getText(),
+      mode === 'unknown' ? 'sii' : mode
+    )
+
+    // Same CRLF-safety reasoning as every other handler here.
+    const normalizedDoc = TextDocument.create(
+      doc.uri,
+      doc.languageId,
+      doc.version,
+      parsed.text
+    )
+
+    return buildDocumentSymbols(parsed, normalizedDoc)
+  } catch (error) {
+    const details =
+      error && (error as Error).stack ? (error as Error).stack : String(error)
+    logger.error(
+      'ON_DOCUMENT_SYMBOL_ERROR',
+      'onDocumentSymbol error',
+      details,
+      params.textDocument?.uri
+    )
+    return []
   }
 })
 
