@@ -36,8 +36,8 @@ export function activate(context: vscode.ExtensionContext) {
     // globalStoragePath and this initial snapshot go through this path;
     // diagnostics.enabledSeverities changes later on are forwarded live
     // by ConfigManager via a notification instead (see configManager.ts).
-    // schema.fetchTimeoutMs only ever comes from here — changing it
-    // requires a window reload, so there's no live-update path for it.
+    // Everything else here is static — changing it requires a window
+    // reload, same as schema.fetchTimeoutMs.
     initializationOptions: {
       globalStoragePath: context.globalStorageUri.fsPath,
       enabledSeverities: extConfig.get('diagnostics.enabledSeverities', [
@@ -47,12 +47,11 @@ export function activate(context: vscode.ExtensionContext) {
         'hint',
       ]),
       fetchTimeoutMs: extConfig.get('schema.fetchTimeoutMs', 8000),
-      // EXPERIMENTAL, off by default — same static, reload-to-change
-      // pattern as fetchTimeoutMs. The server uses these to decide
-      // whether to even declare the completionProvider/hoverProvider
-      // capabilities at all, not just whether to act on requests.
+      // EXPERIMENTAL, off by default.
       completionEnabled: extConfig.get('completion.enabled', false),
       hoverEnabled: extConfig.get('hover.enabled', false),
+      formatterEnabled: extConfig.get('formatter.enabled', false),
+      formatterBraceStyle: extConfig.get('formatter.braceStyle', '1tbs'),
     },
     // synchronize: {
     //   fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{sii,sui}')

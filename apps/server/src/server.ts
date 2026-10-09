@@ -10,6 +10,7 @@ import {
   type DocumentSymbol,
   type Hover,
   type InitializeResult,
+  type TextEdit,
 } from 'vscode-languageserver/node'
 
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -33,6 +34,7 @@ import {
   findAttributeKeyAtPosition,
 } from './hover/attributeKey'
 import { buildDocumentSymbols } from './symbols/documentSymbols'
+import { formatSiiDocument, type FormatterOptions } from './formatter/format'
 import type { SiiSeverity } from './interfaces/structure'
 
 const connection = createConnection(ProposedFeatures.all)
@@ -59,6 +61,10 @@ let enabledSeverities: SiiSeverity[] = [
   'hint',
 ]
 
+// Static for the whole session — formatter.braceStyle isn't
+// live-updatable (same reload-required pattern as schema.fetchTimeoutMs).
+let formatterBraceStyle: FormatterOptions['braceStyle'] = '1tbs'
+
 /** For other server modules (completion, hover, ...) to consult the
  *  schema once it's ready. Returns undefined until onInitialize has run
  *  and the client sent a usable storage path. */
@@ -80,6 +86,8 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
         fetchTimeoutMs?: number
         completionEnabled?: boolean
         hoverEnabled?: boolean
+        formatterEnabled?: boolean
+        formatterBraceStyle?: FormatterOptions['braceStyle']
       }
     | undefined
 
@@ -93,11 +101,12 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
   }
 
   // EXPERIMENTAL, off by default — the client only sends `true` here if
-  // the user explicitly opted in via scs-intellisense.completion.enabled
-  // / .hover.enabled. Not declaring the capability at all (rather than
-  // declaring it and having the handlers just return [] / null) means
-  // VSCode never even sends a completion/hover request for this
-  // language while the feature is off, instead of a wasted round-trip.
+  // the user explicitly opted in via the matching
+  // scs-intellisense.*.enabled setting. Not declaring a capability at
+  // all (rather than declaring it and having the handler just return
+  // [] / null) means VSCode never even sends that kind of request for
+  // this language while the feature is off, instead of a wasted
+  // round-trip.
   if (initOptions?.completionEnabled) {
     result.capabilities.completionProvider = {
       resolveProvider: false,
@@ -109,6 +118,10 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     result.capabilities.hoverProvider = true
   }
 
+  if (initOptions?.formatterEnabled) {
+    result.capabilities.documentFormattingProvider = true
+  }
+
   result.capabilities.semanticTokensProvider = {
     legend: semanticTokensLegend,
     full: true,
@@ -117,6 +130,10 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 
   if (initOptions?.enabledSeverities) {
     enabledSeverities = initOptions.enabledSeverities
+  }
+
+  if (initOptions?.formatterBraceStyle) {
+    formatterBraceStyle = initOptions.formatterBraceStyle
   }
 
   const globalStoragePath = initOptions?.globalStoragePath
@@ -358,6 +375,60 @@ connection.onDocumentSymbol((params): DocumentSymbol[] => {
     logger.error(
       'ON_DOCUMENT_SYMBOL_ERROR',
       'onDocumentSymbol error',
+      details,
+      params.textDocument?.uri
+    )
+    return []
+  }
+})
+
+connection.onDocumentFormatting((params): TextEdit[] => {
+  try {
+    const doc = documents.get(params.textDocument.uri)
+    if (!doc) return []
+
+    const ext = detectExtFromUri(doc.uri)
+    const mode = detectModeFromExt(ext)
+    const parsed = readScsDocument(
+      doc.getText(),
+      mode === 'unknown' ? 'sii' : mode
+    )
+
+    // Structural issues (missing ':', missing '}', etc.) mean the tree
+    // is genuinely incomplete somewhere — most commonly because the
+    // user is mid-typing. Rewriting the whole file in that state is
+    // exactly the wrong moment to do it, so formatting is skipped
+    // entirely (no edits) rather than risking it on a tree that isn't
+    // fully trustworthy yet. Business-rule issues (invalid className,
+    // duplicate unit names, etc.) don't affect the structural ranges
+    // the formatter relies on, so those alone don't block formatting.
+    if (parsed.issues.length > 0) {
+      logger.info(
+        'FORMAT_SKIPPED_STRUCTURAL_ISSUES',
+        `Skipped formatting ${params.textDocument.uri}: ${parsed.issues.length} structural issue(s) present`
+      )
+      return []
+    }
+
+    const formatted = formatSiiDocument(parsed, {
+      braceStyle: formatterBraceStyle,
+    })
+
+    // The formatter reconstructs the whole file from the tree, so the
+    // simplest and safest edit is "replace everything" — no need to
+    // diff against the original to compute a minimal set of edits.
+    const fullRange = {
+      start: { line: 0, character: 0 },
+      end: doc.positionAt(doc.getText().length),
+    }
+
+    return [{ range: fullRange, newText: formatted }]
+  } catch (error) {
+    const details =
+      error && (error as Error).stack ? (error as Error).stack : String(error)
+    logger.error(
+      'ON_DOCUMENT_FORMATTING_ERROR',
+      'onDocumentFormatting error',
       details,
       params.textDocument?.uri
     )

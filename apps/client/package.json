@@ -274,6 +274,21 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "**EXPERIMENTAL** — Enable hover information for `class_name` and `attribute_key`, backed by the community schema database. Off by default while this feature is still being validated. Requires a window reload to take effect."
+        },
+        "scs-intellisense.formatter.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "**EXPERIMENTAL** — Enable formatting (Format Document) for `.sii`/`.sui` files. Rewrites indentation, brace placement, spacing around `:`, blank lines, and `@include` placement — never touches attribute values. Off by default while this feature is still being validated. Requires a window reload to take effect."
+        },
+        "scs-intellisense.formatter.braceStyle": {
+          "type": "string",
+          "enum": ["1tbs", "allman"],
+          "enumDescriptions": [
+            "Opening brace on the same line (e.g. \"class_name : unit.name {\")",
+            "Opening brace on its own line below (the style the game's own files use)"
+          ],
+          "default": "1tbs",
+          "markdownDescription": "Brace style used when formatting `.sii`/`.sui` files. Only takes effect if `#scs-intellisense.formatter.enabled#` is on."
         }
       }
     },
