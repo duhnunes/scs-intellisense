@@ -149,10 +149,27 @@ function emitNodeList(
   let previousEnd: number | undefined
 
   for (const node of nodes) {
+    const gap =
+      previousEnd !== undefined
+        ? document.text.slice(previousEnd, node.start)
+        : undefined
+
+    // A comment that started on the same line as whatever came right
+    // before it (`key: value # note`, `} # end`) is a trailing comment:
+    // keep it on that line instead of dropping it onto its own line.
     if (
-      previousEnd !== undefined &&
-      countNewlines(document.text.slice(previousEnd, node.start)) >= 2
+      node.kind === 'comment' &&
+      gap !== undefined &&
+      countNewlines(gap) === 0 &&
+      lines.length > 0
     ) {
+      lines[lines.length - 1] +=
+        ` ${document.text.slice(node.comment.range.start, node.comment.range.end)}`
+      previousEnd = node.end
+      continue
+    }
+
+    if (gap !== undefined && countNewlines(gap) >= 2) {
       // At most one blank line preserved between consecutive items,
       // however many the original had.
       lines.push('')
@@ -163,7 +180,7 @@ function emitNodeList(
         emitUnit(node.unit, depth, document, opts, indentUnit, lines)
         break
       case 'include':
-        emitInclude(node.include.valueRange, depth, document, indentUnit, lines)
+        emitInclude(node.include.valueRange, document, lines)
         break
       case 'attribute':
         emitAttribute(node.attribute, depth, document, indentUnit, lines)
@@ -237,7 +254,7 @@ function emitAttribute(
   lines: string[]
 ): void {
   if (attribute.kind === 'include') {
-    emitInclude(attribute.valueRange, depth, document, indentUnit, lines)
+    emitInclude(attribute.valueRange, document, lines)
     return
   }
 
@@ -255,19 +272,16 @@ function emitAttribute(
 
 function emitInclude(
   valueRange: SiiRange,
-  depth: number,
   document: SiiDocument,
-  indentUnit: string,
   lines: string[]
 ): void {
-  const indent = indentUnit.repeat(depth)
   const value = document.text.slice(valueRange.start, valueRange.end)
-  // Always at column 0 of its own logical indent, never with extra
-  // whitespace before it — this is what naturally fixes the "@include
-  // needs no leading whitespace" rule, since the indent here is always
-  // exactly what this depth calls for, never whatever stray spacing the
-  // original had.
-  lines.push(`${indent}@include ${value}`)
+  // The SCS docs require @include at the very start of its line, with
+  // no whitespace before it (diagnostic/rules.ts enforces the same
+  // rule). Unlike everything else here it deliberately ignores the
+  // nesting depth — indenting it would make the formatter produce
+  // exactly the error the diagnostic then reports.
+  lines.push(`@include ${value}`)
 }
 
 function emitComment(
