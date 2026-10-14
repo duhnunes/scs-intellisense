@@ -95,12 +95,29 @@ function validateClassName(
   return issues
 }
 
+/**
+ * Prefix the game itself uses for generated nameless units (e.g.
+ * "_nameless.NVIDIA.GeForce.GT.220" in the extracted
+ * default_gfx_setup.sii, where the tokens after the prefix are graphics
+ * card names, uppercase and all). The wiki's token rule is lowercase
+ * only, but game files contradict it for exactly these names — and a
+ * search across the extracted .sii/.sui files found no uppercase unit
+ * name token anywhere outside this prefix, so the lowercase rule stays
+ * in force everywhere else.
+ */
+const ENGINE_NAMELESS_PREFIX = '_nameless.'
+
 function validateUnitName(
   unitName: string,
   unitNameRange: SiiRange
 ): SiiIssue[] {
   const issues: SiiIssue[] = []
   let offset = unitNameRange.start
+
+  // Only the letter case is relaxed for these names. Token length,
+  // other invalid characters, and empty tokens are still checked.
+  const isEngineNameless = unitName.startsWith(ENGINE_NAMELESS_PREFIX)
+  const allowedToken = isEngineNameless ? /^[A-Za-z0-9_]*$/ : /^[a-z0-9_]*$/
 
   for (const token of unitName.split('.')) {
     const tokenRange: SiiRange = { start: offset, end: offset + token.length }
@@ -111,11 +128,12 @@ function validateUnitName(
         range: tokenRange,
       })
 
-    if (!/^[a-z0-9_]*$/.test(token))
+    if (!allowedToken.test(token))
       issues.push({
-        message: /[A-Z]/.test(token)
-          ? `UnitName token contains uppercase letters: "${token}"`
-          : `UnitName token contains invalid characters: "${token}"`,
+        message:
+          !isEngineNameless && /[A-Z]/.test(token)
+            ? `UnitName token contains uppercase letters: "${token}"`
+            : `UnitName token contains invalid characters: "${token}"`,
         range: tokenRange,
       })
 
