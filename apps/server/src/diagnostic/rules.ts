@@ -96,28 +96,21 @@ function validateClassName(
 }
 
 /**
- * Prefix the game itself uses for generated nameless units (e.g.
- * "_nameless.NVIDIA.GeForce.GT.220" in the extracted
- * default_gfx_setup.sii, where the tokens after the prefix are graphics
- * card names, uppercase and all). The wiki's token rule is lowercase
- * only, but game files contradict it for exactly these names — and a
- * search across the extracted .sii/.sui files found no uppercase unit
- * name token anywhere outside this prefix, so the lowercase rule stays
- * in force everywhere else.
+ * The wiki defines a unit name token as lowercase letters, digits and
+ * "_" only, at most 12 characters. The length and character rules have
+ * held up against every game file checked, but the lowercase part has
+ * not: the game's own files use uppercase in unit names that load fine
+ * (mover.allflags.sii has "mover.flagUSsmaSi", and default_gfx_setup.sii
+ * has "_nameless.NVIDIA.GeForce.GT.220"). So uppercase is reported as a
+ * hint — it contradicts the docs, but it isn't evidence that loading
+ * fails — while every other violation stays an error.
  */
-const ENGINE_NAMELESS_PREFIX = '_nameless.'
-
 function validateUnitName(
   unitName: string,
   unitNameRange: SiiRange
 ): SiiIssue[] {
   const issues: SiiIssue[] = []
   let offset = unitNameRange.start
-
-  // Only the letter case is relaxed for these names. Token length,
-  // other invalid characters, and empty tokens are still checked.
-  const isEngineNameless = unitName.startsWith(ENGINE_NAMELESS_PREFIX)
-  const allowedToken = isEngineNameless ? /^[A-Za-z0-9_]*$/ : /^[a-z0-9_]*$/
 
   for (const token of unitName.split('.')) {
     const tokenRange: SiiRange = { start: offset, end: offset + token.length }
@@ -128,13 +121,17 @@ function validateUnitName(
         range: tokenRange,
       })
 
-    if (!allowedToken.test(token))
+    if (!/^[A-Za-z0-9_]*$/.test(token))
       issues.push({
-        message:
-          !isEngineNameless && /[A-Z]/.test(token)
-            ? `UnitName token contains uppercase letters: "${token}"`
-            : `UnitName token contains invalid characters: "${token}"`,
+        message: `UnitName token contains invalid characters: "${token}"`,
         range: tokenRange,
+      })
+
+    if (/[A-Z]/.test(token))
+      issues.push({
+        message: `UnitName token contains uppercase letters: "${token}" (the docs specify lowercase, but some game files use uppercase here)`,
+        range: tokenRange,
+        severity: 'hint',
       })
 
     if (token.length === 0 && offset !== unitNameRange.start) {
