@@ -6,7 +6,7 @@
 		{
 			"label": "pnpm: build",
 			"type": "shell",
-			"command": "pnpm build",
+			"command": "pnpm run build:dev",
 			"problemMatcher": "$tsc",
 			"group": {
 				"kind": "build",

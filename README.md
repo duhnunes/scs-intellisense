@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./apps/client/public/icon.png" width="160" alt="SCS IntelliSense logo" />
   <h1>SCS IntelliSense</h1>
-  <p>VS Code support for SCS Software mod files</p>
+  <p>VS Code support for SCS Software mod files (American Truck Simulator / Euro Truck Simulator 2)</p>
 </div>
 
 <div align="center">
@@ -11,28 +11,66 @@
 
 ## What it is
 
-**SCS IntelliSense** is a **VS Code extension** that improves editing files used by **SCS Software mods**. It brings modern language support to these formats, making the files easier to read and edit.
+**SCS IntelliSense** is a VS Code extension for the `.sii` and `.sui` files used by SCS Software games and mods. These files are usually edited as plain text; the extension adds highlighting, error checking and navigation, so mistakes show up while you type instead of when the game fails to load.
 
-## Why it matters
+**Install it** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense), or search for **SCS IntelliSense** in the Extensions view (`Ctrl+Shift+X`).
 
-The extension is built around a parser that reads **SCS documents** and turns them into a structured tree. This tree is the base for the sistems.
+## Features
 
-When the file structure is correct, the extension can provide accurate feedback and make modding faster.
+Always on:
 
-## Main features
+- 🎨 **Semantic highlighting**: class names (including namespaces such as `ui::`), unit names, attribute keys, values, comments and `@include`.
+- 🔍 **Diagnostics**: structural errors (missing `:`, `{` or `}`), invalid class and unit names, duplicate unit names in a file, misplaced `@include`, missing final newline.
+- 🧭 **Outline, breadcrumbs and Go to Symbol** for units, attributes and includes.
+- 📂 **File icons** for SCS file types.
 
-- 🎨 Semantic Highlighting for SCS syntax
-- 💡 Completion to `attribute_key` and `class_name`
-- 🔍 Inline diagnostics while editing
-- 🖱️ Hover details for supported nodes
-- 📂 File Icons for supported formats
+Experimental (off by default):
 
-## Project structure
+- 💡 **Completion** for `class_name` and attribute keys.
+- 🖱️ **Hover** with descriptions of classes and attributes.
+- ✨ **Formatter**: Format Document, plus **Check Formatting of All Files** and **Format All Files** for the whole workspace.
 
-- `apps/client` — the VS Code extension UI and activation logic
-- `apps/server` — the language server that parses files and provides editor features
-<!-- - `apps/web` — documentation site and content
+To turn experimental features on, open the Settings (`Ctrl+,`), search for `@ext:DuHNunes.scs-intellisense`, check the ones you want and reload the window (**Developer: Reload Window**). See the [Marketplace page](https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense) for every setting and command.
 
-## Docs
+## Tested against the game
 
-The project documentation lives in `apps/web/content/docs` and explains how the extension works, including the reader, hover, diagnostics, and other systems. -->
+The diagnostics are checked against **all 34,843 `.sii`/`.sui` files of American Truck Simulator 1.61**, with no false errors, and the formatter was run over the same files without changing any content.
+
+SCS's [modding wiki](https://modding.scssoft.com/wiki/Main_Page) is incomplete, and in some places the game's own files differ from it: unit names with uppercase letters or in double quotes, class names such as `ui::text`, `.sui` files that hold only attributes. When the game and the wiki disagree, the extension follows the game.
+
+The extension hasn't been checked against Euro Truck Simulator 2's files yet.
+
+## Schema database
+
+Completion and hover read class and attribute information from a separate repository, [scs-schema](https://github.com/duhnunes/scs-schema), which is still being written. Contributions there are welcome: see its [contributing guide](https://github.com/duhnunes/scs-schema/blob/master/CONTRIBUTING.md).
+
+## Reporting problems
+
+Open an [issue](https://github.com/duhnunes/scs-intellisense/issues). The most useful report is an error on a file that **the game loads fine**: include the part of the file and its path (for example `def/world/mover.allflags.sii`).
+
+## Development
+
+Requirements: [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/) 11.
+
+```bash
+pnpm install
+pnpm test
+```
+
+| Command | What it does |
+|---|---|
+| `pnpm test` | Runs the test suite (Vitest, in `apps/server/test`) |
+| `pnpm compile` | Builds everything and creates the `.vsix` in `release/latest`, without publishing |
+| `pnpm release` | Maintainer only: tests, version bump, changelog, `.vsix`, GitHub release and Marketplace publish |
+
+To run the extension from source, open `apps/client` in VS Code and start **Run Extension** (`F5`). It builds the server and the client first, with source maps for debugging.
+
+### Project structure
+
+- `apps/client`: the VS Code extension. Starts the language server, handles settings and commands.
+- `apps/server`: the language server. A tolerant parser reads each file into a tree; highlighting, diagnostics, Outline, formatter, completion and hover all work from that tree.
+- `config`: shared ESLint and TypeScript settings.
+
+## License
+
+[MIT](./LICENSE.md)

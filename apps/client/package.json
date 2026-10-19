@@ -40,6 +40,7 @@
   "scripts": {
     "vscode:prepublish": "pnpm run package:server && pnpm -w run copy-server && pnpm run package",
     "package:server": "pnpm --filter scs-int-server run check-types && pnpm --filter scs-int-server exec node esbuild.cjs --production",
+    "build:dev": "pnpm --filter scs-int-server run check-types && pnpm --filter scs-int-server exec node esbuild.cjs && pnpm -w run copy-server && pnpm run compile",
     "compile": "pnpm run check-types && pnpm run lint && node esbuild.cjs",
     "package": "pnpm run check-types && pnpm run lint && node esbuild.cjs --production",
     "build": "pnpm i && pnpm run check-types && pnpm run lint && node esbuild.cjs",
