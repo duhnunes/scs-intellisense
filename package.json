@@ -15,7 +15,7 @@
     "test": "pnpm --filter scs-int-server test",
     "package:client": "pnpm --filter ./apps/client run vsce:package",
     "compile": "pnpm run build && pnpm run package:client",
-    "release": "pnpm release-it && pnpm vsce:publish",
+    "release": "dotenv -- release-it",
     "vsce:publish": "pnpm --filter ./apps/client/ vsce:publish"
   },
   "devDependencies": {
@@ -50,7 +50,8 @@
       "publish": false
     },
     "hooks": {
-      "after:bump": "pnpm --filter ./apps/client run vsce:package"
+      "after:bump": "pnpm --filter ./apps/client run vsce:package",
+      "after:release": "pnpm vsce:publish"
     },
     "plugins": {
       "@release-it/bumper": {
