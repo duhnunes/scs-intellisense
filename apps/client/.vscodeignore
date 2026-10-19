@@ -11,3 +11,8 @@ esbuild.js
 **/*.map
 **/*.ts
 **/.vscode-test.*
+# Build scripts and leftovers from old builds
+esbuild.cjs
+dist/debug/**
+# Photoshop sources of the icons (only the .png files ship)
+**/*.psd

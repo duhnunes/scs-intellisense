@@ -15,6 +15,20 @@ function headers(input: string) {
 }
 
 describe('reader: unit headers', () => {
+  // Moved from the old src/sii/reader.regression.ts script. While a class
+  // name is being typed (no ':' yet), the reader must still produce a
+  // partial unit covering it, or live highlighting and className
+  // completion stop working mid-typing.
+  it('reads a class name being typed as a partial unit', () => {
+    const prefix = 'SiiNunit\n{\n'
+    const [unit] = readSiiDocument(`${prefix}class_name\n`).units
+    expect(unit?.className).toBe('class_name')
+    expect(unit?.classNameRange).toEqual({
+      start: prefix.length,
+      end: prefix.length + 'class_name'.length,
+    })
+  })
+
   it('reads a plain header', () => {
     expect(headers(sii('truck : vehicle.dummy.truck {\n  a: 1\n}'))).toEqual([
       {
