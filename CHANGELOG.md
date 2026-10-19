@@ -1,5 +1,49 @@
 # Changelog
 
+[compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.5.0...0.6.0)
+### Features
+
+* **client:** add manual schema-refresh command ([9c788b4](https://github.com/duhnunes/scs-intellisense/commit/9c788b4e61ecb399356e4822bc2806c57270566e))
+* **formatter:** add Check Formatting and Format All Files commands ([7593232](https://github.com/duhnunes/scs-intellisense/commit/75932325deb1480dbf1638e26c897d9eeab53f66))
+* **formatter:** add experimental Format Document support for .sii/.sui files ([34452af](https://github.com/duhnunes/scs-intellisense/commit/34452af83d573519dbcf5128488e40e15748fec2))
+* **hover:** add class_name and attribute_key hover support ([6197184](https://github.com/duhnunes/scs-intellisense/commit/6197184f92ba684f230aa50dd46f72c7bc54eb28))
+* **hover:** add class_name and attribute_key hover support ([3a444bd](https://github.com/duhnunes/scs-intellisense/commit/3a444bd593e3343cbcf1ea79a594b15e05578d11))
+* **icons:** Add new icons to improve icons-system ([8210d38](https://github.com/duhnunes/scs-intellisense/commit/8210d38665d2f3df7b552ec3b16367809a0f5b5b))
+* **parser:** support .sui files that hold bare attributes ([00127fb](https://github.com/duhnunes/scs-intellisense/commit/00127fb61c974fd5d7306fa577564faed1c30592))
+* **parser:** support namespaced class names (ui::, hcd::) ([13143c2](https://github.com/duhnunes/scs-intellisense/commit/13143c23231172649b23eb8c54108b2584d25f0b))
+* **schema:** adapt completion/hover to the new scs-schema v2 format, add experimental toggles ([65ce29c](https://github.com/duhnunes/scs-intellisense/commit/65ce29cb997ae828316ad133fbf770275f0771dc))
+* **schema:** add fetch timeout so a stuck connection can't block completion forever ([4c45498](https://github.com/duhnunes/scs-intellisense/commit/4c45498c0a5e03a0ce947efc5938e2cf6228f087))
+* **schema:** add manifest fetch/cache system with manual refresh command ([2a220ba](https://github.com/duhnunes/scs-intellisense/commit/2a220bac437032addcef21301788f5df637d25a3))
+* **server:** add completion to class_name and attribute_key ([af96c08](https://github.com/duhnunes/scs-intellisense/commit/af96c0813fd1ca4a8e4ca8d459c0676dd18085a7))
+* **server:** support top-level [@include](https://github.com/include) directives in SII parsing ([494dc67](https://github.com/duhnunes/scs-intellisense/commit/494dc67c7256111c8add98e211b499ff870b4685))
+* **server:** wire hover, completion, and diagnostics into the language server ([76ed2b5](https://github.com/duhnunes/scs-intellisense/commit/76ed2b58ba5131512986a5377b0a93c0cc26436b))
+* **settings:** add configurable diagnostic severities and fetch timeout ([674485b](https://github.com/duhnunes/scs-intellisense/commit/674485b5bb5ab4e86282f483728df25e8958349c))
+* **symbols:** add Document Symbols for the Outline view, breadcrumbs, and Go to Symbols ([7408e0e](https://github.com/duhnunes/scs-intellisense/commit/7408e0efa8ca886112298cec62fe10ce88c22d9a))
+* **validation:** flag duplicate SiiNunit blocks and duplicate unit names ([919a7e7](https://github.com/duhnunes/scs-intellisense/commit/919a7e79e6c8d4174c3383210c51bd819d4a003e))
+
+### Bug Fixes
+
+* **client:** fix warning from language-configuration.json ([d1c7c51](https://github.com/duhnunes/scs-intellisense/commit/d1c7c51a4f3a8dc5246b7ab4a5ec3d9e2cada5f4))
+* **completion:** stop wordBaseSugestion for sii and sui files ([b521118](https://github.com/duhnunes/scs-intellisense/commit/b521118e0f0c90ecf47344b000ffa70ca5e971e2))
+* **diagnostic:** accept unit names wrapped in double quotes ([771ab4d](https://github.com/duhnunes/scs-intellisense/commit/771ab4d10071e17fac5ceabb555efc3f78afceee))
+* **diagnostic:** allow uppercase in unit names starting with '_nameless.' ([c25f7eb](https://github.com/duhnunes/scs-intellisense/commit/c25f7eb96bf006828db10e042c1c6dd314d307fc))
+* **diagnostic:** report uppercase in unit name tokens as a hint ([f4c19d8](https://github.com/duhnunes/scs-intellisense/commit/f4c19d86fd4270d7f0fd2002af675868ff6b8e7b))
+* **formatter:** eep [@include](https://github.com/include) at column 0 and trailing comments on their line ([341e819](https://github.com/duhnunes/scs-intellisense/commit/341e8197940b7bd5a4b9a2a4a64e4eee46b6341a))
+* **icons:** Add pma icon ([41e48d5](https://github.com/duhnunes/scs-intellisense/commit/41e48d5ad1d6ebf78bb0ae12ef6cfd6aca79c9a4))
+* **logger:** prevent duplicate server log output and centralize logger behavior ([0b284a0](https://github.com/duhnunes/scs-intellisense/commit/0b284a04cde4f7d9056000fe9e42db0419cfc868))
+* **package:** fix a typo ([f6cff2b](https://github.com/duhnunes/scs-intellisense/commit/f6cff2b5717d8d2319e16df6a072e4848c26a75b))
+* **parser:** report a unit whose closing brace is missing ([12ea048](https://github.com/duhnunes/scs-intellisense/commit/12ea0481ab063016789edb39ad5a221cd3614c0a))
+* **reader:** decouple className tokenization from character validation ([e2c679e](https://github.com/duhnunes/scs-intellisense/commit/e2c679eab7567eb73a7384d0c5d32b4ed7b53b0e))
+* **schema:** prune stale/orphaned schema cache files on manifest change ([318ef95](https://github.com/duhnunes/scs-intellisense/commit/318ef956926daf53a890cd4cd269b65c3596fa08))
+* **server:** improve SII validation diagnostics and recovery ([9ea00c4](https://github.com/duhnunes/scs-intellisense/commit/9ea00c41f05fb8773ca04276d2001a9e96b7f39a))
+
+### Refactors
+
+* **completion:** export formatAttributeType for reuse by hover ([f183da7](https://github.com/duhnunes/scs-intellisense/commit/f183da7dd0d37e4ee996fec8db3bc9df30662d26))
+* **diagnostic:** rename validation/ to diagnostic/, add severity support ([b5b9b0f](https://github.com/duhnunes/scs-intellisense/commit/b5b9b0f42f42e79d6f2667526dbb65ccaabe71f9))
+* **server:** consolidate SII parsing interfaces and remove structure dependency ([3df10c6](https://github.com/duhnunes/scs-intellisense/commit/3df10c6eed87174fd243d20bbf058cd9f2eea2b2))
+* **server:** split SII validation into business rules and parser issues ([c4c5f1b](https://github.com/duhnunes/scs-intellisense/commit/c4c5f1b6da2558d5a0b5d711976ecb9fd8df9ad4))
+
 [compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.4.0...0.5.0)
 ### Features
 

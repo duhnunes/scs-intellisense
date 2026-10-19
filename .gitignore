@@ -5,6 +5,7 @@ apps/client/LICENSE.md
 apps/client/README.md
 /release/
 TODO.md
+QA.md
 .env
 *.psd
 !apps/client/public/extensions/icon.psd

@@ -1,6 +1,6 @@
 {
   "name": "scs-intellisense",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "displayName": "SCS IntelliSense (SCS Software)",
   "description": "Extension to add intellisense for SCS Software files.",
   "author": "DuH Nunes",
@@ -82,8 +82,15 @@
     "languages": [
       {
         "id": "sii",
-        "aliases": ["SII", "sii", "SCS Software", "SCS"],
-        "extensions": [".sii"],
+        "aliases": [
+          "SII",
+          "sii",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".sii"
+        ],
         "configuration": "./language-configuration.json",
         "icon": {
           "dark": "./public/extensions/sii.png",
@@ -92,8 +99,15 @@
       },
       {
         "id": "sui",
-        "aliases": ["SUI", "sui", "SCS Software", "SCS"],
-        "extensions": [".sui"],
+        "aliases": [
+          "SUI",
+          "sui",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".sui"
+        ],
         "configuration": "./language-configuration.json",
         "icon": {
           "dark": "./public/extensions/sui.png",
@@ -102,8 +116,15 @@
       },
       {
         "id": "pmd",
-        "aliases": ["pmd", "PMD", "SCS Software", "SCS"],
-        "extensions": [".pmd"],
+        "aliases": [
+          "pmd",
+          "PMD",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".pmd"
+        ],
         "icon": {
           "dark": "./public/extensions/pmd.png",
           "light": "./public/extensions/pmg.png"
@@ -111,8 +132,15 @@
       },
       {
         "id": "pmg",
-        "aliases": ["pmg", "PMG", "SCS Software", "SCS"],
-        "extensions": [".pmg"],
+        "aliases": [
+          "pmg",
+          "PMG",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".pmg"
+        ],
         "icon": {
           "dark": "./public/extensions/pmg.png",
           "light": "./public/extensions/pmg.png"
@@ -120,8 +148,15 @@
       },
       {
         "id": "pmc",
-        "aliases": ["pmc", "PMC", "SCS Software", "SCS"],
-        "extensions": [".pmc"],
+        "aliases": [
+          "pmc",
+          "PMC",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".pmc"
+        ],
         "icon": {
           "dark": "./public/extensions/pma.png",
           "light": "./public/extensions/pma.png"
@@ -129,8 +164,15 @@
       },
       {
         "id": "pma",
-        "aliases": ["pma", "PMA", "SCS Software", "SCS"],
-        "extensions": [".pma"],
+        "aliases": [
+          "pma",
+          "PMA",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".pma"
+        ],
         "icon": {
           "dark": "./public/extensions/pma.png",
           "light": "./public/extensions/pma.png"
@@ -138,8 +180,15 @@
       },
       {
         "id": "pit",
-        "aliases": ["pit", "PIT", "SCS Software", "SCS"],
-        "extensions": [".pit"],
+        "aliases": [
+          "pit",
+          "PIT",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".pit"
+        ],
         "icon": {
           "dark": "./public/extensions/pit.png",
           "light": "./public/extensions/pit.png"
@@ -147,8 +196,15 @@
       },
       {
         "id": "pim",
-        "aliases": ["pim", "PIM", "SCS Software", "SCS"],
-        "extensions": [".pim"],
+        "aliases": [
+          "pim",
+          "PIM",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".pim"
+        ],
         "icon": {
           "dark": "./public/extensions/pim.png",
           "light": "./public/extensions/pim.png"
@@ -156,8 +212,15 @@
       },
       {
         "id": "pic",
-        "aliases": ["pic", "PIC", "SCS Software", "SCS"],
-        "extensions": [".pic"],
+        "aliases": [
+          "pic",
+          "PIC",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".pic"
+        ],
         "icon": {
           "dark": "./public/extensions/pic.png",
           "light": "./public/extensions/pic.png"
@@ -165,8 +228,15 @@
       },
       {
         "id": "pia",
-        "aliases": ["pia", "PIA", "SCS Software", "SCS"],
-        "extensions": [".pia"],
+        "aliases": [
+          "pia",
+          "PIA",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".pia"
+        ],
         "icon": {
           "dark": "./public/extensions/pia.png",
           "light": "./public/extensions/pia.png"
@@ -174,8 +244,15 @@
       },
       {
         "id": "pip",
-        "aliases": ["pip", "PIP", "SCS Software", "SCS"],
-        "extensions": [".pip"],
+        "aliases": [
+          "pip",
+          "PIP",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".pip"
+        ],
         "icon": {
           "dark": "./public/extensions/pip.png",
           "light": "./public/extensions/pip.png"
@@ -183,8 +260,13 @@
       },
       {
         "id": "tobj",
-        "aliases": ["tojb", "TOBJ"],
-        "extensions": [".tobj"],
+        "aliases": [
+          "tojb",
+          "TOBJ"
+        ],
+        "extensions": [
+          ".tobj"
+        ],
         "icon": {
           "dark": "./public/extensions/tobj.png",
           "light": "./public/extensions/tobj.png"
@@ -192,8 +274,13 @@
       },
       {
         "id": "mat",
-        "aliases": ["mat", "MAT"],
-        "extensions": [".mat"],
+        "aliases": [
+          "mat",
+          "MAT"
+        ],
+        "extensions": [
+          ".mat"
+        ],
         "icon": {
           "dark": "./public/extensions/mat.png",
           "light": "./public/extensions/mat.png"
@@ -201,8 +288,15 @@
       },
       {
         "id": "sndr",
-        "aliases": ["sndr", "SNDR", "SCS Software", "SCS"],
-        "extensions": [".soundref"],
+        "aliases": [
+          "sndr",
+          "SNDR",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".soundref"
+        ],
         "icon": {
           "dark": "./public/extensions/sndr.png",
           "light": "./public/extensions/sndr.png"
@@ -210,8 +304,13 @@
       },
       {
         "id": "zip",
-        "aliases": ["zip", "ZIP"],
-        "extensions": [".zip"],
+        "aliases": [
+          "zip",
+          "ZIP"
+        ],
+        "extensions": [
+          ".zip"
+        ],
         "icon": {
           "dark": "./public/extensions/zip.png",
           "light": "./public/extensions/zip.png"
@@ -219,8 +318,14 @@
       },
       {
         "id": "scs",
-        "aliases": ["scs", "SCS", "SCS Software"],
-        "extensions": [".scs"],
+        "aliases": [
+          "scs",
+          "SCS",
+          "SCS Software"
+        ],
+        "extensions": [
+          ".scs"
+        ],
         "icon": {
           "dark": "./public/extensions/scs.png",
           "light": "./public/extensions/scs.png"
@@ -279,9 +384,19 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["error", "warning", "information", "hint"]
+            "enum": [
+              "error",
+              "warning",
+              "information",
+              "hint"
+            ]
           },
-          "default": ["error", "warning", "information", "hint"],
+          "default": [
+            "error",
+            "warning",
+            "information",
+            "hint"
+          ],
           "markdownDescription": "Which diagnostic severities SCS IntelliSense should report. Uncheck any you'd like hidden — for example, uncheck `warning` to keep only load-breaking `error` diagnostics."
         },
         "scs-intellisense.schema.fetchTimeoutMs": {
@@ -307,7 +422,10 @@
         },
         "scs-intellisense.formatter.braceStyle": {
           "type": "string",
-          "enum": ["1tbs", "allman"],
+          "enum": [
+            "1tbs",
+            "allman"
+          ],
           "enumDescriptions": [
             "Opening brace on the same line (e.g. \"class_name : unit.name {\")",
             "Opening brace on its own line below (the style the game's own files use)"
