@@ -1,0 +1,19 @@
+SiiNunit
+{
+# Excerpt of ATS 1.60 def/def/world/mover.allflags.sii (lines 3-17)
+### US flags small ###
+mover_model : mover.flagUSsmaSi
+{
+	mover_name: "flag US small Sign"
+	model_anim: "/asset/props/flagsmall.pma"
+	model_desc: "/asset/props/flag_ats_small_sign.pmd"
+	model_coll: "/asset/props/flag_ats_small_sign.pmc"
+}
+mover_model : mover.flagUSsmaCom
+{
+	mover_name: "flag US small Companies"
+	model_anim: "/asset/props/flagsmall.pma"
+	model_desc: "/asset/props/flag_ats_small_comp.pmd"
+	model_coll: "/asset/props/flag_ats_small_comp.pmc"
+}
+}

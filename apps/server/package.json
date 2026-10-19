@@ -6,8 +6,10 @@
   "scripts": {
     "build": "pnpm i && pnpm run check-types && node esbuild.cjs",
     "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix",
-    "lint:check": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --mx-warnings=0",
-    "check-types": "tsc --noEmit"
+    "lint:check": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --max-warnings=0",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "vscode-languageserver": "^9.0.1",
@@ -20,7 +22,8 @@
     "@types/node": "~22.19.18",
     "esbuild": "^0.27.3",
     "eslint": "^10.4.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
   },
   "release-it": {
     "git": false,

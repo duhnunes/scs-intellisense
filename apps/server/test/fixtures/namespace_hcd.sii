@@ -1,0 +1,39 @@
+SiiNunit
+{
+# Excerpt of ATS 1.60 def/def/tutorial_hint_conditions.sii (lines 4-37)
+
+hcd::on_job : cond.job.on_any
+{
+    type: any
+    value_type: none
+}
+
+hcd::on_job : cond.job_trans.on_quick15
+{
+    type: quick
+    value_type: none
+    duration: 15
+}
+
+hcd::on_job : cond.job_fuel0.quick10
+{
+    type: quick
+    value_type: fuel_consumed
+    comparison_type: at_most
+    value: 0
+    duration: 10
+}
+
+hcd::on_job : cond.job_trans.to_quick15
+{
+    type: quick
+    value_type: none
+    duration: 15
+}
+
+hcd::completed_delivery_count : cond.deliveries.zero
+{
+    count: 0
+    comparison_type: equal
+}
+}

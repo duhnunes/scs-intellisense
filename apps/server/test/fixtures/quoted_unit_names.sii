@@ -1,0 +1,18 @@
+SiiNunit {
+  # Excerpt of ATS 1.60 def/def/default_input_setup.sii (lines 3727-3740)
+
+  # Indicates that specified part is configured in imediatelly usable way.
+
+  default_input_config : "icfg.steering.configured" {
+    values[]: "steer_cfg=1"
+  }
+
+  default_input_config : "icfg.pedals.configured" {
+    values[]: "pedals_cfg=1"
+  }
+
+  default_input_config : "icfg.clutch.configured" {
+    values[]: "clutch_cfg=1"
+  }
+
+}
