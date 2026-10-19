@@ -316,8 +316,9 @@ class SiiReader {
       // swallow the real '{' via recoverToNextLine() — the same kind of
       // brace desync the className '@' fix addressed earlier.
       // If the current character could plausibly start a unitName on
-      // its own (a letter/digit/underscore, or the leading '.' of a
-      // nameless unit) there's nothing extraneous to skip — e.g.
+      // its own (a letter/digit/underscore, the leading '.' of a
+      // nameless unit, or the '"' of a quoted name) there's nothing
+      // extraneous to skip — e.g.
       // "prefab_model prefab.house.dorime {" with just a missing colon
       // and no stray character at all.
       if (
@@ -687,7 +688,7 @@ function isWhitespace(character: string): boolean {
 }
 
 function isPossibleUnitNameStart(character: string): boolean {
-  return /[A-Za-z0-9_.]/.test(character)
+  return /[A-Za-z0-9_."]/.test(character)
 }
 
 function isHorizontalWhitespace(character: string): boolean {

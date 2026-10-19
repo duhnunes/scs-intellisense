@@ -104,15 +104,45 @@ function validateClassName(
  * has "_nameless.NVIDIA.GeForce.GT.220"). So uppercase is reported as a
  * hint — it contradicts the docs, but it isn't evidence that loading
  * fails — while every other violation stays an error.
+ *
+ * The game's files also wrap some unit names in one pair of double quotes
+ * (default_input_setup.sii has `default_input_config:
+ * "icfg.steering.configured"`). The wiki doesn't mention this, so the
+ * quotes are accepted and the token rules run on what's inside them.
  */
 function validateUnitName(
   unitName: string,
   unitNameRange: SiiRange
 ): SiiIssue[] {
   const issues: SiiIssue[] = []
-  let offset = unitNameRange.start
+  const opensQuoted = unitName.startsWith('"')
+  const closesQuoted = unitName.length > 1 && unitName.endsWith('"')
 
-  for (const token of unitName.split('.')) {
+  if (opensQuoted !== closesQuoted) {
+    const quoteOffset = opensQuoted
+      ? unitNameRange.start
+      : unitNameRange.end - 1
+    issues.push({
+      message: 'Unmatched double quote in unitName',
+      range: { start: quoteOffset, end: quoteOffset + 1 },
+    })
+  }
+
+  const innerStart = unitNameRange.start + (opensQuoted ? 1 : 0)
+  const inner = unitName.slice(
+    opensQuoted ? 1 : 0,
+    closesQuoted ? -1 : undefined
+  )
+
+  if (opensQuoted && closesQuoted && inner.length === 0) {
+    issues.push({ message: 'UnitName must not be empty', range: unitNameRange })
+    return issues
+  }
+
+  const innerEnd = innerStart + inner.length
+  let offset = innerStart
+
+  for (const token of inner.split('.')) {
     const tokenRange: SiiRange = { start: offset, end: offset + token.length }
 
     if (token.length > 12)
@@ -134,14 +164,14 @@ function validateUnitName(
         severity: 'hint',
       })
 
-    if (token.length === 0 && offset !== unitNameRange.start) {
+    if (token.length === 0 && offset !== innerStart) {
       // A zero-length range has nothing for an editor to underline, so it
       // falls back to highlighting whatever token happens to be nearby.
       // Point at the actual redundant dot(s) instead — the '.' that ended
       // the previous token through the '.' that starts the next one.
       const dotsRange: SiiRange = {
         start: offset - 1,
-        end: Math.min(offset + 1, unitNameRange.end),
+        end: Math.min(offset + 1, innerEnd),
       }
       issues.push({
         message: 'UnitName must not contain empty tokens (consecutive dots)',
@@ -167,14 +197,17 @@ function validateUnitName(
  * Nameless units (unitName starting with '.') are deliberately exempt:
  * the whole point of a nameless unit is that it's never referenced by
  * name from elsewhere, so the load-failure case the docs describe
- * doesn't apply to them.
+ * doesn't apply to them. A quoted name counts as nameless when its
+ * inside starts with '.'. Otherwise names are compared as written, so
+ * "a.b" and a.b are not reported as duplicates of each other: nobody
+ * has confirmed yet whether the game treats them as the same name.
  */
 function validateDuplicateUnitNames(units: SiiUnit[]): SiiIssue[] {
   const unitsByName = new Map<string, SiiUnit[]>()
 
   for (const unit of units) {
     const name = unit.unitName
-    if (!name || name.startsWith('.')) continue
+    if (!name || name.replace(/^"/, '').startsWith('.')) continue
     // A zero-length unitNameRange means the reader never actually reached
     // a unitName for this unit — already reported as a structural issue,
     // nothing to compare here.
@@ -190,7 +223,7 @@ function validateDuplicateUnitNames(units: SiiUnit[]): SiiIssue[] {
     if (group.length < 2) continue
     for (const unit of group) {
       issues.push({
-        message: `Duplicate unit name "${name}" — used by ${group.length} units in this file`,
+        message: `Duplicate unit name ${name.startsWith('"') ? name : `"${name}"`} — used by ${group.length} units in this file`,
         range: unit.unitNameRange,
       })
     }
