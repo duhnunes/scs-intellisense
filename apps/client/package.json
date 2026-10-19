@@ -1,7 +1,7 @@
 {
   "name": "scs-intellisense",
   "version": "0.6.0",
-  "displayName": "SCS IntelliSense (SCS Software)",
+  "displayName": "SCS IntelliSense for ATS & ETS2",
   "description": "Extension to add intellisense for SCS Software files.",
   "author": "DuH Nunes",
   "license": "MIT",
@@ -336,27 +336,27 @@
       {
         "command": "scsIntellisense.showOutput",
         "title": "Show Output",
-        "category": "SCS Intellisense"
+        "category": "SCS IntelliSense"
       },
       {
         "command": "scsIntellisense.clearOutput",
         "title": "Clear Output",
-        "category": "SCS Intellisense"
+        "category": "SCS IntelliSense"
       },
       {
         "command": "scsIntellisense.refreshSchema",
         "title": "Refresh Schema Database",
-        "category": "SCS Intellisense"
+        "category": "SCS IntelliSense"
       },
       {
         "command": "scsIntellisense.checkFormatting",
         "title": "Check Formatting of All Files",
-        "category": "SCS Intellisense"
+        "category": "SCS IntelliSense"
       },
       {
         "command": "scsIntellisense.formatAllFiles",
         "title": "Format All Files",
-        "category": "SCS Intellisense"
+        "category": "SCS IntelliSense"
       }
     ],
     "menus": {
@@ -373,7 +373,7 @@
     },
     "capabilities": {},
     "configuration": {
-      "title": "SCS Intellisense",
+      "title": "SCS IntelliSense",
       "properties": {
         "scs-intellisense.semanticHighlighting": {
           "type": "boolean",

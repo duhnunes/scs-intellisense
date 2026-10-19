@@ -143,7 +143,7 @@ export function activate(context: vscode.ExtensionContext) {
     })
   )
 
-  console.log('SCS Intellisense client started')
+  console.log('SCS IntelliSense client started')
 }
 
 export function deactivate(): Thenable<void> | undefined {

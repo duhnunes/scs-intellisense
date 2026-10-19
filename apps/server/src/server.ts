@@ -166,7 +166,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     )
   }
 
-  logger.info('SERVER_INIT', 'SCS Intellisense server intialized!')
+  logger.info('SERVER_INIT', 'SCS IntelliSense server initialized')
 
   return result
 })

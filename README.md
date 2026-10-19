@@ -9,6 +9,8 @@
   <a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="Latest release" /></a>
 </div>
 
+> **Unofficial community project.** SCS IntelliSense is not affiliated with or endorsed by SCS Software. Euro Truck Simulator 2, American Truck Simulator and SCS Software are trademarks of their respective owners.
+
 ## What it is
 
 **SCS IntelliSense** is a VS Code extension for the `.sii` and `.sui` files used by SCS Software games and mods. These files are usually edited as plain text; the extension adds highlighting, error checking and navigation, so mistakes show up while you type instead of when the game fails to load.
