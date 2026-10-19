@@ -35,6 +35,11 @@ import {
 } from './hover/attributeKey'
 import { buildDocumentSymbols } from './symbols/documentSymbols'
 import { formatSiiDocument, type FormatterOptions } from './formatter/format'
+import {
+  formatFiles,
+  type FileFormatResult,
+  type FileToFormat,
+} from './formatter/workspaceFormat'
 import type { SiiSeverity } from './interfaces/structure'
 
 const connection = createConnection(ProposedFeatures.all)
@@ -184,6 +189,18 @@ connection.onRequest('scsIntellisense/refreshSchema', async () => {
     return { ok: false, message: String(err) }
   }
 })
+
+// Backs the "Check Formatting" (write: false) and "Format All Files"
+// (write: true) commands. The client finds the files and sends them in
+// batches; see formatter/workspaceFormat.ts.
+connection.onRequest(
+  'scsIntellisense/formatFiles',
+  async (params: {
+    files: FileToFormat[]
+    write: boolean
+  }): Promise<FileFormatResult[]> =>
+    formatFiles(params.files, params.write, { braceStyle: formatterBraceStyle })
+)
 
 connection.onCompletion(async (params) => {
   try {

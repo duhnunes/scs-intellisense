@@ -239,8 +239,30 @@
         "command": "scsIntellisense.refreshSchema",
         "title": "Refresh Schema Database",
         "category": "SCS Intellisense"
+      },
+      {
+        "command": "scsIntellisense.checkFormatting",
+        "title": "Check Formatting of All Files",
+        "category": "SCS Intellisense"
+      },
+      {
+        "command": "scsIntellisense.formatAllFiles",
+        "title": "Format All Files",
+        "category": "SCS Intellisense"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "scsIntellisense.checkFormatting",
+          "when": "config.scs-intellisense.formatter.enabled"
+        },
+        {
+          "command": "scsIntellisense.formatAllFiles",
+          "when": "config.scs-intellisense.formatter.enabled"
+        }
+      ]
+    },
     "capabilities": {},
     "configuration": {
       "title": "SCS Intellisense",

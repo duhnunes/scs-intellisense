@@ -3,7 +3,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { getDiagnostics } from '../src/diagnostic'
 import { formatSiiDocument } from '../src/formatter/format'
 import { provideSemanticTokensForDocument, tokenTypes } from '../src/semantic'
-import { readSiiDocument } from '../src/sii'
+import { readScsDocument, readSiiDocument } from '../src/sii'
 import { buildDocumentSymbols } from '../src/symbols/documentSymbols'
 import { sii } from './helpers'
 
@@ -89,6 +89,37 @@ describe('formatter', () => {
     )
     expect(formatted).toContain('    k: 1 # note\n')
     expect(formatted).toContain('\n@include "in.sui"\n')
+  })
+
+  it('keeps a header comment on the header line', () => {
+    // ATS 1.61 base/unit/hookup/lights/highway_tunnel_light.sii
+    const input =
+      'SiiNunit\n{\nlight_source : highway.tunnel.light #omni\n{\n\ttype: point\n}\n}\n'
+    expect(format(input)).toBe(
+      'SiiNunit {\n  light_source : highway.tunnel.light { #omni\n    type: point\n  }\n}\n'
+    )
+    expect(format(input, 'allman')).toBe(
+      'SiiNunit\n{\n  light_source : highway.tunnel.light #omni\n  {\n    type: point\n  }\n}\n'
+    )
+  })
+
+  it('keeps a comment after the opening brace on that line', () => {
+    for (const style of ['1tbs', 'allman'] as const) {
+      const once = format(
+        'SiiNunit\n{\na : x.y #head\n{ #brace\nk: 1\n}\n}\n',
+        style
+      )
+      expect(format(once, style)).toBe(once)
+    }
+    expect(format('SiiNunit {\na : x.y { #brace\nk: 1\n}\n}\n')).toBe(
+      'SiiNunit {\n  a : x.y { #brace\n    k: 1\n  }\n}\n'
+    )
+  })
+
+  it('never wraps a .sui file in SiiNunit', () => {
+    expect(
+      formatSiiDocument(readScsDocument('a:x.y\n{\nk:    1\n}\n', 'sui'))
+    ).toBe('a : x.y {\n  k: 1\n}\n')
   })
 
   it('keeps values verbatim, quotes included', () => {

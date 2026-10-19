@@ -46,16 +46,22 @@ export function formatSiiDocument(
   const indentUnit = ' '.repeat(opts.indentSize)
   const lines: string[] = []
 
-  emitBraceOpener('SiiNunit', 0, opts, indentUnit, lines)
-
   const topLevelNodes = collectNodes(
     document.units,
     document.includes,
     [],
     topLevelComments(document)
   )
-  emitNodeList(topLevelNodes, 1, document, opts, indentUnit, lines)
 
+  // A .sui is a fragment that gets pasted into another file's SiiNunit by
+  // @include, so it must never gain a wrapper of its own.
+  if (document.mode === 'sui') {
+    emitNodeList(topLevelNodes, 0, document, opts, indentUnit, lines)
+    return lines.join('\n') + '\n'
+  }
+
+  emitBraceOpener('SiiNunit', 0, opts, indentUnit, lines)
+  emitNodeList(topLevelNodes, 1, document, opts, indentUnit, lines)
   lines.push('}')
   return lines.join('\n') + '\n'
 }
@@ -122,15 +128,48 @@ function isWithin(offset: number, range: SiiRange): boolean {
 function topLevelComments(document: SiiDocument): SiiComment[] {
   return document.comments.filter(
     (comment) =>
-      !document.units.some((unit) =>
-        isWithin(comment.range.start, unit.bodyRange)
+      !document.units.some(
+        (unit) =>
+          isWithin(comment.range.start, unit.bodyRange) ||
+          isHeaderComment(comment, unit)
       )
   )
 }
 
+/** A comment between the unit name and the opening '{', as in the
+ *  game's own `light_source : highway.tunnel.light #omni` + `{` on the
+ *  next line. It belongs to the header, not after the unit. */
+function isHeaderComment(comment: SiiComment, unit: SiiUnit): boolean {
+  return (
+    comment.range.start > unit.classNameRange.start &&
+    comment.range.start < unit.bodyRange.start - 1
+  )
+}
+
 function bodyComments(unit: SiiUnit, document: SiiDocument): SiiComment[] {
-  return document.comments.filter((comment) =>
-    isWithin(comment.range.start, unit.bodyRange)
+  return document.comments.filter(
+    (comment) =>
+      isWithin(comment.range.start, unit.bodyRange) &&
+      !isBraceLineComment(comment, unit, document)
+  )
+}
+
+/** A comment right after the opening '{', on the same line and before
+ *  any attribute (`a : b { #note`). It stays on the brace's line —
+ *  that's also where 1tbs puts a header comment, so without this a
+ *  second format would move it again. */
+function isBraceLineComment(
+  comment: SiiComment,
+  unit: SiiUnit,
+  document: SiiDocument
+): boolean {
+  const firstAttribute = unit.attributes[0]
+  return (
+    isWithin(comment.range.start, unit.bodyRange) &&
+    !document.text
+      .slice(unit.bodyRange.start, comment.range.start)
+      .includes('\n') &&
+    (!firstAttribute || firstAttribute.range.start > comment.range.start)
   )
 }
 
@@ -233,7 +272,35 @@ function emitUnit(
     ? `${classNameText} : ${document.text.slice(unit.unitNameRange.start, unit.unitNameRange.end)}`
     : classNameText
 
-  emitBraceOpener(header, depth, opts, indentUnit, lines)
+  const commentText = (comment: SiiComment) =>
+    document.text.slice(comment.range.start, comment.range.end)
+  const headerComments = document.comments
+    .filter((comment) => isHeaderComment(comment, unit))
+    .map(commentText)
+  const braceLineComments = document.comments
+    .filter((comment) => isBraceLineComment(comment, unit, document))
+    .map(commentText)
+
+  if (headerComments.length === 0 && braceLineComments.length === 0) {
+    emitBraceOpener(header, depth, opts, indentUnit, lines)
+  } else {
+    // In 1tbs header comments go after the '{': before it, a line
+    // comment would swallow the brace.
+    const indent = indentUnit.repeat(depth)
+    const withComments = (text: string, comments: string[]) =>
+      comments.length > 0 ? `${text} ${comments.join(' ')}` : text
+    if (opts.braceStyle === '1tbs') {
+      lines.push(
+        withComments(`${indent}${header} {`, [
+          ...headerComments,
+          ...braceLineComments,
+        ])
+      )
+    } else {
+      lines.push(withComments(`${indent}${header}`, headerComments))
+      lines.push(withComments(`${indent}{`, braceLineComments))
+    }
+  }
 
   const bodyNodes = collectNodes(
     [],

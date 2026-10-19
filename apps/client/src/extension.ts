@@ -7,6 +7,7 @@ import {
   TransportKind,
 } from 'vscode-languageclient/node'
 import { ConfigManager } from './configManager'
+import { registerWorkspaceFormatCommands } from './workspaceFormat'
 
 let client: LanguageClient | undefined
 let output: vscode.OutputChannel
@@ -72,6 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
   // send a request through `client` — so it's created only once `client`
   // exists, not before.
   new ConfigManager(context, client)
+  registerWorkspaceFormatCommands(context, client, output)
 
   const registerLogHandler = () => {
     try {
