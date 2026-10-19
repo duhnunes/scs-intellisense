@@ -4,8 +4,7 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "config/*",
-    "packages/*"
+    "config/*"
   ],
   "scripts": {
     "copy-server": "copyfiles -u 3 apps/server/dist/**/* apps/client/dist/",
