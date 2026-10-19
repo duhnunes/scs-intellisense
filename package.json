@@ -50,6 +50,7 @@
       "publish": false
     },
     "hooks": {
+      "before:init": "pnpm test",
       "after:bump": "pnpm --filter ./apps/client run vsce:package",
       "after:release": "pnpm vsce:publish"
     },
