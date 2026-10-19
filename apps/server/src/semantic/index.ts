@@ -90,6 +90,9 @@ export function provideSemanticTokensForDocument(
         queueAttributeTokens(tokensToEmit, attribute, textLength)
       }
     }
+    for (const attribute of document.attributes) {
+      queueAttributeTokens(tokensToEmit, attribute, textLength)
+    }
 
     const stringToken = tokenTypes.indexOf('string')
     for (const include of document.includes) {

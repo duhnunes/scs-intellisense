@@ -16,6 +16,10 @@ export function isClassNamePosition(
   document: SiiDocument,
   offset: number
 ): boolean {
+  // A .sui made of bare attributes is a unit body fragment: what goes
+  // there are attribute keys, never a new class.
+  if (document.attributes.length > 0) return false
+
   for (const unit of document.units) {
     // Already typing (or re-editing) this unit's className — even a
     // malformed one, since the reader reads className "raw" and only

@@ -49,12 +49,13 @@ export function formatSiiDocument(
   const topLevelNodes = collectNodes(
     document.units,
     document.includes,
-    [],
+    document.attributes,
     topLevelComments(document)
   )
 
-  // A .sui is a fragment that gets pasted into another file's SiiNunit by
-  // @include, so it must never gain a wrapper of its own.
+  // A .sui is a fragment pasted into another file by @include (into the
+  // SiiNunit root, or into a unit body when it holds bare attributes), so
+  // it must never gain a wrapper of its own.
   if (document.mode === 'sui') {
     emitNodeList(topLevelNodes, 0, document, opts, indentUnit, lines)
     return lines.join('\n') + '\n'

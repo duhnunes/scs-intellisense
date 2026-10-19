@@ -8,10 +8,10 @@ import { buildDocumentSymbols } from '../src/symbols/documentSymbols'
 import { sii } from './helpers'
 
 /** Decodes LSP's relative token encoding into "text=type" pairs. */
-function semanticTokens(input: string): string[] {
+function semanticTokens(input: string, uri = 'file:///x.sii'): string[] {
   const text = input.replace(/\r\n/g, '\n')
   const lines = text.split('\n')
-  const { data } = provideSemanticTokensForDocument(input, 'file:///x.sii')
+  const { data } = provideSemanticTokensForDocument(input, uri)
   const tokens: string[] = []
   let line = 0
   let char = 0
@@ -42,6 +42,15 @@ describe('semantic highlighting', () => {
     expect(tokens).toContain('text=class')
     expect(tokens.some((token) => token.includes('::'))).toBe(false)
   })
+
+  it('colors bare attributes in a .sui', () => {
+    const tokens = semanticTokens(
+      'score_success: 1100\nid: x\n',
+      'file:///x.sui'
+    )
+    expect(tokens).toContain('score_success=parameter')
+    expect(tokens).toContain('1100=number')
+  })
 })
 
 describe('document symbols (Outline)', () => {
@@ -64,6 +73,22 @@ describe('document symbols (Outline)', () => {
       ['.t1', 'ui::text'],
       ['x.y', 'truck'],
     ])
+  })
+
+  it('lists the bare attributes of a .sui', () => {
+    const document = readScsDocument(
+      '@include "a.sui"\nk: 1\nnames[]: "x"\n',
+      'sui'
+    )
+    const textDocument = TextDocument.create(
+      'file:///x.sui',
+      'sui',
+      1,
+      document.text
+    )
+    expect(
+      buildDocumentSymbols(document, textDocument).map((symbol) => symbol.name)
+    ).toEqual(['@include', 'k', 'names[]'])
   })
 })
 
@@ -120,6 +145,17 @@ describe('formatter', () => {
     expect(
       formatSiiDocument(readScsDocument('a:x.y\n{\nk:    1\n}\n', 'sui'))
     ).toBe('a : x.y {\n  k: 1\n}\n')
+  })
+
+  it('formats a .sui body fragment at column 0', () => {
+    expect(
+      formatSiiDocument(
+        readScsDocument(
+          '\n\n@include "a.sui"\n\n\tk:   1\n\tid: x # note\n',
+          'sui'
+        )
+      )
+    ).toBe('@include "a.sui"\n\nk: 1\nid: x # note\n')
   })
 
   it('keeps values verbatim, quotes included', () => {

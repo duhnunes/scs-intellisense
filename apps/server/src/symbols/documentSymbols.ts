@@ -39,9 +39,13 @@ export function buildDocumentSymbols(
     ...document.includes.map((include) =>
       buildTopLevelIncludeSymbol(include, toRange)
     ),
+    ...document.attributes.map((attribute) =>
+      buildAttributeSymbol(attribute, toRange)
+    ),
   ]
 
-  // Units and top-level includes come from two separate arrays on
+  // Units, top-level includes and bare attributes (.sui body fragments)
+  // come from separate arrays on
   // `document` — sort by position so the Outline reflects the file's
   // actual top-to-bottom order, not "all units, then all includes".
   symbols.sort((a, b) => compareStart(a.range, b.range))

@@ -160,8 +160,8 @@ export function readScsDocument(
 function readSuiDocument(input: string, options: ReadSiiOptions): SiiDocument {
   const text = prepareText(input, options)
   const reader = new SiiReader(text, 'sui')
-  const { units, includes } = reader.readUnits(false)
-  return reader.document({ units, includes })
+  const { units, includes, attributes } = reader.readUnits(false)
+  return reader.document({ units, includes, attributes })
 }
 
 function prepareText(input: string, options: ReadSiiOptions): string {
@@ -192,7 +192,10 @@ class SiiReader {
 
   document(
     values: Partial<
-      Pick<SiiDocument, 'magicMark' | 'rootRange' | 'units' | 'includes'>
+      Pick<
+        SiiDocument,
+        'magicMark' | 'rootRange' | 'units' | 'includes' | 'attributes'
+      >
     > = {}
   ): SiiDocument {
     return {
@@ -200,6 +203,7 @@ class SiiReader {
       text: this.text,
       units: values.units ?? [],
       includes: values.includes ?? [],
+      attributes: values.attributes ?? [],
       comments: this.comments,
       issues: this.issues,
       ...(values.magicMark ? { magicMark: values.magicMark } : {}),
@@ -245,9 +249,11 @@ class SiiReader {
   readUnits(stopAtClosingBrace: boolean): {
     units: SiiUnit[]
     includes: SiiInclude[]
+    attributes: SiiAttribute[]
   } {
     const units: SiiUnit[] = []
     const includes: SiiInclude[] = []
+    const attributes: SiiAttribute[] = []
 
     while (this.positionValue < this.masked.length) {
       this.skipTrivia()
@@ -256,7 +262,7 @@ class SiiReader {
       if (this.current() === '}') {
         if (stopAtClosingBrace) {
           this.positionValue++
-          return { units, includes }
+          return { units, includes, attributes }
         }
         this.issue("Unexpected '}'", this.positionValue, this.positionValue + 1)
         this.positionValue++
@@ -273,6 +279,13 @@ class SiiReader {
         continue
       }
 
+      if (this.mode === 'sui' && this.startsBareAttribute()) {
+        const attribute = this.readAttribute()
+        if (attribute) attributes.push(attribute)
+        else this.recoverToNextLine()
+        continue
+      }
+
       const unit = this.readUnit()
       if (unit) units.push(unit)
       else this.recoverToNextLine()
@@ -284,7 +297,29 @@ class SiiReader {
         this.positionValue,
         this.positionValue
       )
-    return { units, includes }
+    return { units, includes, attributes }
+  }
+
+  /**
+   * A `.sui` can hold units (`class : name {`) or bare attributes
+   * (`key: value`), which look the same up to the ':'. The difference is
+   * what follows: a unit header is followed by '{', on the same line or
+   * after line breaks; an attribute never is. Strings are left out of the
+   * check, since a value like `text: "{x}"` contains braces. Only looks
+   * ahead — the position doesn't move.
+   */
+  private startsBareAttribute(): boolean {
+    let lineEnd = this.masked.indexOf('\n', this.positionValue)
+    if (lineEnd === -1) lineEnd = this.masked.length
+    const line = this.masked
+      .slice(this.positionValue, lineEnd)
+      .replace(/"(?:[^"\\\n]|\\.)*"/g, '')
+    if (line.includes('{')) return false
+
+    let next = lineEnd
+    while (next < this.masked.length && isWhitespace(this.masked[next] ?? ''))
+      next++
+    return this.masked[next] !== '{'
   }
 
   private readUnit(): SiiUnit | undefined {

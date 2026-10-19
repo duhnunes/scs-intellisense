@@ -93,13 +93,17 @@ function contentPieces(document: SiiDocument): string[] {
     add(include.keyRange)
     add(include.valueRange)
   }
+  const attributes = [
+    ...document.attributes,
+    ...document.units.flatMap((unit) => unit.attributes),
+  ]
   for (const unit of document.units) {
     add(unit.classNameRange)
     add(unit.unitNameRange)
-    for (const attribute of unit.attributes) {
-      add(attribute.keyRange)
-      add(attribute.valueRange)
-    }
+  }
+  for (const attribute of attributes) {
+    add(attribute.keyRange)
+    add(attribute.valueRange)
   }
 
   return pieces.sort((a, b) => a.start - b.start).map((piece) => piece.text)

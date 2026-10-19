@@ -136,6 +136,10 @@ export interface SiiDocument {
   rootRange?: SiiRange
   units: SiiUnit[]
   includes: SiiInclude[]
+  /** Attributes outside any unit. Only a `.sui` has them: one that holds
+   *  just attributes is a unit *body* fragment, pasted into a unit by
+   *  `@include`. Always empty for `.sii`. */
+  attributes: SiiAttribute[]
   comments: SiiComment[]
   issues: SiiIssue[]
 }

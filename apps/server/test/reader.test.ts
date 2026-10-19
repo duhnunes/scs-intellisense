@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { readSiiDocument } from '../src/sii'
+import { readScsDocument, readSiiDocument } from '../src/sii'
 import { sii } from './helpers'
 
 function headers(input: string) {
@@ -68,6 +68,54 @@ describe('reader: namespaced class names', () => {
       'ok',
     ])
     expect(document.issues).toEqual([])
+  })
+})
+
+describe('reader: .sui with bare attributes', () => {
+  const read = (text: string) => {
+    const document = readScsDocument(text, 'sui')
+    return {
+      units: document.units.map((unit) => unit.unitName),
+      attributes: document.attributes.map((attribute) => attribute.key),
+      includes: document.includes.map((include) => include.path),
+      issues: document.issues.map((issue) => issue.message),
+    }
+  }
+
+  it('reads a body fragment as top-level attributes', () => {
+    expect(
+      read(
+        '@include "goal_bonus.sui"\n\n\tscore_success: 1100\n\tid: dir_change_b\n'
+      )
+    ).toEqual({
+      units: [],
+      attributes: ['score_success', 'id'],
+      includes: ['goal_bonus.sui'],
+      issues: [],
+    })
+  })
+
+  it('still reads units, with the brace on the same or the next line', () => {
+    expect(read('a : x.y {\n}\nb : x.z\n{\n}\n').units).toEqual(['x.y', 'x.z'])
+  })
+
+  it('reads array attributes and values containing braces', () => {
+    expect(read('names[]: "a"\nnames[]: "b"\ntext: "{x}"\n')).toMatchObject({
+      attributes: ['names', 'names', 'text'],
+      issues: [],
+    })
+  })
+
+  it('reads units and attributes side by side', () => {
+    expect(read('k: 1\na : x.y {\n  v: 2\n}\n')).toMatchObject({
+      units: ['x.y'],
+      attributes: ['k'],
+      issues: [],
+    })
+  })
+
+  it('never reads bare attributes in a .sii', () => {
+    expect(readSiiDocument(sii('k: 1')).attributes).toEqual([])
   })
 })
 
