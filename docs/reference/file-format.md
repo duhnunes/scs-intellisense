@@ -1,3 +1,5 @@
+[Docs](../README.md) › Reference › **File format**
+
 # File format
 
 What the reader accepts. The base is SCS's [Units documentation](https://modding.scssoft.com/wiki/Documentation/Engine/Units); the sections marked **game files** are behavior found in the game's own files that the wiki doesn't describe, or contradicts. Those were checked against the extracted files of American Truck Simulator 1.61. File paths are in-game paths, as found inside the game archives (`base.scs`, `def.scs`...).
@@ -54,3 +56,7 @@ In ATS 1.61, 1,086 `.sui` files hold units and 255 hold bare attributes; none mi
 No unit name token over 12 characters exists in the 1.61 files.
 
 Found another case? Please open an [issue](https://github.com/duhnunes/scs-intellisense/issues) with the file's path and the lines involved.
+
+---
+
+← [Formatter](../features/formatter.md)

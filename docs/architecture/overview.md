@@ -1,4 +1,6 @@
-# Architecture
+[Docs](../README.md) › Architecture › **Overview**
+
+# Overview
 
 SCS IntelliSense is a [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) extension: a small VS Code client starts a language server, and every language feature lives in the server.
 
@@ -26,11 +28,11 @@ VS Code ── apps/client ──(LSP over IPC)── apps/server
 | `server.ts` | LSP wiring: capabilities, request and notification handlers |
 | `sii/reader.ts` | The parser. Turns text into a tree (`SiiDocument`) with offset ranges |
 | `interfaces/structure.ts` | The tree's types: `SiiDocument`, `SiiUnit`, `SiiAttribute`, `SiiIssue`... |
-| `diagnostic/rules.ts` | Business rules: is this class name, unit name, include... allowed? See [diagnostics.md](./diagnostics.md) |
+| `diagnostic/rules.ts` | Business rules: is this class name, unit name, include... allowed? See [diagnostics.md](../features/diagnostics.md) |
 | `diagnostic/index.ts` | `getDiagnostics()`: merges reader and rule issues, filters by severity, converts to LSP |
 | `semantic/` | Semantic tokens (highlighting) |
 | `symbols/documentSymbols.ts` | Outline, breadcrumbs, Go to Symbol |
-| `formatter/format.ts` | Format Document. See [formatter.md](./formatter.md) |
+| `formatter/format.ts` | Format Document. See [formatter.md](../features/formatter.md) |
 | `formatter/workspaceFormat.ts` | Format/check many files, including the ones that aren't open |
 | `completion/`, `hover/` | Class name and attribute key completion and hover |
 | `schema/client.ts` | `SchemaClient`: fetches and caches the [scs-schema](https://github.com/duhnunes/scs-schema) database |
@@ -51,6 +53,10 @@ These are deliberate. A change that breaks one of them usually breaks something 
 - `readSiiDocument(text)` reads a `.sii`: the `SiiNunit` marker, the root `{ }`, then units and top-level `@include`.
 - `readScsDocument(text, 'sui')` reads a `.sui`: the same without the root. At the top level an item followed by `{` is a unit; anything else is a bare attribute (`document.attributes`), because a `.sui` can be a unit body fragment.
 - Comments are found first and masked with spaces, so nothing inside a comment is parsed, while every offset stays the same.
-- It never throws. Problems it can't recover from structurally (a missing `}`, say) become `SiiIssue`s in `document.issues`, and it recovers to keep reading.
+- It never throws. Structural problems (a missing `:`, a header it can't read) become `SiiIssue`s in `document.issues`, and it recovers to keep reading.
 
-The formats it accepts are described in [file-format.md](./file-format.md).
+The details, with a worked example and diagrams, are in [The reader](./reader.md). The formats it accepts are described in [File format](../reference/file-format.md).
+
+---
+
+[The reader](./reader.md) →

@@ -27,10 +27,13 @@ To try your changes, open `apps/client` in VS Code and press `F5` (**Run Extensi
 
 ## Where things are
 
-- [docs/architecture.md](./docs/architecture.md): how the client, the server and the parser fit together, and the rules the code depends on.
-- [docs/diagnostics.md](./docs/diagnostics.md): where the diagnostic rules are, the current ones, and how to add one.
-- [docs/file-format.md](./docs/file-format.md): what the parser accepts, and where the game's files differ from the wiki.
-- [docs/formatter.md](./docs/formatter.md): how the formatter works and its safety check.
+The [developer docs](./docs/README.md) explain the code. Good places to start:
+
+- [Overview](./docs/architecture/overview.md): how the client, the server and the parser fit together, and the rules the code depends on.
+- [The reader](./docs/architecture/reader.md): how a file becomes a tree, and what the tree looks like.
+- [Diagnostics](./docs/features/diagnostics.md): where the diagnostic rules are, the current ones, and how to add one.
+- [Formatter](./docs/features/formatter.md): how the formatter works and its safety check.
+- [File format](./docs/reference/file-format.md): what the parser accepts, and where the game's files differ from the wiki.
 
 ## Making a change
 

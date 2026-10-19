@@ -1,3 +1,5 @@
+[Docs](../README.md) › Features › **Diagnostics**
+
 # Diagnostics
 
 Diagnostics come from two places, and the difference matters when you add one:
@@ -9,7 +11,7 @@ Diagnostics come from two places, and the difference matters when you add one:
 
 `getDiagnostics()` in `diagnostic/index.ts` merges both, drops the severities the user turned off (`scs-intellisense.diagnostics.enabledSeverities`) and converts offsets to LSP positions.
 
-**A new check almost always belongs in `rules.ts`.** Only touch the reader if the file can't be parsed at all; see rule 1 in [architecture.md](./architecture.md).
+**A new check almost always belongs in `rules.ts`.** Only touch the reader if the file can't be parsed at all; see rule 1 in [architecture.md](../architecture/overview.md).
 
 ## Severity
 
@@ -19,7 +21,7 @@ Diagnostics come from two places, and the difference matters when you add one:
 | `warning` | A recommendation from the SCS documentation; the game loads it anyway |
 | `hint` | Contradicts the documentation, but the game's own files do it |
 
-Choose by evidence. If a game file does what your rule forbids, it can't be an `error`: either make it a `hint` or drop the rule. The extracted game files are the reference, not the wiki (see [file-format.md](./file-format.md)).
+Choose by evidence. If a game file does what your rule forbids, it can't be an `error`: either make it a `hint` or drop the rule. The extracted game files are the reference, not the wiki (see [file-format.md](../reference/file-format.md)).
 
 ## Current checks
 
@@ -87,3 +89,7 @@ describe('rules: duplicate attributes', () => {
 **4. Check it against real game files.** A rule that fires on files the game loads is a false positive. The excerpts in `apps/server/test/fixtures/` come from the game and must stay free of errors and warnings, so `pnpm test` catches the obvious cases. If you have the game files extracted, open the folder in VS Code with your build: every error your rule reports there is one to explain.
 
 **5. Run `pnpm test`.**
+
+---
+
+← [The reader](../architecture/reader.md) · [Formatter](./formatter.md) →

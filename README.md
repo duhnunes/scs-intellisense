@@ -71,12 +71,13 @@ To run the extension from source, open `apps/client` in VS Code and start **Run 
 - `apps/server`: the language server. A tolerant parser reads each file into a tree; highlighting, diagnostics, Outline, formatter, completion and hover all work from that tree.
 - `config`: shared ESLint and TypeScript settings.
 
-Want to help? Start with [CONTRIBUTING.md](./CONTRIBUTING.md). Developer documentation:
+Want to help? Start with [CONTRIBUTING.md](./CONTRIBUTING.md). The [developer docs](./docs/README.md) cover:
 
-- [Architecture](./docs/architecture.md)
-- [Diagnostics](./docs/diagnostics.md): where the rules are and how to add one
-- [File format](./docs/file-format.md): what the parser accepts, and where the game differs from the wiki
-- [Formatter](./docs/formatter.md)
+- [Architecture overview](./docs/architecture/overview.md)
+- [The reader](./docs/architecture/reader.md): how a file becomes a tree
+- [Diagnostics](./docs/features/diagnostics.md): where the rules are and how to add one
+- [File format](./docs/reference/file-format.md): what the parser accepts, and where the game differs from the wiki
+- [Formatter](./docs/features/formatter.md)
 
 ## License
 

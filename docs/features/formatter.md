@@ -1,3 +1,5 @@
+[Docs](../README.md) › Features › **Formatter**
+
 # Formatter
 
 Experimental, off by default (`scs-intellisense.formatter.enabled`). Code: `apps/server/src/formatter/`.
@@ -36,3 +38,7 @@ Last full run: all 34,843 `.sii`/`.sui` files of ATS 1.61 pass the check, and fo
 ## Tests
 
 `apps/server/test/features.test.ts` (formatter output), `workspaceFormat.test.ts` (safety check, encodings, writing) and `fixtures.test.ts` (every real-file excerpt must format to a stable result without losing a word).
+
+---
+
+← [Diagnostics](./diagnostics.md) · [File format](../reference/file-format.md) →
