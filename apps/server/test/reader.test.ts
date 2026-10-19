@@ -133,6 +133,57 @@ describe('reader: .sui with bare attributes', () => {
   })
 })
 
+describe('reader: unit missing its closing brace', () => {
+  const read = (text: string) => {
+    const document = readSiiDocument(text)
+    return {
+      units: document.units.map(
+        (unit) =>
+          `${unit.unitName}: ${unit.attributes.map((a) => a.key).join(',')}`
+      ),
+      issues: document.issues.map(
+        (issue) =>
+          `${issue.message} @ ${document.text.slice(issue.range.start, issue.range.end)}`
+      ),
+    }
+  }
+
+  it('reports it, and still reads the next unit on its own', () => {
+    expect(read(sii('a : x.y {\n  k: 1\nb : x.z {\n  j: 2\n}'))).toEqual({
+      units: ['x.y: k', 'x.z: j'],
+      issues: ["Expected '}' to close unit @ {"],
+    })
+  })
+
+  it('finds the next header when its brace is on the next line', () => {
+    expect(read(sii('a : x.y {\n  k: 1\nb : x.z\n{\n  j: 2\n}'))).toMatchObject(
+      {
+        units: ['x.y: k', 'x.z: j'],
+      }
+    )
+  })
+
+  it('points at the brace of the unit left open', () => {
+    const text = sii('a : x.y {\n  k: 1\nb : x.z {\n}')
+    const document = readSiiDocument(text)
+    const [issue] = document.issues
+    expect(issue?.range.start).toBe(text.indexOf('{', text.indexOf('x.y')))
+  })
+
+  it('does not mistake a brace inside a string for a unit', () => {
+    expect(read(sii('a : x.y {\n  text: "{b}"\n  k: 1\n}'))).toEqual({
+      units: ['x.y: text,k'],
+      issues: [],
+    })
+  })
+
+  it('reports a unit left open at the end of the file', () => {
+    expect(read('SiiNunit\n{\na : x.y {\n  k: 1\n').issues).toContain(
+      "Expected '}' to close unit @ {"
+    )
+  })
+})
+
 describe('reader: missing colon recovery', () => {
   it('does not skip the opening quote of a quoted unit name', () => {
     const document = readSiiDocument(sii('x "ab.cd" {\n}'))

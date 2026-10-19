@@ -279,7 +279,7 @@ class SiiReader {
         continue
       }
 
-      if (this.mode === 'sui' && this.startsBareAttribute()) {
+      if (this.mode === 'sui' && !this.startsUnitHeader()) {
         const attribute = this.readAttribute()
         if (attribute) attributes.push(attribute)
         else this.recoverToNextLine()
@@ -301,25 +301,29 @@ class SiiReader {
   }
 
   /**
-   * A `.sui` can hold units (`class : name {`) or bare attributes
-   * (`key: value`), which look the same up to the ':'. The difference is
-   * what follows: a unit header is followed by '{', on the same line or
-   * after line breaks; an attribute never is. Strings are left out of the
-   * check, since a value like `text: "{x}"` contains braces. Only looks
-   * ahead — the position doesn't move.
+   * Whether the item at the cursor is a unit header (`class : name {`)
+   * rather than an attribute (`key: value`); the two look the same up to
+   * the ':'. A unit header is followed by '{', on the same line or after
+   * line breaks; an attribute never is, since attributes have no braces.
+   * Strings are left out of the check, as a value like `text: "{x}"`
+   * contains braces. Only looks ahead — the position doesn't move.
+   *
+   * Used to tell units from bare attributes at the top level of a .sui,
+   * and to notice a unit header inside a body, which means the previous
+   * unit was never closed.
    */
-  private startsBareAttribute(): boolean {
+  private startsUnitHeader(): boolean {
     let lineEnd = this.masked.indexOf('\n', this.positionValue)
     if (lineEnd === -1) lineEnd = this.masked.length
     const line = this.masked
       .slice(this.positionValue, lineEnd)
       .replace(/"(?:[^"\\\n]|\\.)*"/g, '')
-    if (line.includes('{')) return false
+    if (line.includes('{')) return true
 
     let next = lineEnd
     while (next < this.masked.length && isWhitespace(this.masked[next] ?? ''))
       next++
-    return this.masked[next] !== '{'
+    return this.masked[next] === '{'
   }
 
   private readUnit(): SiiUnit | undefined {
@@ -415,7 +419,9 @@ class SiiReader {
     const bodyEnd = this.positionValue
     const isClosed = this.masked[bodyEnd] === '}'
     if (isClosed) this.positionValue++
-    else this.issue("Expected '}' to close unit", bodyEnd, bodyEnd)
+    // Point at the '{' that was never closed: where the '}' should go
+    // can't be known, but which unit is left open can.
+    else this.issue("Expected '}' to close unit", bodyOpen, bodyOpen + 1)
 
     return {
       kind: 'unit',
@@ -438,6 +444,12 @@ class SiiReader {
       this.skipTrivia()
       if (this.positionValue >= this.masked.length || this.current() === '}')
         break
+
+      // A unit header inside a body means this unit's '}' is missing.
+      // Without stopping here, `b : x.z {` would be read as an attribute
+      // `b` of this unit and the error would go unreported. readUnit()
+      // reports it; the caller then reads the next unit normally.
+      if (this.startsUnitHeader()) break
 
       const attribute = this.readAttribute()
       if (attribute) attributes.push(attribute)
