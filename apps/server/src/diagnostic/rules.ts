@@ -58,37 +58,68 @@ function validateUnit(unit: SiiUnit, text: string): SiiIssue[] {
   return issues
 }
 
+/**
+ * A className is an identifier, optionally prefixed by namespaces joined
+ * with "::" (`ui::text`, `hcd::on_job` in the game's own files — the wiki
+ * doesn't document namespaces at all). Every "::"-separated part follows
+ * the same identifier rules.
+ */
 function validateClassName(
   className: string,
   classNameRange: SiiRange
 ): SiiIssue[] {
-  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(className)) return []
+  const issues: SiiIssue[] = []
+  let offset = classNameRange.start
+
+  for (const part of className.split('::')) {
+    issues.push(...validateClassNamePart(part, offset, classNameRange))
+    offset += part.length + 2
+  }
+
+  return issues
+}
+
+function validateClassNamePart(
+  part: string,
+  start: number,
+  classNameRange: SiiRange
+): SiiIssue[] {
+  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(part)) return []
+
+  if (part.length === 0) {
+    // Same reasoning as empty unitName tokens: a zero-length range has
+    // nothing to underline, so point at the "::" next to the gap.
+    const separatorStart = start + 2 <= classNameRange.end ? start : start - 2
+    return [
+      {
+        message: 'className must not have an empty part around "::"',
+        range: { start: separatorStart, end: separatorStart + 2 },
+      },
+    ]
+  }
 
   const issues: SiiIssue[] = []
 
   // Point at each individual character that isn't allowed, instead of
   // underlining the whole identifier — "pref@b_model" should only flag
   // the "@", not "pref@b_model" in full.
-  for (const match of className.matchAll(/[^A-Za-z0-9_]/g)) {
+  for (const match of part.matchAll(/[^A-Za-z0-9_]/g)) {
     if (match.index === undefined) continue
     issues.push({
       message: `Invalid character in className: "${match[0]}"`,
       range: {
-        start: classNameRange.start + match.index,
-        end: classNameRange.start + match.index + 1,
+        start: start + match.index,
+        end: start + match.index + 1,
       },
     })
   }
 
   // A leading digit is a separate problem from "disallowed character" —
   // digits ARE allowed in a className, just not as the first character.
-  if (/^[0-9]/.test(className)) {
+  if (/^[0-9]/.test(part)) {
     issues.push({
       message: 'className must not start with a digit',
-      range: {
-        start: classNameRange.start,
-        end: classNameRange.start + 1,
-      },
+      range: { start, end: start + 1 },
     })
   }
 
@@ -194,20 +225,22 @@ function validateUnitName(
  * mod (that would need the workspace-wide index that's still future
  * work), but a same-file duplicate is a mistake either way.
  *
- * Nameless units (unitName starting with '.') are deliberately exempt:
- * the whole point of a nameless unit is that it's never referenced by
- * name from elsewhere, so the load-failure case the docs describe
- * doesn't apply to them. A quoted name counts as nameless when its
- * inside starts with '.'. Otherwise names are compared as written, so
- * "a.b" and a.b are not reported as duplicates of each other: nobody
- * has confirmed yet whether the game treats them as the same name.
+ * Nameless units (unitName starting with '.') are checked too. They only
+ * exist within the SiiNunit that declares them, so they can't collide
+ * with other files or mods, but the docs are explicit that "nameless
+ * units within an SiiNunit must have unique names within that scope"
+ * (Documentation/Engine/Units/transmission_names).
+ *
+ * Names are compared as written, so "a.b" and a.b are not reported as
+ * duplicates of each other: nobody has confirmed yet whether the game
+ * treats them as the same name.
  */
 function validateDuplicateUnitNames(units: SiiUnit[]): SiiIssue[] {
   const unitsByName = new Map<string, SiiUnit[]>()
 
   for (const unit of units) {
     const name = unit.unitName
-    if (!name || name.replace(/^"/, '').startsWith('.')) continue
+    if (!name) continue
     // A zero-length unitNameRange means the reader never actually reached
     // a unitName for this unit — already reported as a structural issue,
     // nothing to compare here.

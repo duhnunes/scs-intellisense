@@ -296,6 +296,11 @@ class SiiReader {
     }
 
     const className = this.text.slice(classNameRange.start, classNameRange.end)
+    const namespaceEnd = className.lastIndexOf('::')
+    const namespaceRange =
+      namespaceEnd > 0
+        ? range(classNameRange.start, classNameRange.start + namespaceEnd)
+        : undefined
     this.skipHorizontalTrivia()
     const colonStart = this.positionValue
     if (this.consume(':')) {
@@ -343,6 +348,7 @@ class SiiReader {
         unitName: '',
         range: range(start, this.positionValue),
         classNameRange,
+        namespaceRange,
         colonRange: range(colonStart, colonStart + 1),
         unitNameRange: range(this.positionValue, this.positionValue),
         bodyRange: range(this.positionValue, this.positionValue),
@@ -362,6 +368,7 @@ class SiiReader {
         unitName,
         range: range(start, this.positionValue),
         classNameRange,
+        namespaceRange,
         colonRange: range(colonStart, colonStart + 1),
         unitNameRange,
         bodyRange: range(bodyOpen, bodyOpen),
@@ -381,6 +388,7 @@ class SiiReader {
       unitName,
       range: range(start, this.positionValue),
       classNameRange,
+      namespaceRange,
       colonRange: range(colonStart, colonStart + 1),
       unitNameRange,
       bodyRange: range(bodyOpen + 1, bodyEnd),
@@ -579,17 +587,29 @@ class SiiReader {
    * a business-rule concern, not a tokenization one — see
    * validateClassName() in validation/rules.ts, which runs against the
    * classNameRange this method returns.
+   *
+   * A "::" belongs to the className rather than ending it: some game
+   * files prefix the class with a namespace (`ui::text : ...`,
+   * `hcd::on_job : ...`). Only a single ':' separates className from
+   * unitName.
    */
   private readClassNameRange(): SiiRange | undefined {
     const start = this.positionValue
     while (
       this.positionValue < this.masked.length &&
       !isWhitespace(this.current()) &&
-      this.current() !== ':' &&
       this.current() !== '{' &&
       this.current() !== '}'
-    )
+    ) {
+      if (this.current() === ':') {
+        if (this.masked[this.positionValue + 1] !== ':') break
+        // Swallow the whole run of colons, so a typo like "a:::b" stays
+        // one (invalid) className instead of desyncing the header.
+        while (this.current() === ':') this.positionValue++
+        continue
+      }
       this.positionValue++
+    }
     return this.positionValue > start
       ? range(start, this.positionValue)
       : undefined

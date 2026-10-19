@@ -86,6 +86,9 @@ export interface SiiUnit {
   unitName: string
   range: SiiRange
   classNameRange: SiiRange
+  /** The part of className before its last "::" (e.g. `ui` in
+   *  `ui::text`), or undefined when the class has no namespace. */
+  namespaceRange: SiiRange | undefined
   colonRange: SiiRange
   unitNameRange: SiiRange
   bodyRange: SiiRange

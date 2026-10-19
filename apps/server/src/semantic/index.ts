@@ -22,6 +22,7 @@ export const tokenTypes = [
   'number',
   'comment',
   'method',
+  'namespace',
 ]
 const tokenModifiers: string[] = []
 
@@ -65,8 +66,26 @@ export function provideSemanticTokensForDocument(
     }
 
     const classToken = tokenTypes.indexOf('class')
+    const namespaceToken = tokenTypes.indexOf('namespace')
     for (const unit of document.units) {
-      queueRange(tokensToEmit, unit.classNameRange, classToken, textLength)
+      // `ui::text`: "ui" is the namespace, "text" the class, and the
+      // "::" between them stays uncolored like any other punctuation.
+      if (unit.namespaceRange) {
+        queueRange(
+          tokensToEmit,
+          unit.namespaceRange,
+          namespaceToken,
+          textLength
+        )
+        queueRange(
+          tokensToEmit,
+          { start: unit.namespaceRange.end + 2, end: unit.classNameRange.end },
+          classToken,
+          textLength
+        )
+      } else {
+        queueRange(tokensToEmit, unit.classNameRange, classToken, textLength)
+      }
       for (const attribute of unit.attributes) {
         queueAttributeTokens(tokensToEmit, attribute, textLength)
       }
