@@ -183,6 +183,9 @@ export interface FileToFormat {
    *  file on disk, which may be older (unsaved changes), and it is never
    *  written to disk here — the client applies it as an editor edit. */
   openText?: string
+  /** This file's indent, overriding the one in the shared options: open
+   *  files can have one VS Code detected from their content. */
+  indent?: string
 }
 
 export type SkipReason =
@@ -253,7 +256,11 @@ async function formatFile(
   }
   if (!decoded.ok) return { uri, status: 'skipped', reason: decoded.reason }
 
-  const result = checkFormatting(decoded.text, mode, options)
+  const result = checkFormatting(
+    decoded.text,
+    mode,
+    file.indent === undefined ? options : { ...options, indent: file.indent }
+  )
   if (result.status === 'unchanged') return { uri, status: 'unchanged' }
   if (result.status === 'skipped') {
     return result.reason === 'structural'

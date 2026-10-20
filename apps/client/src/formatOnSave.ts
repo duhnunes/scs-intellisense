@@ -3,8 +3,12 @@ import {
   DocumentFormattingRequest,
   type LanguageClient,
 } from 'vscode-languageclient/node'
+import { editorIndentFor } from './indent'
 
 const LANGUAGES = new Set(['sii', 'sui'])
+
+/** Lowercase, since VS Code compares extension ids case-insensitively. */
+const EXTENSION_ID = 'duhnunes.scs-intellisense'
 
 /**
  * Formats .sii/.sui files on save when `formatter.formatOnSave` is on, so
@@ -30,28 +34,35 @@ export function registerFormatOnSave(
       if (!settings.get<boolean>('formatter.enabled', false)) return
       if (!settings.get<boolean>('formatter.formatOnSave', true)) return
 
-      // If the user turned on VS Code's own format on save for these files,
-      // VS Code already formats them; doing it here too would be wasted work.
+      // If VS Code's own format on save is on AND it would use this
+      // extension for the file, VS Code formats it already. Only then is
+      // this redundant: a global editor.defaultFormatter set to another
+      // extension (say, Prettier) can't format .sii, so we still do it.
       const editor = vscode.workspace.getConfiguration('editor', document)
-      if (editor.get<boolean>('formatOnSave', false)) return
+      if (editor.get<boolean>('formatOnSave', false)) {
+        const defaultFormatter = editor.get<string>('defaultFormatter')
+        if (
+          !defaultFormatter ||
+          defaultFormatter.toLowerCase() === EXTENSION_ID
+        )
+          return
+      }
 
-      event.waitUntil(formatEdits(client, document, editor))
+      event.waitUntil(formatEdits(client, document))
     })
   )
 }
 
 async function formatEdits(
   client: LanguageClient,
-  document: vscode.TextDocument,
-  editor: vscode.WorkspaceConfiguration
+  document: vscode.TextDocument
 ): Promise<vscode.TextEdit[]> {
   try {
     const edits = await client.sendRequest(DocumentFormattingRequest.type, {
       textDocument: { uri: client.code2ProtocolConverter.asUri(document.uri) },
-      options: {
-        tabSize: editor.get<number>('tabSize', 2),
-        insertSpaces: editor.get<boolean>('insertSpaces', true),
-      },
+      // The indentation the editor itself uses for this file, the same
+      // one VS Code sends with Format Document.
+      options: editorIndentFor(document),
     })
     return (await client.protocol2CodeConverter.asTextEdits(edits)) ?? []
   } catch {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { getDiagnostics } from '../src/diagnostic'
-import { formatSiiDocument } from '../src/formatter/format'
+import { formatSiiDocument, indentFromEditor } from '../src/formatter/format'
 import { provideSemanticTokensForDocument, tokenTypes } from '../src/semantic'
 import { readScsDocument, readSiiDocument } from '../src/sii'
 import { buildDocumentSymbols } from '../src/symbols/documentSymbols'
@@ -139,6 +139,46 @@ describe('formatter', () => {
     expect(format('SiiNunit {\na : x.y { #brace\nk: 1\n}\n}\n')).toBe(
       'SiiNunit {\n  a : x.y { #brace\n    k: 1\n  }\n}\n'
     )
+  })
+
+  describe('indentation', () => {
+    const input = 'SiiNunit\n{\na : x.y\n{\nk: 1\n}\n}\n'
+    const formatWith = (options: Parameters<typeof formatSiiDocument>[1]) =>
+      formatSiiDocument(readSiiDocument(input), options)
+
+    it('follows the editor: tabs', () => {
+      expect(
+        formatWith({
+          indent: indentFromEditor({ tabSize: 4, insertSpaces: false }),
+        })
+      ).toBe('SiiNunit {\n\ta : x.y {\n\t\tk: 1\n\t}\n}\n')
+    })
+
+    it('follows the editor: 4 spaces', () => {
+      expect(
+        formatWith({
+          indent: indentFromEditor({ tabSize: 4, insertSpaces: true }),
+        })
+      ).toBe('SiiNunit {\n    a : x.y {\n        k: 1\n    }\n}\n')
+    })
+
+    it('can keep units at column 0 inside SiiNunit', () => {
+      expect(formatWith({ indentUnits: false })).toBe(
+        'SiiNunit {\na : x.y {\n  k: 1\n}\n}\n'
+      )
+    })
+
+    it('ignores indentUnits in a .sui, which has no wrapper', () => {
+      expect(
+        formatSiiDocument(readScsDocument('a : x.y {\nk: 1\n}\n', 'sui'), {
+          indentUnits: false,
+        })
+      ).toBe('a : x.y {\n  k: 1\n}\n')
+    })
+
+    it('falls back to 4 spaces for an invalid tab size', () => {
+      expect(indentFromEditor({ tabSize: 0, insertSpaces: true })).toBe('    ')
+    })
   })
 
   it('never wraps a .sui file in SiiNunit', () => {

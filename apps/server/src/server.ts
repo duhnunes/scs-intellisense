@@ -34,7 +34,7 @@ import {
   findAttributeKeyAtPosition,
 } from './hover/attributeKey'
 import { buildDocumentSymbols } from './symbols/documentSymbols'
-import type { FormatterOptions } from './formatter/format'
+import { indentFromEditor, type FormatterOptions } from './formatter/format'
 import {
   checkFormatting,
   formatFiles,
@@ -70,6 +70,7 @@ let enabledSeverities: SiiSeverity[] = [
 // Static for the whole session — formatter.braceStyle isn't
 // live-updatable (same reload-required pattern as schema.fetchTimeoutMs).
 let formatterBraceStyle: FormatterOptions['braceStyle'] = '1tbs'
+let formatterIndentUnits = true
 
 // Built in onInitialize, logged in onInitialized (see there why).
 let startedMessage = 'Server started'
@@ -92,6 +93,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
         hoverEnabled?: boolean
         formatterEnabled?: boolean
         formatterBraceStyle?: FormatterOptions['braceStyle']
+        formatterIndentUnits?: boolean
       }
     | undefined
 
@@ -139,6 +141,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
   if (initOptions?.formatterBraceStyle) {
     formatterBraceStyle = initOptions.formatterBraceStyle
   }
+  formatterIndentUnits = initOptions?.formatterIndentUnits ?? true
 
   const globalStoragePath = initOptions?.globalStoragePath
 
@@ -212,10 +215,20 @@ connection.onRequest('scsIntellisense/refreshSchema', async () => {
 connection.onRequest(
   'scsIntellisense/formatFiles',
   async (params: {
-    files: FileToFormat[]
+    files: (FileToFormat & { editorOptions?: EditorIndentOptions })[]
     write: boolean
+    /** The editor settings for .sii/.sui files that aren't open. Open
+     *  files carry their own editorOptions, as VS Code resolved them. */
+    editorOptions: EditorIndentOptions
   }): Promise<FileFormatResult[]> =>
-    formatFiles(params.files, params.write, { braceStyle: formatterBraceStyle })
+    formatFiles(
+      params.files.map(({ editorOptions, ...file }) => ({
+        ...file,
+        indent: indentFromEditor(editorOptions ?? params.editorOptions),
+      })),
+      params.write,
+      { braceStyle: formatterBraceStyle, indentUnits: formatterIndentUnits }
+    )
 )
 
 connection.onCompletion(async (params) => {
@@ -331,6 +344,15 @@ documents.onDidChangeContent((change) => {
   }
 })
 
+interface EditorIndentOptions {
+  tabSize: number
+  insertSpaces: boolean
+}
+
+function describeIndent(options: EditorIndentOptions): string {
+  return options.insertSpaces ? `${options.tabSize} spaces` : 'tab'
+}
+
 function onOff(enabled: boolean | undefined): string {
   return enabled ? 'on' : 'off'
 }
@@ -440,7 +462,15 @@ connection.onDocumentFormatting((params): TextEdit[] => {
     const result = checkFormatting(
       doc.getText(),
       mode === 'sui' ? 'sui' : 'sii',
-      { braceStyle: formatterBraceStyle }
+      {
+        braceStyle: formatterBraceStyle,
+        indentUnits: formatterIndentUnits,
+        // What VS Code sends with the request: editor.tabSize and
+        // editor.insertSpaces as they apply to this file (detected from
+        // its content when editor.detectIndentation is on). Using them
+        // keeps formatting and the editor's own indent on Enter in step.
+        indent: indentFromEditor(params.options),
+      }
     )
 
     // Every outcome is logged, at debug for the routine ones, so a bug
@@ -486,7 +516,7 @@ connection.onDocumentFormatting((params): TextEdit[] => {
 
     logger.debug(
       'FORMAT_APPLIED',
-      `Formatted (${formatterBraceStyle} brace style)`,
+      `Formatted (${formatterBraceStyle} braces, indent ${describeIndent(params.options)}, units ${formatterIndentUnits ? 'indented' : 'at column 0'})`,
       undefined,
       params.textDocument.uri
     )

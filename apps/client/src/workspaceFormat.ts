@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import type { LanguageClient } from 'vscode-languageclient/node'
 import type { ExtensionLog } from './log'
+import { configuredIndent, editorIndentFor } from './indent'
 
 /** Mirrors FileFormatResult in the server's formatter/workspaceFormat.ts. */
 interface FileFormatResult {
@@ -161,13 +162,17 @@ async function processInBatches(
           const files = uris.slice(start, start + BATCH_SIZE).map((uri) => {
             const open = openDocuments.get(uri.toString())
             return open
-              ? { uri: uri.toString(), openText: open.getText() }
+              ? {
+                  uri: uri.toString(),
+                  openText: open.getText(),
+                  editorOptions: editorIndentFor(open),
+                }
               : { uri: uri.toString() }
           })
           results.push(
             ...(await client.sendRequest<FileFormatResult[]>(
               'scsIntellisense/formatFiles',
-              { files, write }
+              { files, write, editorOptions: configuredIndent() }
             ))
           )
           progress.report({

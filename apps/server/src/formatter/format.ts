@@ -9,12 +9,34 @@ import type {
 
 export interface FormatterOptions {
   braceStyle: '1tbs' | 'allman'
-  indentSize: number
+  /** One level of indentation: a tab, or some number of spaces. Comes
+   *  from the editor (see indentFromEditor), so formatting and the
+   *  editor's own auto-indent on Enter agree. */
+  indent: string
+  /** Whether units inside `SiiNunit { }` are indented one level. Game
+   *  files do both. Doesn't apply to .sui, which has no wrapper. */
+  indentUnits: boolean
 }
 
 const DEFAULT_OPTIONS: FormatterOptions = {
   braceStyle: '1tbs',
-  indentSize: 2,
+  indent: '  ',
+  indentUnits: true,
+}
+
+/** The indent VS Code would use, from the formatting options it sends
+ *  with every request (they already reflect editor.tabSize,
+ *  editor.insertSpaces and, for an open file, editor.detectIndentation). */
+export function indentFromEditor(options: {
+  tabSize: number
+  insertSpaces: boolean
+}): string {
+  if (!options.insertSpaces) return '\t'
+  const size =
+    Number.isInteger(options.tabSize) && options.tabSize > 0
+      ? options.tabSize
+      : 4
+  return ' '.repeat(size)
 }
 
 /**
@@ -43,7 +65,7 @@ export function formatSiiDocument(
   options: Partial<FormatterOptions> = {}
 ): string {
   const opts: FormatterOptions = { ...DEFAULT_OPTIONS, ...options }
-  const indentUnit = ' '.repeat(opts.indentSize)
+  const indentUnit = opts.indent
   const lines: string[] = []
 
   const topLevelNodes = collectNodes(
@@ -62,7 +84,14 @@ export function formatSiiDocument(
   }
 
   emitBraceOpener('SiiNunit', 0, opts, indentUnit, lines)
-  emitNodeList(topLevelNodes, 1, document, opts, indentUnit, lines)
+  emitNodeList(
+    topLevelNodes,
+    opts.indentUnits ? 1 : 0,
+    document,
+    opts,
+    indentUnit,
+    lines
+  )
   lines.push('}')
   return lines.join('\n') + '\n'
 }

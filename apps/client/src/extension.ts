@@ -57,6 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
       hoverEnabled: extConfig.get('hover.enabled', false),
       formatterEnabled: extConfig.get('formatter.enabled', false),
       formatterBraceStyle: extConfig.get('formatter.braceStyle', '1tbs'),
+      formatterIndentUnits: extConfig.get('formatter.indentUnits', true),
     },
   }
 

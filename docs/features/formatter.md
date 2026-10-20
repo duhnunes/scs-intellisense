@@ -10,7 +10,9 @@ Experimental, off by default (`scs-intellisense.formatter.enabled`). Code: `apps
 
 - Units, includes, attributes and comments are collected per nesting level and sorted by **position**, so a comment can't be lost because it isn't part of a unit.
 - Every piece of content (class and unit names, keys, values, comments, include paths) is copied **verbatim** from the original text. Only the whitespace between pieces is generated, so values are never rewritten.
-- Output: 2-space indent, `key: value`, `class : unit`, at most one blank line in a row, a final newline. `formatter.braceStyle` chooses `1tbs` (`{` on the header line, the default) or `allman` (`{` on the next line).
+- Output: `key: value`, `class : unit`, at most one blank line in a row, a final newline. `formatter.braceStyle` chooses `1tbs` (`{` on the header line, the default) or `allman` (`{` on the next line).
+- **Indentation follows the editor.** Every Format Document request carries VS Code's formatting options for the file (`editor.tabSize` and `editor.insertSpaces`, as detected from the content when `editor.detectIndentation` is on); `indentFromEditor()` turns them into a tab or N spaces. That keeps the formatter and the editor's own indent on Enter in step: with a fixed indent, a game file (tabs) was formatted with spaces and Enter then indented with a tab. Format on save sends the open editor's resolved options; Format All uses an open file's editor options, or the `[sii]` editor settings for files that aren't open.
+- `formatter.indentUnits` (default on) indents units one level inside `SiiNunit { }`; off keeps them at column 0. Game files do both. A `.sui` has no wrapper, so it doesn't apply there.
 - `@include` always goes to column 0, because the game ignores an indented one.
 - A comment that followed something on the same line stays on that line. A comment between the unit name and `{` stays on the header line (in `1tbs` it goes after the `{`, since before it a line comment would swallow the brace).
 - A `.sui` never gets a `SiiNunit` wrapper.

@@ -133,6 +133,22 @@ describe('formatFiles on disk', () => {
     expect(read('a.sii').toString()).toBe(unformatted)
   })
 
+  it('uses a file own indent over the shared one', async () => {
+    write('a.sii', unformatted)
+    write('b.sii', unformatted)
+    await formatFiles(
+      [{ uri: uriOf('a.sii'), indent: '\t' }, { uri: uriOf('b.sii') }],
+      true,
+      { indent: '    ' }
+    )
+    expect(read('a.sii').toString()).toBe(
+      'SiiNunit {\n\ta : x.y {\n\t\tk: 1\n\t}\n}\n'
+    )
+    expect(read('b.sii').toString()).toBe(
+      'SiiNunit {\n    a : x.y {\n        k: 1\n    }\n}\n'
+    )
+  })
+
   it('formats a CRLF file with a BOM and keeps both', async () => {
     write(
       'a.sii',
