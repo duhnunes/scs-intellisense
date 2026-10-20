@@ -1,5 +1,6 @@
 import * as os from 'node:os'
 import * as vscode from 'vscode'
+import { editorIndentFor } from './indent'
 import type { ExtensionLog } from './log'
 
 const ISSUES_URL = 'https://github.com/duhnunes/scs-intellisense/issues'
@@ -44,13 +45,24 @@ function buildReport(
   const editor = vscode.window.activeTextEditor
   const entries = log.recentEntries().slice(-REPORT_LOG_LINES)
 
+  // The indentation the formatter would use for the active file: it
+  // follows the editor, so it matters for formatting bugs.
+  const indent = editor ? editorIndentFor(editor.document) : undefined
+  const indentText = indent
+    ? indent.insertSpaces
+      ? `${indent.tabSize} spaces`
+      : 'tab'
+    : 'no active file'
+
   return [
     '### SCS IntelliSense bug report info',
     '',
     `- Extension: ${context.extension.packageJSON.version}`,
     `- VS Code: ${vscode.version}`,
     `- OS: ${os.type()} ${os.release()} (${process.arch})`,
-    `- Completion: ${onOff('completion.enabled', false)}, Hover: ${onOff('hover.enabled', false)}, Formatter: ${onOff('formatter.enabled', false)} (format on save: ${onOff('formatter.formatOnSave', true)}, brace style: ${settings.get('formatter.braceStyle', '1tbs')})`,
+    `- Completion: ${onOff('completion.enabled', false)}`,
+    `- Hover: ${onOff('hover.enabled', false)}`,
+    `- Formatter: ${onOff('formatter.enabled', false)} (format on save: ${onOff('formatter.formatOnSave', true)}, brace style: ${settings.get('formatter.braceStyle', '1tbs')}, indent units: ${onOff('formatter.indentUnits', true)}, indentation: ${indentText})`,
     `- Diagnostics shown: ${settings.get<string[]>('diagnostics.enabledSeverities', []).join(', ')}`,
     `- Active file: ${editor ? `${vscode.workspace.asRelativePath(editor.document.uri)} (${editor.document.languageId})` : 'none'}`,
     '',
