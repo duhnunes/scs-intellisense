@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "SUI",
+  "scopeName": "source.sui",
+  "comment": ".sui uses the same comments and strings as .sii; see sii.tmLanguage.json.",
+  "patterns": [{ "include": "source.sii" }]
+}

@@ -332,6 +332,18 @@
         }
       }
     ],
+    "grammars": [
+      {
+        "language": "sii",
+        "scopeName": "source.sii",
+        "path": "./syntaxes/sii.tmLanguage.json"
+      },
+      {
+        "language": "sui",
+        "scopeName": "source.sui",
+        "path": "./syntaxes/sui.tmLanguage.json"
+      }
+    ],
     "commands": [
       {
         "command": "scsIntellisense.showOutput",

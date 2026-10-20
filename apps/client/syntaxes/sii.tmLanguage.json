@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "SII",
+  "scopeName": "source.sii",
+  "comment": "Deliberately minimal: only comments and strings. Everything else is colored by the language server's semantic tokens. These two scopes exist so VS Code knows what is a comment or a string, which bracket pair colorization and bracket matching rely on (they skip brackets inside comments and strings). Keep the rules in sync with scanSiiComments() in apps/server/src/sii/reader.ts.",
+  "patterns": [{ "include": "#comments" }, { "include": "#strings" }],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "include": "#block-comment" },
+        {
+          "name": "comment.line.double-slash.sii",
+          "begin": "//",
+          "end": "$"
+        },
+        {
+          "name": "comment.line.number-sign.sii",
+          "begin": "#",
+          "end": "$"
+        }
+      ]
+    },
+    "block-comment": {
+      "name": "comment.block.sii",
+      "begin": "/\\*",
+      "end": "\\*/",
+      "patterns": [{ "include": "#block-comment" }]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.sii",
+          "begin": "\"",
+          "end": "\"|$",
+          "patterns": [{ "include": "#escape" }]
+        },
+        {
+          "name": "string.quoted.single.sii",
+          "begin": "'",
+          "end": "'|$",
+          "patterns": [{ "include": "#escape" }]
+        }
+      ]
+    },
+    "escape": {
+      "name": "constant.character.escape.sii",
+      "match": "\\\\."
+    }
+  }
+}

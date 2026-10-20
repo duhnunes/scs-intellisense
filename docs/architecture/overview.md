@@ -19,7 +19,8 @@ VS Code ── apps/client ──(LSP over IPC)── apps/server
 - `src/extension.ts` starts the `LanguageClient`, passes the startup settings in `initializationOptions` and prints the server's log notifications in the **SCS IntelliSense** Output channel.
 - `src/configManager.ts` mirrors `semanticHighlighting` into VS Code's own setting, forwards `diagnostics.enabledSeverities` to the server when it changes, and registers **Refresh Schema Database**.
 - `src/workspaceFormat.ts` implements **Check Formatting of All Files** and **Format All Files**: it finds the files, asks for confirmation, applies edits to open editors and writes the report. Reading, formatting and writing files happen in the server.
-- `package.json` is the extension manifest: languages, settings, commands.
+- `package.json` is the extension manifest: languages, grammars, settings, commands.
+- `syntaxes/` holds a minimal TextMate grammar that only marks comments and strings. All real coloring comes from the server's semantic tokens; the grammar exists because VS Code's bracket pair colorization and bracket matching skip brackets inside comments and strings, and they learn what those are only from a TextMate grammar.
 
 ## Server (`apps/server/src`)
 
@@ -43,7 +44,7 @@ VS Code ── apps/client ──(LSP over IPC)── apps/server
 These are deliberate. A change that breaks one of them usually breaks something far away.
 
 1. **The reader only builds the tree; it never judges.** It reads class and unit names "raw" (greedily, whatever characters they contain) and records their ranges. Whether a name is *valid* is decided afterwards in `diagnostic/rules.ts`. If the reader stopped at the first invalid character, the cursor would get stuck, the rest of the line would be misread and every brace after it would be matched wrong.
-2. **Every feature reads the tree; none re-reads the text.** Highlighting, diagnostics, Outline, formatter, completion and hover all consume `SiiDocument`. A second tokenizer would sooner or later disagree with the reader.
+2. **Every feature reads the tree; none re-reads the text.** Highlighting, diagnostics, Outline, formatter, completion and hover all consume `SiiDocument`. A second tokenizer would sooner or later disagree with the reader. The one exception is the TextMate grammar in `apps/client/syntaxes/`, which VS Code requires for brackets: it is kept to comments and strings only, and must follow the same rules as `scanSiiComments()` (`#` and `//` to the end of the line, nestable `/* */`, quotes and escapes). Change both together.
 3. **Ranges are offsets into the normalized text.** `parsed.text` has no BOM and LF line endings. Convert an offset to a line/column through `TextDocument.create(uri, languageId, version, parsed.text)`, never through the editor's original text, or positions drift on Windows (CRLF) files.
 4. **Capabilities are declared only when their feature is on.** Completion, hover and the formatter are registered in `onInitialize` only if enabled. Startup settings travel in `initializationOptions` and need a window reload; only `diagnostics.enabledSeverities` updates live (`scsIntellisense/updateDiagnosticSettings`).
 5. **Logging goes only through `scsIntellisense/log`.** Don't also write to `connection.console`.
