@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Builds the server, copies it into the client and builds the client,
+      // with source maps (see build:dev in apps/client/package.json).
+      "label": "Build extension (dev)",
+      "type": "shell",
+      "command": "pnpm --filter ./apps/client run build:dev",
+      "problemMatcher": "$tsc",
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}

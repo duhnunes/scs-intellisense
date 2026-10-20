@@ -1,0 +1,16 @@
+{
+  // F5 from the monorepo root. Same as apps/client/.vscode/launch.json,
+  // which is used when apps/client is opened on its own.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/apps/client"],
+      "outFiles": ["${workspaceFolder}/apps/client/dist/**/*.js"],
+      "preLaunchTask": "Build extension (dev)"
+    }
+  ]
+}

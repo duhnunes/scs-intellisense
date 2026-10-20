@@ -23,7 +23,7 @@ pnpm install
 pnpm test
 ```
 
-To try your changes, open `apps/client` in VS Code and press `F5` (**Run Extension**). It builds the server and the client and opens a VS Code window with your build loaded. `pnpm compile` creates an installable `.vsix` in `release/latest` instead.
+To try your changes, open the repository in VS Code and press `F5` (**Run Extension**). It builds the server and the client and opens a VS Code window with your build loaded. `pnpm compile` creates an installable `.vsix` in `release/latest` instead.
 
 ## Where things are
 

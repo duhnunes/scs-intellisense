@@ -65,7 +65,7 @@ pnpm test
 | `pnpm compile` | Builds everything and creates the `.vsix` in `release/latest`, without publishing |
 | `pnpm release` | Maintainer only: tests, version bump, changelog, `.vsix`, GitHub release and Marketplace publish |
 
-To run the extension from source, open `apps/client` in VS Code and start **Run Extension** (`F5`). It builds the server and the client first, with source maps for debugging.
+To run the extension from source, open the repository in VS Code and press `F5` (**Run Extension**). It builds the server and the client first, with source maps for debugging.
 
 ### Project structure
 
