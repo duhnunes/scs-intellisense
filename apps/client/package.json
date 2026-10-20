@@ -384,69 +384,101 @@
       ]
     },
     "capabilities": {},
-    "configuration": {
-      "title": "SCS IntelliSense",
-      "properties": {
-        "scs-intellisense.semanticHighlighting": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Enable/disable semantic highlighting"
-        },
-        "scs-intellisense.diagnostics.enabledSeverities": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
+    "configuration": [
+      {
+        "id": "general.scs-intellisense",
+        "title": "General",
+        "order": 1,
+        "properties": {
+          "scs-intellisense.semanticHighlighting": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Enable/disable semantic highlighting",
+            "order": 1
+          }
+        }
+      },
+      {
+        "id": "diagnostics.scs-intellisense",
+        "title": "Diagnostics",
+        "order": 2,
+        "properties": {
+          "scs-intellisense.diagnostics.enabledSeverities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "information",
+                "hint"
+              ]
+            },
+            "default": [
               "error",
               "warning",
               "information",
               "hint"
-            ]
+            ],
+            "markdownDescription": "Which diagnostic severities SCS IntelliSense should report. Uncheck any you'd like hidden — for example, uncheck `warning` to keep only load-breaking `error` diagnostics.",
+            "order": 1
+          }
+        }
+      },
+      {
+        "id": "completion.scs-intellisense",
+        "title": "Completion & Hover",
+        "order": 3,
+        "properties": {
+          "scs-intellisense.completion.enabled": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "**EXPERIMENTAL** — Enable `class_name` and `attribute_key` completion, backed by the community schema database. Off by default while this feature is still being validated. Requires a window reload to take effect.",
+            "order": 1
           },
-          "default": [
-            "error",
-            "warning",
-            "information",
-            "hint"
-          ],
-          "markdownDescription": "Which diagnostic severities SCS IntelliSense should report. Uncheck any you'd like hidden — for example, uncheck `warning` to keep only load-breaking `error` diagnostics."
-        },
-        "scs-intellisense.schema.fetchTimeoutMs": {
-          "type": "number",
-          "default": 8000,
-          "minimum": 1000,
-          "markdownDescription": "How long (in milliseconds) a single completion/hover request waits for the schema database before giving up on *that* request. The fetch itself is never cancelled — it keeps running in the background and gets cached regardless, so the next request benefits even if this one timed out. Requires a window reload to take effect."
-        },
-        "scs-intellisense.completion.enabled": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "**EXPERIMENTAL** — Enable `class_name` and `attribute_key` completion, backed by the community schema database. Off by default while this feature is still being validated. Requires a window reload to take effect."
-        },
-        "scs-intellisense.hover.enabled": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "**EXPERIMENTAL** — Enable hover information for `class_name` and `attribute_key`, backed by the community schema database. Off by default while this feature is still being validated. Requires a window reload to take effect."
-        },
-        "scs-intellisense.formatter.enabled": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "**EXPERIMENTAL** — Enable formatting (Format Document) for `.sii`/`.sui` files. Rewrites indentation, brace placement, spacing around `:`, blank lines, and `@include` placement — never touches attribute values. Off by default while this feature is still being validated. Requires a window reload to take effect."
-        },
-        "scs-intellisense.formatter.braceStyle": {
-          "type": "string",
-          "enum": [
-            "1tbs",
-            "allman"
-          ],
-          "enumDescriptions": [
-            "Opening brace on the same line (e.g. \"class_name : unit.name {\")",
-            "Opening brace on its own line below (the style the game's own files use)"
-          ],
-          "default": "1tbs",
-          "markdownDescription": "Brace style used when formatting `.sii`/`.sui` files. Only takes effect if `#scs-intellisense.formatter.enabled#` is on."
+          "scs-intellisense.hover.enabled": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "**EXPERIMENTAL** — Enable hover information for `class_name` and `attribute_key`, backed by the community schema database. Off by default while this feature is still being validated. Requires a window reload to take effect.",
+            "order": 2
+          },
+          "scs-intellisense.schema.fetchTimeoutMs": {
+            "type": "number",
+            "default": 8000,
+            "minimum": 1000,
+            "markdownDescription": "How long (in milliseconds) a single completion/hover request waits for the schema database before giving up on *that* request. The fetch itself is never cancelled — it keeps running in the background and gets cached regardless, so the next request benefits even if this one timed out. Requires a window reload to take effect.",
+            "order": 3
+          }
+        }
+      },
+      {
+        "id": "formatter.scs-intellisense",
+        "title": "Formatter",
+        "order": 4,
+        "properties": {
+          "scs-intellisense.formatter.enabled": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "**EXPERIMENTAL** — Enable formatting (Format Document) for `.sii`/`.sui` files. Rewrites indentation, brace placement, spacing around `:`, blank lines, and `@include` placement — never touches attribute values. Off by default while this feature is still being validated. Requires a window reload to take effect.",
+            "order": 1
+          },
+          "scs-intellisense.formatter.braceStyle": {
+            "type": "string",
+            "enum": [
+              "1tbs",
+              "allman"
+            ],
+            "enumDescriptions": [
+              "Opening brace on the same line (e.g. \"class_name : unit.name {\")",
+              "Opening brace on its own line below (the style the game's own files use)"
+            ],
+            "default": "1tbs",
+            "markdownDescription": "Brace style used when formatting `.sii`/`.sui` files. Only takes effect if `#scs-intellisense.formatter.enabled#` is on.",
+            "order": 2
+          }
         }
       }
-    },
+    ],
     "configurationDefaults": {
       "[sii]": {
         "editor.wordBasedSuggestions": "off"
