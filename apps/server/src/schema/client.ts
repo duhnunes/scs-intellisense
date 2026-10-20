@@ -144,7 +144,8 @@ export class SchemaClient {
    * Re-fetches manifest.json from GitHub. Safe to call often — on a
    * failed fetch, the existing in-memory/on-disk manifest is left
    * untouched (a network hiccup should never blank out completion).
-   * Returns true if the manifest actually changed.
+   * Returns true if the manifest actually changed. `force` (the Refresh
+   * Schema Database command) also retries schemas that failed recently.
    */
   async refreshManifest(force = false): Promise<boolean> {
     if (force) {
@@ -188,7 +189,10 @@ export class SchemaClient {
       return false
     }
 
-    if (!force && !manifestHasChanged(this.manifest, incoming)) {
+    // Even a forced refresh compares: "force" means check right now and
+    // retry failed schemas, not "report an update". Saying the database
+    // was updated when nothing changed would mislead the user.
+    if (!manifestHasChanged(this.manifest, incoming)) {
       this.logger.debug(
         'SCHEMA_MANIFEST_UNCHANGED',
         'Schema manifest unchanged, skipping cache write'

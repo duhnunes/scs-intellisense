@@ -168,9 +168,9 @@ connection.onInitialized(() => {
   }
 })
 
-// Backs the client's manual "force update" command — bypasses the
-// version check that refreshManifest() normally does, since the user is
-// explicitly asking to check right now regardless.
+// Backs the client's Refresh Schema Database command: checks right now
+// and retries schemas that failed recently. `changed` tells the client
+// whether to say "updated" or "already up to date".
 connection.onRequest('scsIntellisense/refreshSchema', async () => {
   if (!schemaClient) {
     return {
