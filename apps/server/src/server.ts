@@ -50,7 +50,12 @@ import {
   type FormatCheckResult,
 } from './formatter/workspaceFormat'
 import { formatRange, type FormatRangeResult } from './formatter/rangeFormat'
-import type { SiiSeverity } from './interfaces/structure'
+import {
+  DEFAULT_SETTINGS,
+  describeSettings,
+  parseSettings,
+  type ServerSettings,
+} from './settings'
 
 const connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments(TextDocument)
@@ -65,25 +70,11 @@ registerSemantic(connection, documents)
 // none of them should ever call fetch() or touch the disk cache directly.
 let schemaClient: SchemaClient | undefined
 
-// Which diagnostic severities to actually report — controlled by the
-// client's scs-intellisense.diagnostics.enabledSeverities setting.
-// Starts with everything enabled; onInitialize overwrites this with the
-// client's real starting value before any document is ever validated.
-let enabledSeverities: SiiSeverity[] = [
-  'error',
-  'warning',
-  'information',
-  'hint',
-]
+// The current scs-intellisense.* settings. Set in onInitialize and
+// replaced on every scsIntellisense/updateSettings, so handlers must read
+// it per request, never copy a value out of it at startup.
+let settings: ServerSettings = DEFAULT_SETTINGS
 
-// Static for the whole session — formatter.braceStyle isn't
-// live-updatable (same reload-required pattern as schema.fetchTimeoutMs).
-let formatterBraceStyle: FormatterOptions['braceStyle'] = '1tbs'
-let formatterIndentUnits = true
-let formatterEnabled = false
-
-// Built in onInitialize, logged in onInitialized (see there why).
-let startedMessage = 'Server started'
 let hasStoragePath = false
 
 /** For other server modules (completion, hover, ...) to consult the
@@ -95,18 +86,10 @@ export function getSchemaClient(): SchemaClient | undefined {
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
   const initOptions = params.initializationOptions as
-    | {
-        globalStoragePath?: string
-        enabledSeverities?: SiiSeverity[]
-        fetchTimeoutMs?: number
-        semanticHighlighting?: boolean
-        completionEnabled?: boolean
-        hoverEnabled?: boolean
-        formatterEnabled?: boolean
-        formatterBraceStyle?: FormatterOptions['braceStyle']
-        formatterIndentUnits?: boolean
-      }
+    | { globalStoragePath?: string; settings?: unknown }
     | undefined
+  settings = parseSettings(initOptions?.settings)
+  setSemanticHighlighting(settings.semanticHighlighting)
 
   const result: InitializeResult = {
     capabilities: {
@@ -120,51 +103,26 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     },
   }
 
-  // EXPERIMENTAL, off by default — the client only sends `true` here if
-  // the user explicitly opted in via the matching
-  // scs-intellisense.*.enabled setting. Not declaring a capability at
-  // all (rather than declaring it and having the handler just return
-  // [] / null) means VSCode never even sends that kind of request for
-  // this language while the feature is off, instead of a wasted
-  // round-trip.
-  if (initOptions?.completionEnabled) {
-    result.capabilities.completionProvider = {
-      resolveProvider: false,
-      triggerCharacters: [],
-    }
+  // Every feature is declared, on or off, and each handler checks its
+  // setting on every request: that's what lets a setting take effect
+  // without a window reload. A feature that's off answers right away with
+  // nothing, before reading the document. The formatter couldn't work any
+  // other way anyway: the extension is the default formatter for
+  // .sii/.sui (configurationDefaults in the client's package.json), and
+  // VS Code flags a default formatter that declares no formatting as
+  // unable to format these files, on every .sii.
+  result.capabilities.completionProvider = {
+    resolveProvider: false,
+    triggerCharacters: [],
   }
-
-  if (initOptions?.hoverEnabled) {
-    result.capabilities.hoverProvider = true
-  }
-
-  // The one exception to "declared only when enabled": the extension is
-  // the default formatter for .sii/.sui (configurationDefaults in the
-  // client's package.json, which beats a global editor.defaultFormatter
-  // such as Prettier). If it then declared no formatter, VS Code would
-  // flag it as a formatter that "cannot format SII-files" on every .sii,
-  // formatter off being the default. So the formatter is always declared
-  // and does nothing while it's off.
-  formatterEnabled = initOptions?.formatterEnabled ?? false
+  result.capabilities.hoverProvider = true
   result.capabilities.documentFormattingProvider = true
   result.capabilities.documentRangeFormattingProvider = true
-
   result.capabilities.semanticTokensProvider = {
     legend: semanticTokensLegend,
     full: true,
     range: false,
   }
-
-  setSemanticHighlighting(initOptions?.semanticHighlighting ?? true)
-
-  if (initOptions?.enabledSeverities) {
-    enabledSeverities = initOptions.enabledSeverities
-  }
-
-  if (initOptions?.formatterBraceStyle) {
-    formatterBraceStyle = initOptions.formatterBraceStyle
-  }
-  formatterIndentUnits = initOptions?.formatterIndentUnits ?? true
 
   const globalStoragePath = initOptions?.globalStoragePath
 
@@ -172,7 +130,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     schemaClient = new SchemaClient({
       cacheDir: globalStoragePath,
       logger,
-      fetchTimeoutMs: initOptions?.fetchTimeoutMs,
+      fetchTimeoutMs: settings.fetchTimeoutMs,
     })
     // Fire-and-forget: server startup (and the capabilities response
     // above) must never block on disk I/O or a network round-trip.
@@ -191,8 +149,6 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
   }
   hasStoragePath = Boolean(initOptions?.globalStoragePath)
 
-  startedMessage = `Server started (completion: ${onOff(initOptions?.completionEnabled)}, hover: ${onOff(initOptions?.hoverEnabled)}, formatter: ${onOff(initOptions?.formatterEnabled)})`
-
   return result
 })
 
@@ -200,7 +156,10 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 // notifications after it gets the initialize response, so an entry sent
 // before that is dropped (and LSP doesn't allow it anyway).
 connection.onInitialized(() => {
-  logger.info('SERVER_STARTED', startedMessage)
+  logger.info(
+    'SERVER_STARTED',
+    `Server started (${describeSettings(settings)})`
+  )
   if (!hasStoragePath) {
     logger.warn(
       'SCHEMA_NO_STORAGE_PATH',
@@ -250,12 +209,17 @@ connection.onRequest(
         indent: indentFromEditor(editorOptions ?? params.editorOptions),
       })),
       params.write,
-      { braceStyle: formatterBraceStyle, indentUnits: formatterIndentUnits }
+      {
+        braceStyle: settings.formatterBraceStyle,
+        indentUnits: settings.formatterIndentUnits,
+      }
     )
 )
 
 connection.onCompletion(async (params) => {
   try {
+    // Asked on every keystroke: off answers before any work, and quietly.
+    if (!settings.completionEnabled) return []
     const doc = documents.get(params.textDocument.uri)
     if (!doc) {
       logger.debug(
@@ -334,39 +298,44 @@ connection.onCompletion(async (params) => {
   }
 })
 
-// Live update from the client whenever
-// scs-intellisense.diagnostics.enabledSeverities changes — re-runs
-// diagnostics for every currently-open document immediately, rather
-// than waiting for the next edit to each one.
-connection.onNotification(
-  'scsIntellisense/updateDiagnosticSettings',
-  (payload: { enabledSeverities?: SiiSeverity[] }) => {
-    if (!payload?.enabledSeverities) return
-    enabledSeverities = payload.enabledSeverities
+// The client sends every setting again whenever any scs-intellisense.*
+// setting changes. Most take effect on the next request by themselves;
+// the ones whose result is already on screen are redone here.
+connection.onNotification('scsIntellisense/updateSettings', (raw: unknown) => {
+  const previous = settings
+  settings = parseSettings(raw)
+  logger.info(
+    'SETTINGS_UPDATED',
+    `Settings changed (${describeSettings(settings)})`
+  )
 
+  schemaClient?.setFetchTimeout(settings.fetchTimeoutMs)
+
+  // Diagnostics already shown are re-sent with the new severities, for
+  // every open document, instead of waiting for the next edit to each.
+  if (previous.enabledSeverities.join() !== settings.enabledSeverities.join()) {
     for (const doc of documents.all()) {
       connection.sendDiagnostics({
         uri: doc.uri,
-        diagnostics: getDiagnostics(doc, enabledSeverities),
+        diagnostics: getDiagnostics(doc, settings.enabledSeverities),
       })
     }
   }
-)
 
-// Live update of scs-intellisense.semanticHighlighting: asks VS Code to
-// request the colors again, which now come back empty (or full).
-connection.onNotification(
-  'scsIntellisense/updateSemanticHighlighting',
-  (payload: { enabled?: boolean }) => {
-    if (typeof payload?.enabled !== 'boolean') return
-    setSemanticHighlighting(payload.enabled)
+  // Asks VS Code to request the colors again, which now come back empty
+  // (or full).
+  if (previous.semanticHighlighting !== settings.semanticHighlighting) {
+    setSemanticHighlighting(settings.semanticHighlighting)
     connection.languages.semanticTokens.refresh()
   }
-)
+})
 
 documents.onDidChangeContent((change) => {
   try {
-    const diagnostics = getDiagnostics(change.document, enabledSeverities)
+    const diagnostics = getDiagnostics(
+      change.document,
+      settings.enabledSeverities
+    )
     connection.sendDiagnostics({ uri: change.document.uri, diagnostics })
   } catch (error) {
     logger.error(
@@ -387,12 +356,9 @@ function describeIndent(options: EditorIndentOptions): string {
   return options.insertSpaces ? `${options.tabSize} spaces` : 'tab'
 }
 
-function onOff(enabled: boolean | undefined): string {
-  return enabled ? 'on' : 'off'
-}
-
 connection.onHover(async (params): Promise<Hover | null> => {
   try {
+    if (!settings.hoverEnabled) return null
     const doc = documents.get(params.textDocument.uri)
     if (!doc) return null
 
@@ -450,7 +416,7 @@ connection.onCodeAction((params): CodeAction[] => {
   try {
     const doc = documents.get(params.textDocument.uri)
     if (!doc) return []
-    return buildCodeActions(doc, params, enabledSeverities)
+    return buildCodeActions(doc, params, settings.enabledSeverities)
   } catch (error) {
     logger.error(
       'QUICKFIX_FAILED',
@@ -588,7 +554,7 @@ connection.onDocumentRangeFormatting((params): TextEdit[] => {
 /** The formatter is always declared (see onInitialize), so every request
  *  checks the setting first. */
 function isFormatterOn(uri: string): boolean {
-  if (formatterEnabled) return true
+  if (settings.formatterEnabled) return true
   logger.debug(
     'FORMAT_DISABLED',
     'Not formatted: the formatter is off (scs-intellisense.formatter.enabled)',
@@ -603,8 +569,8 @@ function formatterOptions(editorOptions: {
   insertSpaces: boolean
 }): FormatterOptions {
   return {
-    braceStyle: formatterBraceStyle,
-    indentUnits: formatterIndentUnits,
+    braceStyle: settings.formatterBraceStyle,
+    indentUnits: settings.formatterIndentUnits,
     // What VS Code sends with the request: editor.tabSize and
     // editor.insertSpaces as they apply to this file (detected from its
     // content when editor.detectIndentation is on). Using them keeps
@@ -654,7 +620,7 @@ function logFormatOutcome(
   }
   logger.debug(
     'FORMAT_APPLIED',
-    `Formatted ${'edit' in result ? 'the selection' : 'the file'} (${formatterBraceStyle} braces, indent ${describeIndent(editorOptions)}, units ${formatterIndentUnits ? 'indented' : 'at column 0'})`,
+    `Formatted ${'edit' in result ? 'the selection' : 'the file'} (${settings.formatterBraceStyle} braces, indent ${describeIndent(editorOptions)}, units ${settings.formatterIndentUnits ? 'indented' : 'at column 0'})`,
     undefined,
     uri
   )

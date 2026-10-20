@@ -2,13 +2,35 @@ import * as vscode from 'vscode'
 import type { LanguageClient } from 'vscode-languageclient/node'
 import type { ExtensionLog } from './log'
 
-const DEFAULT_ENABLED_SEVERITIES = ['error', 'warning', 'information', 'hint']
+const SECTION = 'scs-intellisense'
+
+/**
+ * Every scs-intellisense.* setting the server uses, in the shape of the
+ * server's ServerSettings (apps/server/src/settings.ts). Sent at startup
+ * and again on every change, so the server always has the current values.
+ * The defaults repeat package.json's; the server applies its own to
+ * anything missing or malformed.
+ */
+export function serverSettings() {
+  const config = vscode.workspace.getConfiguration(SECTION)
+  return {
+    enabledSeverities: config.get('diagnostics.enabledSeverities', [
+      'error',
+      'warning',
+      'information',
+      'hint',
+    ]),
+    semanticHighlighting: config.get('semanticHighlighting', true),
+    fetchTimeoutMs: config.get('schema.fetchTimeoutMs', 8000),
+    completionEnabled: config.get('completion.enabled', false),
+    hoverEnabled: config.get('hover.enabled', false),
+    formatterEnabled: config.get('formatter.enabled', false),
+    formatterBraceStyle: config.get('formatter.braceStyle', '1tbs'),
+    formatterIndentUnits: config.get('formatter.indentUnits', true),
+  }
+}
 
 export class ConfigManager {
-  private readonly extSection = 'scs-intellisense'
-  private readonly semanticHighlightingKey = 'semanticHighlighting'
-  private readonly diagnosticsSeverityKey = 'diagnostics.enabledSeverities'
-
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly client: LanguageClient,
@@ -18,48 +40,24 @@ export class ConfigManager {
     this.registerCommands()
   }
 
+  /** Any scs-intellisense.* change sends every setting again. Nothing is
+   *  written to VS Code's own settings: what .sii/.sui need from them is
+   *  in configurationDefaults in package.json. */
   private listenForChanges() {
-    vscode.workspace.onDidChangeConfiguration((e) => {
-      if (
-        e.affectsConfiguration(
-          `${this.extSection}.${this.semanticHighlightingKey}`
-        )
-      ) {
-        // The server stops (or starts) sending colors; nothing is written
-        // to VS Code's own settings. editor.semanticHighlighting.enabled
-        // is on for .sii/.sui through configurationDefaults in package.json.
-        const enabled = vscode.workspace
-          .getConfiguration(this.extSection)
-          .get<boolean>(this.semanticHighlightingKey, true)
-        this.client.sendNotification(
-          'scsIntellisense/updateSemanticHighlighting',
-          { enabled }
-        )
-      }
-
-      if (
-        e.affectsConfiguration(
-          `${this.extSection}.${this.diagnosticsSeverityKey}`
-        )
-      ) {
-        this.sendDiagnosticSettings()
-      }
-    })
-  }
-
-  /** Forwards the current diagnostics.enabledSeverities to the server —
-   *  diagnostics are computed server-side, so the server needs to know
-   *  about this whenever it changes, not just at startup. The server
-   *  re-runs diagnostics for every open document on receiving this, so
-   *  the change is visible immediately, not just on the next edit. */
-  private sendDiagnosticSettings() {
-    const enabledSeverities = vscode.workspace
-      .getConfiguration(this.extSection)
-      .get<string[]>(this.diagnosticsSeverityKey, DEFAULT_ENABLED_SEVERITIES)
-
-    this.client.sendNotification('scsIntellisense/updateDiagnosticSettings', {
-      enabledSeverities,
-    })
+    this.context.subscriptions.push(
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (!e.affectsConfiguration(SECTION)) return
+        this.client
+          .sendNotification('scsIntellisense/updateSettings', serverSettings())
+          .catch((error) =>
+            this.log.warn(
+              'SETTINGS_SEND_FAILED',
+              'A settings change could not reach the server; it applies after a window reload',
+              error
+            )
+          )
+      })
+    )
   }
 
   private registerCommands() {

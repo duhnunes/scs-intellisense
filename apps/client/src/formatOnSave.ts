@@ -69,8 +69,6 @@ async function formatEdits(
   } catch {
     // The server isn't running yet, or the request failed. Saving must
     // never fail because of formatting, so the file is saved as it is.
-    // (When formatter.enabled was turned on without reloading the window,
-    // the server answers with no edits instead.)
     return []
   }
 }

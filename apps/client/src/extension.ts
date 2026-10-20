@@ -7,7 +7,7 @@ import {
   TransportKind,
 } from 'vscode-languageclient/node'
 import { registerBugReportCommand } from './bugReport'
-import { ConfigManager } from './configManager'
+import { ConfigManager, serverSettings } from './configManager'
 import { registerFormatOnSave } from './formatOnSave'
 import { ExtensionLog, type LogEntry } from './log'
 import { registerWorkspaceFormatCommands } from './workspaceFormat'
@@ -25,8 +25,6 @@ export function activate(context: vscode.ExtensionContext) {
     debug: { module: serverModule, transport: TransportKind.ipc },
   }
 
-  const extConfig = vscode.workspace.getConfiguration('scs-intellisense')
-
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
       { scheme: 'file', language: 'sii' },
@@ -36,30 +34,12 @@ export function activate(context: vscode.ExtensionContext) {
     // to the same channel as everything else.
     outputChannel: log.channel,
     // The server has no `vscode` API of its own (it's a plain Node
-    // process), so anything it needs from us — cache location, initial
-    // settings — has to be handed over explicitly here. Only
-    // globalStoragePath and this initial snapshot go through this path;
-    // diagnostics.enabledSeverities and semanticHighlighting changes later
-    // on are forwarded live by ConfigManager via a notification instead
-    // (see configManager.ts).
-    // Everything else here is static — changing it requires a window
-    // reload, same as schema.fetchTimeoutMs.
+    // process), so anything it needs from us — cache location, settings —
+    // has to be handed over explicitly. The settings go here at startup
+    // and again on every change (ConfigManager), so none needs a reload.
     initializationOptions: {
       globalStoragePath: context.globalStorageUri.fsPath,
-      enabledSeverities: extConfig.get('diagnostics.enabledSeverities', [
-        'error',
-        'warning',
-        'information',
-        'hint',
-      ]),
-      fetchTimeoutMs: extConfig.get('schema.fetchTimeoutMs', 8000),
-      semanticHighlighting: extConfig.get('semanticHighlighting', true),
-      // EXPERIMENTAL, off by default.
-      completionEnabled: extConfig.get('completion.enabled', false),
-      hoverEnabled: extConfig.get('hover.enabled', false),
-      formatterEnabled: extConfig.get('formatter.enabled', false),
-      formatterBraceStyle: extConfig.get('formatter.braceStyle', '1tbs'),
-      formatterIndentUnits: extConfig.get('formatter.indentUnits', true),
+      settings: serverSettings(),
     },
   }
 

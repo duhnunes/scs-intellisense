@@ -38,7 +38,7 @@ The extension is the **default formatter** for `.sii`/`.sui`: `configurationDefa
 
 - The client listens to `onWillSaveTextDocument` and asks **this extension's server** for the edits (`textDocument/formatting`), so the result never depends on which formatter VS Code would pick. The edits become part of the save, and Ctrl+Z undoes them.
 - It does nothing when the formatter is off, when the save is an auto-save after a delay (VS Code's own format on save skips those too), or when the user already turned on `editor.formatOnSave` for the file (VS Code formats it then).
-- Unlike `formatter.enabled`, it's read on every save, so changing it needs no reload. If the formatter was enabled without a reload, the server has no formatter yet and the file is simply saved as it is.
+- It's read on every save, like every other setting, so changing it needs no reload.
 
 ## Formatting many files (`workspaceFormat.ts`)
 

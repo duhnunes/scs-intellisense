@@ -71,7 +71,7 @@ export class SchemaClient {
   private readonly logger: SchemaClientLogger
   private readonly fetchImpl: typeof fetch
   private readonly negativeCacheTtlMs: number
-  private readonly fetchTimeoutMs: number
+  private fetchTimeoutMs: number
 
   private manifest: SchemaManifest | undefined
   private readonly inFlightSchemaFetches = new Map<
@@ -94,6 +94,11 @@ export class SchemaClient {
     this.negativeCacheTtlMs =
       options.negativeCacheTtlMs ?? DEFAULT_NEGATIVE_CACHE_TTL_MS
     this.fetchTimeoutMs = options.fetchTimeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS
+  }
+
+  /** schema.fetchTimeoutMs changed: applies to the next request. */
+  setFetchTimeout(ms: number): void {
+    this.fetchTimeoutMs = ms
   }
 
   /**

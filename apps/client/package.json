@@ -438,20 +438,20 @@
           "scs-intellisense.completion.enabled": {
             "type": "boolean",
             "default": false,
-            "markdownDescription": "**EXPERIMENTAL** — Enable `class_name` and `attribute_key` completion, backed by the community schema database. Off by default while this feature is still being validated. Requires a window reload to take effect.",
+            "markdownDescription": "**EXPERIMENTAL** — Enable `class_name` and `attribute_key` completion, backed by the community schema database. Off by default while this feature is still being validated. Takes effect right away.",
             "order": 1
           },
           "scs-intellisense.hover.enabled": {
             "type": "boolean",
             "default": false,
-            "markdownDescription": "**EXPERIMENTAL** — Enable hover information for `class_name` and `attribute_key`, backed by the community schema database. Off by default while this feature is still being validated. Requires a window reload to take effect.",
+            "markdownDescription": "**EXPERIMENTAL** — Enable hover information for `class_name` and `attribute_key`, backed by the community schema database. Off by default while this feature is still being validated. Takes effect right away.",
             "order": 2
           },
           "scs-intellisense.schema.fetchTimeoutMs": {
             "type": "number",
             "default": 8000,
             "minimum": 1000,
-            "markdownDescription": "How long (in milliseconds) a single completion/hover request waits for the schema database before giving up on *that* request. The fetch itself is never cancelled — it keeps running in the background and gets cached regardless, so the next request benefits even if this one timed out. Requires a window reload to take effect.",
+            "markdownDescription": "How long (in milliseconds) a single completion/hover request waits for the schema database before giving up on *that* request. The fetch itself is never cancelled — it keeps running in the background and gets cached regardless, so the next request benefits even if this one timed out. Takes effect right away.",
             "order": 3
           }
         }
@@ -464,13 +464,13 @@
           "scs-intellisense.formatter.enabled": {
             "type": "boolean",
             "default": false,
-            "markdownDescription": "**EXPERIMENTAL** — Enable formatting (Format Document) for `.sii`/`.sui` files. Rewrites indentation, brace placement, spacing around `:`, blank lines, and `@include` placement — never touches attribute values. Off by default while this feature is still being validated. Requires a window reload to take effect.",
+            "markdownDescription": "**EXPERIMENTAL** — Enable formatting (Format Document) for `.sii`/`.sui` files. Rewrites indentation, brace placement, spacing around `:`, blank lines, and `@include` placement — never touches attribute values. Off by default while this feature is still being validated. Takes effect right away.",
             "order": 1
           },
           "scs-intellisense.formatter.formatOnSave": {
             "type": "boolean",
             "default": true,
-            "markdownDescription": "Format `.sii`/`.sui` files when you save them. Only works while `#scs-intellisense.formatter.enabled#` is on, and doesn't need VS Code's own `#editor.formatOnSave#`. A file with structural errors is saved as it is, without formatting. Takes effect right away, no reload needed.",
+            "markdownDescription": "Format `.sii`/`.sui` files when you save them. Only works while `#scs-intellisense.formatter.enabled#` is on, and doesn't need VS Code's own `#editor.formatOnSave#`. A file with structural errors is saved as it is, without formatting. Takes effect right away.",
             "order": 2
           },
           "scs-intellisense.formatter.braceStyle": {
@@ -490,7 +490,7 @@
           "scs-intellisense.formatter.indentUnits": {
             "type": "boolean",
             "default": true,
-            "markdownDescription": "Indent the units inside `SiiNunit { }` one level. Uncheck to keep them at column 0. Game files use both styles. Doesn't apply to `.sui` files, which have no `SiiNunit`. The indent itself (tab or spaces, and their size) follows your editor settings: `#editor.tabSize#`, `#editor.insertSpaces#` and `#editor.detectIndentation#`. Requires a window reload to take effect.",
+            "markdownDescription": "Indent the units inside `SiiNunit { }` one level. Uncheck to keep them at column 0. Game files use both styles. Doesn't apply to `.sui` files, which have no `SiiNunit`. The indent itself (tab or spaces, and their size) follows your editor settings: `#editor.tabSize#`, `#editor.insertSpaces#` and `#editor.detectIndentation#`. Takes effect right away.",
             "order": 4
           }
         }

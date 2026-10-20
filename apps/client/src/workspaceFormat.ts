@@ -51,14 +51,14 @@ async function runWorkspaceFormat(
 ) {
   const commandName = write ? 'Format All Files' : 'Check Formatting'
 
-  // The server only formats with the settings it got at startup, so the
-  // setting has to be on (and the window reloaded) for this to be honest.
+  // The server doesn't format while the formatter is off, so say why
+  // instead of reporting "nothing to change".
   const formatterEnabled = vscode.workspace
     .getConfiguration('scs-intellisense')
     .get<boolean>('formatter.enabled', false)
   if (!formatterEnabled) {
     vscode.window.showInformationMessage(
-      'SCS IntelliSense: the formatter is experimental and off. Enable "scs-intellisense.formatter.enabled" and reload the window to use this command.'
+      'SCS IntelliSense: the formatter is experimental and off. Enable "scs-intellisense.formatter.enabled" to use this command.'
     )
     return
   }
