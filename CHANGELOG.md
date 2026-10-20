@@ -1,5 +1,71 @@
 # Changelog
 
+[compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.6.1...0.7.0)
+### Features
+
+* **deagnostics:** add quick fixes for problems with one certain fix ([b690707](https://github.com/duhnunes/scs-intellisense/commit/b69070752ebe0aaa4b7c25a54d56503c39c77c29))
+* **formatter:** add Format Selection and make the extension the default formatter for .sii/.sui ([1cee7b3](https://github.com/duhnunes/scs-intellisense/commit/1cee7b38f0324775bee645d0774d8609190fed64))
+* **formatter:** follow the editor's identation and add Ident Units ([442448f](https://github.com/duhnunes/scs-intellisense/commit/442448f3df2db432b3e011ffe2fc62acf450a10b))
+* **formatter:** format .sii/.sui on save, with no settings to add ([dcfdd84](https://github.com/duhnunes/scs-intellisense/commit/dcfdd845d3d635c6bf27242bab22c78e43057dfe))
+* **logging:** log levels, standard log codes and Copy Bug Report Info ([61a1d41](https://github.com/duhnunes/scs-intellisense/commit/61a1d41fec9dc27c246eb8a379e0ba41c45f504f))
+* **settings:** apply every setting without a window reload ([4dfffb5](https://github.com/duhnunes/scs-intellisense/commit/4dfffb58ba92329f12b1eaade5620b0b810e9854))
+
+### Bug Fixes
+
+* **client:** stop coloring bracets inside comments and string ([390b492](https://github.com/duhnunes/scs-intellisense/commit/390b492b8d7a0f780c6a8e6e8fd4a43bab4f8318))
+* **highlighting:** scope semantic highlighting to .sii/.sui without writing settings ([bc8dc55](https://github.com/duhnunes/scs-intellisense/commit/bc8dc5578e843a0cdba92dbe8eefe3aeef6b7f20))
+* **logging:** stop dropping the server's startup log entries ([1201ef9](https://github.com/duhnunes/scs-intellisense/commit/1201ef96b74045b02379328b4da4bffad513e15a))
+* **loggin:** include indent units and indentation in bug reports ([1355b3a](https://github.com/duhnunes/scs-intellisense/commit/1355b3a637defb670aa7a1813741929411f85d11))
+
+### Refactors
+
+* **icons:** readjust size to file icons ([003c6fb](https://github.com/duhnunes/scs-intellisense/commit/003c6fb3c1d338675e8664b0f261dd039f8f1db0))
+* **settings:** group settings into sections ([9ca0a9a](https://github.com/duhnunes/scs-intellisense/commit/9ca0a9a13ae68f8c9b90c5db13e99c6979a24911))
+
+[compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.6.1...0.8.0)
+### Features
+
+* **deagnostics:** add quick fixes for problems with one certain fix ([b690707](https://github.com/duhnunes/scs-intellisense/commit/b69070752ebe0aaa4b7c25a54d56503c39c77c29))
+* **formatter:** add Format Selection and make the extension the default formatter for .sii/.sui ([1cee7b3](https://github.com/duhnunes/scs-intellisense/commit/1cee7b38f0324775bee645d0774d8609190fed64))
+* **formatter:** follow the editor's identation and add Ident Units ([442448f](https://github.com/duhnunes/scs-intellisense/commit/442448f3df2db432b3e011ffe2fc62acf450a10b))
+* **formatter:** format .sii/.sui on save, with no settings to add ([dcfdd84](https://github.com/duhnunes/scs-intellisense/commit/dcfdd845d3d635c6bf27242bab22c78e43057dfe))
+* **logging:** log levels, standard log codes and Copy Bug Report Info ([61a1d41](https://github.com/duhnunes/scs-intellisense/commit/61a1d41fec9dc27c246eb8a379e0ba41c45f504f))
+* **settings:** apply every setting without a window reload ([4dfffb5](https://github.com/duhnunes/scs-intellisense/commit/4dfffb58ba92329f12b1eaade5620b0b810e9854))
+
+### Bug Fixes
+
+* **client:** stop coloring bracets inside comments and string ([390b492](https://github.com/duhnunes/scs-intellisense/commit/390b492b8d7a0f780c6a8e6e8fd4a43bab4f8318))
+* **highlighting:** scope semantic highlighting to .sii/.sui without writing settings ([bc8dc55](https://github.com/duhnunes/scs-intellisense/commit/bc8dc5578e843a0cdba92dbe8eefe3aeef6b7f20))
+* **logging:** stop dropping the server's startup log entries ([1201ef9](https://github.com/duhnunes/scs-intellisense/commit/1201ef96b74045b02379328b4da4bffad513e15a))
+* **loggin:** include indent units and indentation in bug reports ([1355b3a](https://github.com/duhnunes/scs-intellisense/commit/1355b3a637defb670aa7a1813741929411f85d11))
+
+### Refactors
+
+* **icons:** readjust size to file icons ([003c6fb](https://github.com/duhnunes/scs-intellisense/commit/003c6fb3c1d338675e8664b0f261dd039f8f1db0))
+* **settings:** group settings into sections ([9ca0a9a](https://github.com/duhnunes/scs-intellisense/commit/9ca0a9a13ae68f8c9b90c5db13e99c6979a24911))
+
+[compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.6.1...0.7.0)
+### Features
+
+* **deagnostics:** add quick fixes for problems with one certain fix ([b690707](https://github.com/duhnunes/scs-intellisense/commit/b69070752ebe0aaa4b7c25a54d56503c39c77c29))
+* **formatter:** add Format Selection and make the extension the default formatter for .sii/.sui ([1cee7b3](https://github.com/duhnunes/scs-intellisense/commit/1cee7b38f0324775bee645d0774d8609190fed64))
+* **formatter:** follow the editor's identation and add Ident Units ([442448f](https://github.com/duhnunes/scs-intellisense/commit/442448f3df2db432b3e011ffe2fc62acf450a10b))
+* **formatter:** format .sii/.sui on save, with no settings to add ([dcfdd84](https://github.com/duhnunes/scs-intellisense/commit/dcfdd845d3d635c6bf27242bab22c78e43057dfe))
+* **logging:** log levels, standard log codes and Copy Bug Report Info ([61a1d41](https://github.com/duhnunes/scs-intellisense/commit/61a1d41fec9dc27c246eb8a379e0ba41c45f504f))
+* **settings:** apply every setting without a window reload ([4dfffb5](https://github.com/duhnunes/scs-intellisense/commit/4dfffb58ba92329f12b1eaade5620b0b810e9854))
+
+### Bug Fixes
+
+* **client:** stop coloring bracets inside comments and string ([390b492](https://github.com/duhnunes/scs-intellisense/commit/390b492b8d7a0f780c6a8e6e8fd4a43bab4f8318))
+* **highlighting:** scope semantic highlighting to .sii/.sui without writing settings ([bc8dc55](https://github.com/duhnunes/scs-intellisense/commit/bc8dc5578e843a0cdba92dbe8eefe3aeef6b7f20))
+* **logging:** stop dropping the server's startup log entries ([1201ef9](https://github.com/duhnunes/scs-intellisense/commit/1201ef96b74045b02379328b4da4bffad513e15a))
+* **loggin:** include indent units and indentation in bug reports ([1355b3a](https://github.com/duhnunes/scs-intellisense/commit/1355b3a637defb670aa7a1813741929411f85d11))
+
+### Refactors
+
+* **icons:** readjust size to file icons ([003c6fb](https://github.com/duhnunes/scs-intellisense/commit/003c6fb3c1d338675e8664b0f261dd039f8f1db0))
+* **settings:** group settings into sections ([9ca0a9a](https://github.com/duhnunes/scs-intellisense/commit/9ca0a9a13ae68f8c9b90c5db13e99c6979a24911))
+
 [compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.6.0...0.6.1)
 
 [compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.5.0...0.6.0)
