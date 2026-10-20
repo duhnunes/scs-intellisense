@@ -39,8 +39,9 @@ export function activate(context: vscode.ExtensionContext) {
     // process), so anything it needs from us — cache location, initial
     // settings — has to be handed over explicitly here. Only
     // globalStoragePath and this initial snapshot go through this path;
-    // diagnostics.enabledSeverities changes later on are forwarded live
-    // by ConfigManager via a notification instead (see configManager.ts).
+    // diagnostics.enabledSeverities and semanticHighlighting changes later
+    // on are forwarded live by ConfigManager via a notification instead
+    // (see configManager.ts).
     // Everything else here is static — changing it requires a window
     // reload, same as schema.fetchTimeoutMs.
     initializationOptions: {
@@ -52,6 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
         'hint',
       ]),
       fetchTimeoutMs: extConfig.get('schema.fetchTimeoutMs', 8000),
+      semanticHighlighting: extConfig.get('semanticHighlighting', true),
       // EXPERIMENTAL, off by default.
       completionEnabled: extConfig.get('completion.enabled', false),
       hoverEnabled: extConfig.get('hover.enabled', false),

@@ -33,6 +33,13 @@ export const semanticTokensLegend: SemanticTokensLegend = {
 
 const logger = getLogger()
 
+// scs-intellisense.semanticHighlighting: off sends no colors at all.
+let semanticHighlightingEnabled = true
+
+export function setSemanticHighlighting(enabled: boolean) {
+  semanticHighlightingEnabled = enabled
+}
+
 /**
  * Semantic tokens are deliberately a projection of the shared SII reader.
  * They must not parse source text independently.
@@ -137,6 +144,7 @@ export function registerSemantic(
 
   connection.languages.semanticTokens.on((params) => {
     try {
+      if (!semanticHighlightingEnabled) return { data: [] } as SemanticTokens
       const doc = documents.get(params.textDocument.uri)
       if (!doc) {
         logger.debug(

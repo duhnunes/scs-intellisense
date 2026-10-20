@@ -14,27 +14,8 @@ export class ConfigManager {
     private readonly client: LanguageClient,
     private readonly log: ExtensionLog
   ) {
-    this.applyCurrentSettings()
     this.listenForChanges()
     this.registerCommands()
-  }
-
-  private applyCurrentSettings() {
-    // Only semanticHighlighting needs applying on startup — it controls a
-    // built-in VSCode setting we mirror into. diagnostics.enabledSeverities
-    // and schema.fetchTimeoutMs are read directly by the server itself
-    // (via initializationOptions in extension.ts), so there's nothing to
-    // push here at startup, only on later changes (see listenForChanges).
-    const extConfig = vscode.workspace.getConfiguration(this.extSection)
-    const enabled = extConfig.get<boolean>(this.semanticHighlightingKey, true)
-
-    vscode.workspace
-      .getConfiguration('editor')
-      .update(
-        'semanticHighlighting.enabled',
-        enabled,
-        vscode.ConfigurationTarget.Global
-      )
   }
 
   private listenForChanges() {
@@ -44,17 +25,16 @@ export class ConfigManager {
           `${this.extSection}.${this.semanticHighlightingKey}`
         )
       ) {
-        const newValue = vscode.workspace
+        // The server stops (or starts) sending colors; nothing is written
+        // to VS Code's own settings. editor.semanticHighlighting.enabled
+        // is on for .sii/.sui through configurationDefaults in package.json.
+        const enabled = vscode.workspace
           .getConfiguration(this.extSection)
           .get<boolean>(this.semanticHighlightingKey, true)
-
-        vscode.workspace
-          .getConfiguration('editor')
-          .update(
-            'semanticHighlighting.enabled',
-            newValue,
-            vscode.ConfigurationTarget.Global
-          )
+        this.client.sendNotification(
+          'scsIntellisense/updateSemanticHighlighting',
+          { enabled }
+        )
       }
 
       if (

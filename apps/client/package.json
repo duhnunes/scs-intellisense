@@ -398,7 +398,7 @@
           "scs-intellisense.semanticHighlighting": {
             "type": "boolean",
             "default": true,
-            "markdownDescription": "Enable/disable semantic highlighting",
+            "markdownDescription": "Color `.sii`/`.sui` files by meaning (class names, unit names, keys, values). On by default for these files only, even when a theme or `#editor.semanticHighlighting.enabled#` turns it off elsewhere. Takes effect right away.",
             "order": 1
           }
         }
@@ -499,11 +499,13 @@
     "configurationDefaults": {
       "[sii]": {
         "editor.wordBasedSuggestions": "off",
-        "editor.defaultFormatter": "DuHNunes.scs-intellisense"
+        "editor.defaultFormatter": "DuHNunes.scs-intellisense",
+        "editor.semanticHighlighting.enabled": true
       },
       "[sui]": {
         "editor.wordBasedSuggestions": "off",
-        "editor.defaultFormatter": "DuHNunes.scs-intellisense"
+        "editor.defaultFormatter": "DuHNunes.scs-intellisense",
+        "editor.semanticHighlighting.enabled": true
       }
     }
   }

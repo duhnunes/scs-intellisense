@@ -16,7 +16,11 @@ import {
 } from 'vscode-languageserver/node'
 
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { registerSemantic, semanticTokensLegend } from './semantic'
+import {
+  registerSemantic,
+  semanticTokensLegend,
+  setSemanticHighlighting,
+} from './semantic'
 import { describeError, getLogger, initLogger } from './logger'
 import { getDiagnostics } from './diagnostic'
 import { buildCodeActions } from './diagnostic/codeActions'
@@ -95,6 +99,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
         globalStoragePath?: string
         enabledSeverities?: SiiSeverity[]
         fetchTimeoutMs?: number
+        semanticHighlighting?: boolean
         completionEnabled?: boolean
         hoverEnabled?: boolean
         formatterEnabled?: boolean
@@ -149,6 +154,8 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     full: true,
     range: false,
   }
+
+  setSemanticHighlighting(initOptions?.semanticHighlighting ?? true)
 
   if (initOptions?.enabledSeverities) {
     enabledSeverities = initOptions.enabledSeverities
@@ -343,6 +350,17 @@ connection.onNotification(
         diagnostics: getDiagnostics(doc, enabledSeverities),
       })
     }
+  }
+)
+
+// Live update of scs-intellisense.semanticHighlighting: asks VS Code to
+// request the colors again, which now come back empty (or full).
+connection.onNotification(
+  'scsIntellisense/updateSemanticHighlighting',
+  (payload: { enabled?: boolean }) => {
+    if (typeof payload?.enabled !== 'boolean') return
+    setSemanticHighlighting(payload.enabled)
+    connection.languages.semanticTokens.refresh()
   }
 )
 
