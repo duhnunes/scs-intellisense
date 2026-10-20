@@ -21,7 +21,7 @@ import { describeError, getLogger, initLogger } from './logger'
 import { getDiagnostics } from './diagnostic'
 import { buildCodeActions } from './diagnostic/codeActions'
 import { SchemaClient } from './schema/client'
-import { readScsDocument } from './sii'
+import { normalizeSiiText, readScsDocument } from './sii'
 import { detectExtFromUri, detectModeFromExt } from './parser/docParser'
 import {
   buildClassNameCompletionItems,
@@ -43,7 +43,9 @@ import {
   formatFiles,
   type FileFormatResult,
   type FileToFormat,
+  type FormatCheckResult,
 } from './formatter/workspaceFormat'
+import { formatRange, type FormatRangeResult } from './formatter/rangeFormat'
 import type { SiiSeverity } from './interfaces/structure'
 
 const connection = createConnection(ProposedFeatures.all)
@@ -74,6 +76,7 @@ let enabledSeverities: SiiSeverity[] = [
 // live-updatable (same reload-required pattern as schema.fetchTimeoutMs).
 let formatterBraceStyle: FormatterOptions['braceStyle'] = '1tbs'
 let formatterIndentUnits = true
+let formatterEnabled = false
 
 // Built in onInitialize, logged in onInitialized (see there why).
 let startedMessage = 'Server started'
@@ -130,9 +133,16 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     result.capabilities.hoverProvider = true
   }
 
-  if (initOptions?.formatterEnabled) {
-    result.capabilities.documentFormattingProvider = true
-  }
+  // The one exception to "declared only when enabled": the extension is
+  // the default formatter for .sii/.sui (configurationDefaults in the
+  // client's package.json, which beats a global editor.defaultFormatter
+  // such as Prettier). If it then declared no formatter, VS Code would
+  // flag it as a formatter that "cannot format SII-files" on every .sii,
+  // formatter off being the default. So the formatter is always declared
+  // and does nothing while it's off.
+  formatterEnabled = initOptions?.formatterEnabled ?? false
+  result.capabilities.documentFormattingProvider = true
+  result.capabilities.documentRangeFormattingProvider = true
 
   result.capabilities.semanticTokensProvider = {
     legend: semanticTokensLegend,
@@ -469,7 +479,7 @@ connection.onDocumentSymbol((params): DocumentSymbol[] => {
 connection.onDocumentFormatting((params): TextEdit[] => {
   try {
     const doc = documents.get(params.textDocument.uri)
-    if (!doc) return []
+    if (!doc || !isFormatterOn(params.textDocument.uri)) return []
 
     const mode = detectModeFromExt(detectExtFromUri(doc.uri))
 
@@ -484,49 +494,10 @@ connection.onDocumentFormatting((params): TextEdit[] => {
     const result = checkFormatting(
       doc.getText(),
       mode === 'sui' ? 'sui' : 'sii',
-      {
-        braceStyle: formatterBraceStyle,
-        indentUnits: formatterIndentUnits,
-        // What VS Code sends with the request: editor.tabSize and
-        // editor.insertSpaces as they apply to this file (detected from
-        // its content when editor.detectIndentation is on). Using them
-        // keeps formatting and the editor's own indent on Enter in step.
-        indent: indentFromEditor(params.options),
-      }
+      formatterOptions(params.options)
     )
-
-    // Every outcome is logged, at debug for the routine ones, so a bug
-    // report can tell whether the formatter ran on a file and what it did.
-    if (result.status === 'unchanged') {
-      logger.debug(
-        'FORMAT_UNCHANGED',
-        'Already formatted, nothing to change',
-        undefined,
-        params.textDocument.uri
-      )
-      return []
-    }
-    if (result.status === 'skipped') {
-      // A structural issue is normal while typing (format on save hits
-      // it all the time), so it's debug. A content mismatch is a
-      // formatter bug: a warning, so it shows up in bug reports.
-      if (result.reason === 'structural') {
-        logger.debug(
-          'FORMAT_SKIPPED',
-          `Not formatted: structural issue at line ${result.line} (${result.message})`,
-          undefined,
-          params.textDocument.uri
-        )
-      } else {
-        logger.warn(
-          'FORMAT_UNSAFE_RESULT',
-          'Not formatted: the result would change content, not just whitespace. This is a formatter bug, please report it',
-          undefined,
-          params.textDocument.uri
-        )
-      }
-      return []
-    }
+    logFormatOutcome(result, params.options, params.textDocument.uri)
+    if (result.status !== 'changed') return []
 
     // The formatter reconstructs the whole file from the tree, so the
     // simplest and safest edit is "replace everything" — no need to
@@ -535,13 +506,6 @@ connection.onDocumentFormatting((params): TextEdit[] => {
       start: { line: 0, character: 0 },
       end: doc.positionAt(doc.getText().length),
     }
-
-    logger.debug(
-      'FORMAT_APPLIED',
-      `Formatted (${formatterBraceStyle} braces, indent ${describeIndent(params.options)}, units ${formatterIndentUnits ? 'indented' : 'at column 0'})`,
-      undefined,
-      params.textDocument.uri
-    )
     return [{ range: fullRange, newText: result.formatted }]
   } catch (error) {
     logger.error(
@@ -553,6 +517,130 @@ connection.onDocumentFormatting((params): TextEdit[] => {
     return []
   }
 })
+
+// Format Selection: the units the selection touches, with the same
+// structural-issue rule and safety check as Format Document.
+connection.onDocumentRangeFormatting((params): TextEdit[] => {
+  try {
+    const doc = documents.get(params.textDocument.uri)
+    if (!doc || !isFormatterOn(params.textDocument.uri)) return []
+
+    const mode = detectModeFromExt(detectExtFromUri(doc.uri))
+    // Offsets go through the normalized text (no BOM, LF only), like
+    // every other handler; line and column are the same in both.
+    const normalizedDoc = TextDocument.create(
+      doc.uri,
+      doc.languageId,
+      doc.version,
+      normalizeSiiText(doc.getText())
+    )
+    const result = formatRange(
+      doc.getText(),
+      mode === 'sui' ? 'sui' : 'sii',
+      {
+        start: normalizedDoc.offsetAt(params.range.start),
+        end: normalizedDoc.offsetAt(params.range.end),
+      },
+      formatterOptions(params.options)
+    )
+    logFormatOutcome(result, params.options, params.textDocument.uri)
+    if (result.status !== 'changed') return []
+
+    const eol = doc.getText().includes('\r\n') ? '\r\n' : '\n'
+    return [
+      {
+        range: {
+          start: normalizedDoc.positionAt(result.edit.range.start),
+          end: normalizedDoc.positionAt(result.edit.range.end),
+        },
+        newText: result.edit.newText.replace(/\n/g, eol),
+      },
+    ]
+  } catch (error) {
+    logger.error(
+      'FORMAT_FAILED',
+      'Format Selection failed',
+      describeError(error),
+      params.textDocument?.uri
+    )
+    return []
+  }
+})
+
+/** The formatter is always declared (see onInitialize), so every request
+ *  checks the setting first. */
+function isFormatterOn(uri: string): boolean {
+  if (formatterEnabled) return true
+  logger.debug(
+    'FORMAT_DISABLED',
+    'Not formatted: the formatter is off (scs-intellisense.formatter.enabled)',
+    undefined,
+    uri
+  )
+  return false
+}
+
+function formatterOptions(editorOptions: {
+  tabSize: number
+  insertSpaces: boolean
+}): FormatterOptions {
+  return {
+    braceStyle: formatterBraceStyle,
+    indentUnits: formatterIndentUnits,
+    // What VS Code sends with the request: editor.tabSize and
+    // editor.insertSpaces as they apply to this file (detected from its
+    // content when editor.detectIndentation is on). Using them keeps
+    // formatting and the editor's own indent on Enter in step.
+    indent: indentFromEditor(editorOptions),
+  }
+}
+
+/**
+ * Every outcome is logged, at debug for the routine ones, so a bug report
+ * can tell whether the formatter ran on a file and what it did.
+ */
+function logFormatOutcome(
+  result: FormatCheckResult | FormatRangeResult,
+  editorOptions: { tabSize: number; insertSpaces: boolean },
+  uri: string
+): void {
+  if (result.status === 'unchanged') {
+    logger.debug(
+      'FORMAT_UNCHANGED',
+      'Already formatted, nothing to change',
+      undefined,
+      uri
+    )
+    return
+  }
+  if (result.status === 'skipped') {
+    // A structural issue is normal while typing (format on save hits it
+    // all the time), so it's debug. A content mismatch is a formatter
+    // bug: a warning, so it shows up in bug reports.
+    if (result.reason === 'structural') {
+      logger.debug(
+        'FORMAT_SKIPPED',
+        `Not formatted: structural issue at line ${result.line} (${result.message})`,
+        undefined,
+        uri
+      )
+    } else {
+      logger.warn(
+        'FORMAT_UNSAFE_RESULT',
+        'Not formatted: the result would change content, not just whitespace. This is a formatter bug, please report it',
+        undefined,
+        uri
+      )
+    }
+    return
+  }
+  logger.debug(
+    'FORMAT_APPLIED',
+    `Formatted ${'edit' in result ? 'the selection' : 'the file'} (${formatterBraceStyle} braces, indent ${describeIndent(editorOptions)}, units ${formatterIndentUnits ? 'indented' : 'at column 0'})`,
+    undefined,
+    uri
+  )
+}
 
 function toHoverResult(markdown: string): Hover {
   return {

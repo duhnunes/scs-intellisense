@@ -498,10 +498,12 @@
     ],
     "configurationDefaults": {
       "[sii]": {
-        "editor.wordBasedSuggestions": "off"
+        "editor.wordBasedSuggestions": "off",
+        "editor.defaultFormatter": "DuHNunes.scs-intellisense"
       },
       "[sui]": {
-        "editor.wordBasedSuggestions": "off"
+        "editor.wordBasedSuggestions": "off",
+        "editor.defaultFormatter": "DuHNunes.scs-intellisense"
       }
     }
   }

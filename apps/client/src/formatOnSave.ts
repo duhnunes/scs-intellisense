@@ -36,8 +36,9 @@ export function registerFormatOnSave(
 
       // If VS Code's own format on save is on AND it would use this
       // extension for the file, VS Code formats it already. Only then is
-      // this redundant: a global editor.defaultFormatter set to another
-      // extension (say, Prettier) can't format .sii, so we still do it.
+      // this redundant. This extension is the default formatter for
+      // .sii/.sui (configurationDefaults), so that's the case unless the
+      // user picked another formatter for [sii] themselves.
       const editor = vscode.workspace.getConfiguration('editor', document)
       if (editor.get<boolean>('formatOnSave', false)) {
         const defaultFormatter = editor.get<string>('defaultFormatter')
@@ -66,9 +67,10 @@ async function formatEdits(
     })
     return (await client.protocol2CodeConverter.asTextEdits(edits)) ?? []
   } catch {
-    // The server has no formatter when formatter.enabled was turned on
-    // without reloading the window (it's a startup setting). Saving must
+    // The server isn't running yet, or the request failed. Saving must
     // never fail because of formatting, so the file is saved as it is.
+    // (When formatter.enabled was turned on without reloading the window,
+    // the server answers with no edits instead.)
     return []
   }
 }

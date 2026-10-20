@@ -96,6 +96,67 @@ export function formatSiiDocument(
   return lines.join('\n') + '\n'
 }
 
+/**
+ * Format Selection: formats the top-level items (units, includes,
+ * comments) the selection touches, each one whole, and nothing else. A
+ * selection inside a unit body formats that unit. Returns the edit as
+ * offsets into `document.text`, or undefined when nothing is selected or
+ * the items share a line with something outside the selection (then
+ * reformatting them would also move that).
+ */
+export function formatSiiRange(
+  document: SiiDocument,
+  range: SiiRange,
+  options: Partial<FormatterOptions> = {}
+): { range: SiiRange; newText: string } | undefined {
+  const opts: FormatterOptions = { ...DEFAULT_OPTIONS, ...options }
+  const text = document.text
+  const nodes = collectNodes(
+    document.units,
+    document.includes,
+    document.attributes,
+    topLevelComments(document)
+  )
+
+  const touched = (node: Node) =>
+    range.start === range.end
+      ? node.start <= range.start && range.start <= node.end
+      : node.start < range.end && range.start < node.end
+  let first = nodes.findIndex(touched)
+  if (first < 0) return undefined
+  let last = nodes.length - 1
+  while (!touched(nodes[last]!)) last--
+
+  // Items on the same line belong together (`} # end`, two units on one
+  // line): formatting only one of them would split the line.
+  const sameLine = (before: Node, after: Node) =>
+    !text.slice(before.end, after.start).includes('\n')
+  while (first > 0 && sameLine(nodes[first - 1]!, nodes[first]!)) first--
+  while (last < nodes.length - 1 && sameLine(nodes[last]!, nodes[last + 1]!))
+    last++
+
+  const start = text.lastIndexOf('\n', nodes[first]!.start - 1) + 1
+  const lineEnd = text.indexOf('\n', nodes[last]!.end)
+  const end = lineEnd < 0 ? text.length : lineEnd
+  if (
+    text.slice(start, nodes[first]!.start).trim() !== '' ||
+    text.slice(nodes[last]!.end, end).trim() !== ''
+  )
+    return undefined
+
+  const depth = document.mode === 'sii' && opts.indentUnits ? 1 : 0
+  const lines: string[] = []
+  emitNodeList(
+    nodes.slice(first, last + 1),
+    depth,
+    document,
+    opts,
+    opts.indent,
+    lines
+  )
+  return { range: { start, end }, newText: lines.join('\n') }
+}
+
 // ---------------------------------------------------------------------
 // Node model: everything at one nesting level (top-level, or one unit's
 // body) gets merged into this single ordered list, sorted by position.

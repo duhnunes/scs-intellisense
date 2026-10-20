@@ -65,7 +65,10 @@ export function checkFormatting(
  *    (`a : b #note` + `{` becomes `a : b { #note`); the piece check
  *    still makes sure every comment survives, unchanged and in order.
  */
-function keepsContent(original: SiiDocument, formatted: string): boolean {
+export function keepsContent(
+  original: SiiDocument,
+  formatted: string
+): boolean {
   const reparsed = readScsDocument(formatted, original.mode)
   if (reparsed.issues.length > 0) return false
 
@@ -113,7 +116,7 @@ function squash(text: string): string {
   return text.replace(/\s+/g, '')
 }
 
-function lineAt(text: string, offset: number): number {
+export function lineAt(text: string, offset: number): number {
   let line = 1
   for (let index = 0; index < offset && index < text.length; index++) {
     if (text[index] === '\n') line++

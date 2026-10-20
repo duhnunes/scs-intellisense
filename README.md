@@ -32,7 +32,7 @@ Experimental (off by default):
 
 - 💡 **Completion** for `class_name` and attribute keys.
 - 🖱️ **Hover** with descriptions of classes and attributes.
-- ✨ **Formatter**: Format Document, plus **Check Formatting of All Files** and **Format All Files** for the whole workspace.
+- ✨ **Formatter**: Format Document and Format Selection, plus **Check Formatting of All Files** and **Format All Files** for the whole workspace.
 
 To turn experimental features on, open the Settings (`Ctrl+,`), search for `@ext:DuHNunes.scs-intellisense`, check the ones you want and reload the window (**Developer: Reload Window**). See the [Marketplace page](https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense) for every setting and command.
 

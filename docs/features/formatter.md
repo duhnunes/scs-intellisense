@@ -4,6 +4,8 @@
 
 Experimental, off by default (`scs-intellisense.formatter.enabled`). Code: `apps/server/src/formatter/`.
 
+The extension is the **default formatter** for `.sii`/`.sui`: `configurationDefaults` in `apps/client/package.json` sets `editor.defaultFormatter` for `[sii]` and `[sui]`. A language default from an extension beats a global `editor.defaultFormatter` (VS Code's settings precedence), so a user whose default is Prettier still gets this formatter for Shift+Alt+F and Format Selection, with nothing written to their `settings.json`. Without it VS Code asks to "Configure Default Formatter", because the global default can't format these files. Formatting is therefore declared even while the formatter is off (see rule 4 in [the overview](../architecture/overview.md)).
+
 ## Format Document (`format.ts`)
 
 `formatSiiDocument()` rebuilds the file from the reader's tree instead of editing the text in place:
@@ -19,6 +21,16 @@ Experimental, off by default (`scs-intellisense.formatter.enabled`). Code: `apps
 - If the reader reported any structural issue, the file isn't formatted at all: the tree may be incomplete.
 - Format Document goes through `checkFormatting()` (see [the safety check](#the-safety-check)), so it returns no edit for a file that is already formatted, has structural issues, or would change content.
 - Every outcome is logged with the file: `FORMAT_APPLIED`, `FORMAT_UNCHANGED` and `FORMAT_SKIPPED` at debug (they happen on every save), `FORMAT_UNSAFE_RESULT` as a warning (a formatter bug) and `FORMAT_FAILED` as an error. Only rule problems in a name (`a..b`, a duplicate) don't stop formatting: the file's structure is intact, and the name is copied as it is.
+
+## Format Selection (`rangeFormat.ts`)
+
+`Ctrl+K Ctrl+F`, or Format Selection in the context menu. VS Code also uses it for `editor.formatOnPaste`.
+
+- `formatSiiRange()` in `format.ts` formats the **top-level items** (units, includes, comments, or a `.sui`'s bare attributes) the selection touches, each one whole, with the same emitters as Format Document. A selection, or just the cursor, inside a unit body formats that unit; nothing outside those items changes.
+- Items on the same line go together (`} # end`, two units on one line), so a line is never split. If one shares its line with something outside them (`SiiNunit { truck : .a {`), nothing is formatted.
+- The `SiiNunit` header and its closing `}` are never touched, and neither is the final newline.
+- Same rules as Format Document: nothing happens in a file with structural issues, and `formatRange()` runs the result through the same safety check (`keepsContent()`).
+- The edit returned is the smallest one (common start and end trimmed), so untouched lines aren't replaced.
 
 ## Format on save (`apps/client/src/formatOnSave.ts`)
 
@@ -49,7 +61,7 @@ Last full run: all 34,843 `.sii`/`.sui` files of ATS 1.61 pass the check, and fo
 
 ## Tests
 
-`apps/server/test/features.test.ts` (formatter output), `workspaceFormat.test.ts` (safety check, encodings, writing) and `fixtures.test.ts` (every real-file excerpt must format to a stable result without losing a word).
+`apps/server/test/features.test.ts` (formatter output), `rangeFormat.test.ts` (Format Selection), `workspaceFormat.test.ts` (safety check, encodings, writing) and `fixtures.test.ts` (every real-file excerpt must format to a stable result without losing a word).
 
 ---
 
