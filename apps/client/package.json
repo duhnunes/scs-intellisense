@@ -462,6 +462,12 @@
             "markdownDescription": "**EXPERIMENTAL** — Enable formatting (Format Document) for `.sii`/`.sui` files. Rewrites indentation, brace placement, spacing around `:`, blank lines, and `@include` placement — never touches attribute values. Off by default while this feature is still being validated. Requires a window reload to take effect.",
             "order": 1
           },
+          "scs-intellisense.formatter.formatOnSave": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Format `.sii`/`.sui` files when you save them. Only works while `#scs-intellisense.formatter.enabled#` is on, and doesn't need VS Code's own `#editor.formatOnSave#`. A file with structural errors is saved as it is, without formatting. Takes effect right away, no reload needed.",
+            "order": 2
+          },
           "scs-intellisense.formatter.braceStyle": {
             "type": "string",
             "enum": [
@@ -474,7 +480,7 @@
             ],
             "default": "1tbs",
             "markdownDescription": "Brace style used when formatting `.sii`/`.sui` files. Only takes effect if `#scs-intellisense.formatter.enabled#` is on.",
-            "order": 2
+            "order": 3
           }
         }
       }

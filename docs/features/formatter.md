@@ -15,6 +15,15 @@ Experimental, off by default (`scs-intellisense.formatter.enabled`). Code: `apps
 - A comment that followed something on the same line stays on that line. A comment between the unit name and `{` stays on the header line (in `1tbs` it goes after the `{`, since before it a line comment would swallow the brace).
 - A `.sui` never gets a `SiiNunit` wrapper.
 - If the reader reported any structural issue, the file isn't formatted at all: the tree may be incomplete.
+- Format Document goes through `checkFormatting()` (see [the safety check](#the-safety-check)), so it returns no edit for a file that is already formatted, has structural issues, or would change content.
+
+## Format on save (`apps/client/src/formatOnSave.ts`)
+
+`scs-intellisense.formatter.formatOnSave` (on by default) formats `.sii`/`.sui` files as they are saved, without asking users to set `editor.formatOnSave` or `editor.defaultFormatter`:
+
+- The client listens to `onWillSaveTextDocument` and asks **this extension's server** for the edits (`textDocument/formatting`), so the result never depends on which formatter VS Code would pick. The edits become part of the save, and Ctrl+Z undoes them.
+- It does nothing when the formatter is off, when the save is an auto-save after a delay (VS Code's own format on save skips those too), or when the user already turned on `editor.formatOnSave` for the file (VS Code formats it then).
+- Unlike `formatter.enabled`, it's read on every save, so changing it needs no reload. If the formatter was enabled without a reload, the server has no formatter yet and the file is simply saved as it is.
 
 ## Formatting many files (`workspaceFormat.ts`)
 

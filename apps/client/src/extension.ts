@@ -8,6 +8,7 @@ import {
 } from 'vscode-languageclient/node'
 import { ConfigManager } from './configManager'
 import { registerWorkspaceFormatCommands } from './workspaceFormat'
+import { registerFormatOnSave } from './formatOnSave'
 
 let client: LanguageClient | undefined
 let output: vscode.OutputChannel
@@ -74,6 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
   // exists, not before.
   new ConfigManager(context, client)
   registerWorkspaceFormatCommands(context, client, output)
+  registerFormatOnSave(context, client)
 
   const registerLogHandler = () => {
     try {

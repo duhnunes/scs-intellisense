@@ -34,8 +34,9 @@ import {
   findAttributeKeyAtPosition,
 } from './hover/attributeKey'
 import { buildDocumentSymbols } from './symbols/documentSymbols'
-import { formatSiiDocument, type FormatterOptions } from './formatter/format'
+import type { FormatterOptions } from './formatter/format'
 import {
+  checkFormatting,
   formatFiles,
   type FileFormatResult,
   type FileToFormat,
@@ -404,32 +405,32 @@ connection.onDocumentFormatting((params): TextEdit[] => {
     const doc = documents.get(params.textDocument.uri)
     if (!doc) return []
 
-    const ext = detectExtFromUri(doc.uri)
-    const mode = detectModeFromExt(ext)
-    const parsed = readScsDocument(
+    const mode = detectModeFromExt(detectExtFromUri(doc.uri))
+
+    // checkFormatting() is the same path the workspace commands use, so
+    // Format Document and format on save get its safety check too: the
+    // result is applied only if nothing but whitespace changed. It also
+    // skips files with structural issues (missing ':', missing '}',
+    // etc.): the tree is incomplete there, most often because the user
+    // is mid-typing, and rebuilding the file from it isn't safe.
+    // Business-rule issues (invalid className, duplicates...) don't
+    // affect the ranges the formatter uses, so they don't block it.
+    const result = checkFormatting(
       doc.getText(),
-      mode === 'unknown' ? 'sii' : mode
+      mode === 'sui' ? 'sui' : 'sii',
+      { braceStyle: formatterBraceStyle }
     )
 
-    // Structural issues (missing ':', missing '}', etc.) mean the tree
-    // is genuinely incomplete somewhere — most commonly because the
-    // user is mid-typing. Rewriting the whole file in that state is
-    // exactly the wrong moment to do it, so formatting is skipped
-    // entirely (no edits) rather than risking it on a tree that isn't
-    // fully trustworthy yet. Business-rule issues (invalid className,
-    // duplicate unit names, etc.) don't affect the structural ranges
-    // the formatter relies on, so those alone don't block formatting.
-    if (parsed.issues.length > 0) {
+    if (result.status === 'unchanged') return []
+    if (result.status === 'skipped') {
       logger.info(
-        'FORMAT_SKIPPED_STRUCTURAL_ISSUES',
-        `Skipped formatting ${params.textDocument.uri}: ${parsed.issues.length} structural issue(s) present`
+        'FORMAT_SKIPPED',
+        result.reason === 'structural'
+          ? `Skipped formatting ${params.textDocument.uri}: structural issue at line ${result.line} (${result.message})`
+          : `Skipped formatting ${params.textDocument.uri}: the result would change content, not just whitespace (a formatter bug, please report it)`
       )
       return []
     }
-
-    const formatted = formatSiiDocument(parsed, {
-      braceStyle: formatterBraceStyle,
-    })
 
     // The formatter reconstructs the whole file from the tree, so the
     // simplest and safest edit is "replace everything" — no need to
@@ -439,7 +440,7 @@ connection.onDocumentFormatting((params): TextEdit[] => {
       end: doc.positionAt(doc.getText().length),
     }
 
-    return [{ range: fullRange, newText: formatted }]
+    return [{ range: fullRange, newText: result.formatted }]
   } catch (error) {
     const details =
       error && (error as Error).stack ? (error as Error).stack : String(error)
