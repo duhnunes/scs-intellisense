@@ -71,6 +71,10 @@ let enabledSeverities: SiiSeverity[] = [
 // live-updatable (same reload-required pattern as schema.fetchTimeoutMs).
 let formatterBraceStyle: FormatterOptions['braceStyle'] = '1tbs'
 
+// Built in onInitialize, logged in onInitialized (see there why).
+let startedMessage = 'Server started'
+let hasStoragePath = false
+
 /** For other server modules (completion, hover, ...) to consult the
  *  schema once it's ready. Returns undefined until onInitialize has run
  *  and the client sent a usable storage path. */
@@ -158,19 +162,25 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
           describeError(err)
         )
       })
-  } else {
-    logger.warn(
-      'SCHEMA_NO_STORAGE_PATH',
-      'No globalStoragePath in initializationOptions; schema fetch/cache disabled for this session'
-    )
   }
+  hasStoragePath = Boolean(initOptions?.globalStoragePath)
 
-  logger.info(
-    'SERVER_STARTED',
-    `Server started (completion: ${onOff(initOptions?.completionEnabled)}, hover: ${onOff(initOptions?.hoverEnabled)}, formatter: ${onOff(initOptions?.formatterEnabled)})`
-  )
+  startedMessage = `Server started (completion: ${onOff(initOptions?.completionEnabled)}, hover: ${onOff(initOptions?.hoverEnabled)}, formatter: ${onOff(initOptions?.formatterEnabled)})`
 
   return result
+})
+
+// Logged here, not in onInitialize: the client only starts listening for
+// notifications after it gets the initialize response, so an entry sent
+// before that is dropped (and LSP doesn't allow it anyway).
+connection.onInitialized(() => {
+  logger.info('SERVER_STARTED', startedMessage)
+  if (!hasStoragePath) {
+    logger.warn(
+      'SCHEMA_NO_STORAGE_PATH',
+      'No storage folder was given to the server, so the schema database is off for this session (no completion or hover data)'
+    )
+  }
 })
 
 // Backs the client's manual "force update" command — bypasses the
