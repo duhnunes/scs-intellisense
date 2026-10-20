@@ -1,78 +1,51 @@
 import type { Connection } from 'vscode-languageserver'
 
-export type LogSeverity = 'error' | 'warning' | 'info'
+/**
+ * Log levels, lowest first. The client writes each entry at its level into
+ * the "SCS IntelliSense" log channel, and users choose which levels they
+ * see there (the level filter of the Output panel, or "Developer: Set Log
+ * Level"). By default VS Code shows info and above.
+ *
+ * - debug: details useful when hunting a bug, noise otherwise (a format
+ *   skipped because the file is mid-edit, a cache that didn't change).
+ * - info: things a user may want to know happened (server started, schema
+ *   database updated).
+ * - warning: something didn't work, but the extension carries on (a fetch
+ *   failed while offline).
+ * - error: something broke; include the stack in `details`.
+ */
+export type LogLevel = 'debug' | 'info' | 'warning' | 'error'
 
-export interface LogRange {
-  start: number
-  end: number
-}
-
-export interface LogPayload {
+/** What travels to the client in the `scsIntellisense/log` notification. */
+export interface LogEntry {
   timestamp: string
-  severity: LogSeverity
-  code?: string
+  level: LogLevel
+  /** AREA_EVENT in upper snake case, e.g. SCHEMA_FETCH_FAILED. Stable and
+   *  searchable: a bug report can be matched to the code that wrote it. */
+  code: string
+  /** One sentence: what happened, and why when it's known. */
   message: string
+  /** Technical extra, such as a stack trace. Shown under the message. */
   details?: string
+  /** URI of the file involved, if any. */
   file?: string
-  range?: LogRange | null
 }
+
+type LogFunction = (
+  code: string,
+  message: string,
+  details?: string,
+  file?: string
+) => void
 
 export interface Logger {
-  info(
-    code: string | undefined,
-    message: string,
-    details?: string,
-    file?: string,
-    range?: LogRange | null
-  ): void
-  warn(
-    code: string | undefined,
-    message: string,
-    details?: string,
-    file?: string,
-    range?: LogRange | null
-  ): void
-  error(
-    code: string | undefined,
-    message: string,
-    details?: string,
-    file?: string,
-    range?: LogRange | null
-  ): void
-  /**
-   * Same as warn(), but deduplicated per (file, code+message — or an
-   * explicit `id`) and batched: repeated calls within a short window
-   * collapse into a single notification instead of one per call. Meant
-   * for warnings that could otherwise fire many times in a row (e.g.
-   * once per line of a large file).
-   */
-  warnOnce(
-    code: string | undefined,
-    message: string,
-    details?: string,
-    file?: string,
-    range?: LogRange | null,
-    id?: string
-  ): void
-  /** Resets warnOnce's dedup memory for one file, or globally if
-   *  omitted. Call this when a file closes, or its content changes
-   *  enough that previously-reported warnings may no longer apply. */
-  clearReportedForFile(file?: string): void
-}
-
-const BATCH_FLUSH_INTERVAL_MS = 5000
-
-interface BatchedWarning {
-  code: string
-  message: string
-  details?: string
-  file?: string
+  debug: LogFunction
+  info: LogFunction
+  warn: LogFunction
+  error: LogFunction
 }
 
 let connection: Connection | undefined
-const reportedOnce = new Map<string, Set<string>>()
-const batchQueue: BatchedWarning[] = []
-let flushTimer: NodeJS.Timeout | undefined
 
 export function initLogger(conn: Connection): Logger {
   connection = conn
@@ -80,126 +53,56 @@ export function initLogger(conn: Connection): Logger {
 }
 
 export function getLogger(): Logger {
-  if (!connection) return consoleFallbackLogger
-
-  const conn = connection
   return {
-    info: (code, message, details, file, range) =>
-      send(conn, 'info', code, message, details, file, range),
-    warn: (code, message, details, file, range) =>
-      send(conn, 'warning', code, message, details, file, range),
-    error: (code, message, details, file, range) =>
-      send(conn, 'error', code, message, details, file, range),
-    warnOnce: (code, message, details, file, _range, id) =>
-      queueWarnOnce(conn, code, message, details, file, id),
-    clearReportedForFile,
+    debug: (...args) => send('debug', ...args),
+    info: (...args) => send('info', ...args),
+    warn: (...args) => send('warning', ...args),
+    error: (...args) => send('error', ...args),
   }
 }
 
+/** The stack trace when there is one, so an error log points at the line
+ *  that failed; otherwise the value as text. */
+export function describeError(error: unknown): string {
+  return error instanceof Error && error.stack ? error.stack : String(error)
+}
+
 /**
- * The single place a log payload actually gets sent. Only through the
- * custom `scsIntellisense/log` notification — extension.ts formats and
- * writes it into the shared "SCS-Intellisense" output channel.
- *
- * Deliberately does NOT also call `connection.console.*`: the client
- * points its own LSP console at that same channel
- * (`LanguageClientOptions.outputChannel` in extension.ts), so doing both
- * printed every message twice, each with different formatting — that
- * was the original bug this file used to have.
+ * The single place a log entry is sent: only through the custom
+ * `scsIntellisense/log` notification, which the client writes into the log
+ * channel. It deliberately does NOT also call `connection.console.*`: the
+ * LSP client prints that console into the same channel, so doing both
+ * printed every message twice.
  */
 function send(
-  conn: Connection,
-  severity: LogSeverity,
-  code: string | undefined,
+  level: LogLevel,
+  code: string,
   message: string,
   details?: string,
-  file?: string,
-  range?: LogRange | null
+  file?: string
 ): void {
-  const payload: LogPayload = {
+  const entry: LogEntry = {
     timestamp: new Date().toISOString(),
-    severity,
+    level,
     code,
     message,
     details,
     file,
-    range,
   }
+
+  if (!connection) {
+    // Only before initLogger() has run, which server.ts does first thing.
+    console.error(`[scs-intellisense] ${level} ${code} ${message}`)
+    return
+  }
+
   try {
-    conn.sendNotification('scsIntellisense/log', payload)
-  } catch (err) {
-    // The one case this DOES fall back to connection.console: the
-    // notification channel itself is broken, so there's nowhere else
-    // left to report that.
-    conn.console.error(
-      `[scs-intellisense] failed to send log notification: ${String(err)}`
+    connection.sendNotification('scsIntellisense/log', entry)
+  } catch (error) {
+    // The notification channel itself is broken: the LSP console is the
+    // only place left to report it.
+    connection.console.error(
+      `[scs-intellisense] failed to send log entry ${code}: ${String(error)}`
     )
   }
-}
-
-function queueWarnOnce(
-  conn: Connection,
-  code: string | undefined,
-  message: string,
-  details: string | undefined,
-  file: string | undefined,
-  id: string | undefined
-): void {
-  const fileKey = file ?? '__global__'
-  const dedupeKey = id ?? `${code ?? 'WARN'}:${message}`
-
-  let seen = reportedOnce.get(fileKey)
-  if (!seen) {
-    seen = new Set()
-    reportedOnce.set(fileKey, seen)
-  }
-  if (seen.has(dedupeKey)) return
-  seen.add(dedupeKey)
-
-  batchQueue.push({ code: code ?? 'WARN', message, details, file })
-  scheduleFlush(conn)
-}
-
-function scheduleFlush(conn: Connection): void {
-  if (flushTimer) return
-  flushTimer = setTimeout(() => {
-    flushTimer = undefined
-    flushBatch(conn)
-  }, BATCH_FLUSH_INTERVAL_MS)
-}
-
-function flushBatch(conn: Connection): void {
-  if (batchQueue.length === 0) return
-  const items = batchQueue.splice(0, batchQueue.length)
-  send(
-    conn,
-    'warning',
-    'BATCH_WARNINGS',
-    `Batch of ${items.length} warning${items.length === 1 ? '' : 's'}`,
-    items
-      .map(
-        (item) =>
-          `${item.code}${item.file ? ` [${item.file}]` : ''} - ${item.message}${item.details ? `\n${item.details}` : ''}`
-      )
-      .join('\n\n')
-  )
-}
-
-function clearReportedForFile(file?: string): void {
-  reportedOnce.delete(file ?? '__global__')
-}
-
-/** Used only if something calls getLogger() before initLogger() has run
- *  — shouldn't happen in practice (server.ts always initializes first),
- *  but degrades to plain console output instead of throwing. */
-const consoleFallbackLogger: Logger = {
-  info: (code, message) =>
-    console.log(`[scs-intellisense:fallback] ${code ?? ''} ${message}`),
-  warn: (code, message) =>
-    console.warn(`[scs-intellisense:fallback] ${code ?? ''} ${message}`),
-  error: (code, message) =>
-    console.error(`[scs-intellisense:fallback] ${code ?? ''} ${message}`),
-  warnOnce: (code, message) =>
-    console.warn(`[scs-intellisense:fallback:once] ${code ?? ''} ${message}`),
-  clearReportedForFile: () => {},
 }

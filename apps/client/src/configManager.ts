@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import type { LanguageClient } from 'vscode-languageclient/node'
+import type { ExtensionLog } from './log'
 
 const DEFAULT_ENABLED_SEVERITIES = ['error', 'warning', 'information', 'hint']
 
@@ -10,7 +11,8 @@ export class ConfigManager {
 
   constructor(
     private readonly context: vscode.ExtensionContext,
-    private readonly client: LanguageClient
+    private readonly client: LanguageClient,
+    private readonly log: ExtensionLog
   ) {
     this.applyCurrentSettings()
     this.listenForChanges()
@@ -99,6 +101,10 @@ export class ConfigManager {
       )
 
       if (!result.ok) {
+        this.log.warn(
+          'SCHEMA_REFRESH_FAILED',
+          `Refresh Schema Database failed: ${result.message}`
+        )
         vscode.window.showErrorMessage(
           `SCS IntelliSense: failed to update the schema database — ${result.message}`
         )
@@ -111,6 +117,11 @@ export class ConfigManager {
           : 'SCS IntelliSense: schema database is already up to date.'
       )
     } catch (err) {
+      this.log.error(
+        'SCHEMA_REFRESH_REQUEST_FAILED',
+        'Refresh Schema Database could not reach the server',
+        err
+      )
       vscode.window.showErrorMessage(
         `SCS IntelliSense: failed to update the schema database — ${String(err)}`
       )

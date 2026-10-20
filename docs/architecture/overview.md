@@ -19,6 +19,8 @@ VS Code ── apps/client ──(LSP over IPC)── apps/server
 - `src/extension.ts` starts the `LanguageClient`, passes the startup settings in `initializationOptions` and prints the server's log notifications in the **SCS IntelliSense** Output channel.
 - `src/configManager.ts` mirrors `semanticHighlighting` into VS Code's own setting, forwards `diagnostics.enabledSeverities` to the server when it changes, and registers **Refresh Schema Database**.
 - `src/workspaceFormat.ts` implements **Check Formatting of All Files** and **Format All Files**: it finds the files, asks for confirmation, applies edits to open editors and writes the report. Reading, formatting and writing files happen in the server.
+- `src/formatOnSave.ts` formats `.sii`/`.sui` on save, asking the server for the edits.
+- `src/log.ts` is the **SCS IntelliSense** log channel (see [Logging](#logging)); `src/bugReport.ts` implements **Copy Bug Report Info**.
 - `package.json` is the extension manifest: languages, grammars, settings, commands.
 - `syntaxes/` holds a minimal TextMate grammar that only marks comments and strings. All real coloring comes from the server's semantic tokens; the grammar exists because VS Code's bracket pair colorization and bracket matching skip brackets inside comments and strings, and they learn what those are only from a TextMate grammar.
 
@@ -47,7 +49,29 @@ These are deliberate. A change that breaks one of them usually breaks something 
 2. **Every feature reads the tree; none re-reads the text.** Highlighting, diagnostics, Outline, formatter, completion and hover all consume `SiiDocument`. A second tokenizer would sooner or later disagree with the reader. The one exception is the TextMate grammar in `apps/client/syntaxes/`, which VS Code requires for brackets: it is kept to comments and strings only, and must follow the same rules as `scanSiiComments()` (`#` and `//` to the end of the line, nestable `/* */`, quotes and escapes). Change both together.
 3. **Ranges are offsets into the normalized text.** `parsed.text` has no BOM and LF line endings. Convert an offset to a line/column through `TextDocument.create(uri, languageId, version, parsed.text)`, never through the editor's original text, or positions drift on Windows (CRLF) files.
 4. **Capabilities are declared only when their feature is on.** Completion, hover and the formatter are registered in `onInitialize` only if enabled. Startup settings travel in `initializationOptions` and need a window reload; only `diagnostics.enabledSeverities` updates live (`scsIntellisense/updateDiagnosticSettings`).
-5. **Logging goes only through `scsIntellisense/log`.** Don't also write to `connection.console`.
+5. **Logging goes only through the logger.** In the server, `logger.ts` (sent as `scsIntellisense/log`); in the client, `log.ts`. Never `console.*` or `connection.console`: those end up somewhere the user never looks, or print a message twice. See [Logging](#logging).
+
+## Logging
+
+Everything the extension logs lands in one place: the **SCS IntelliSense** channel of the Output panel. It's a VS Code *log* channel, so every line has a timestamp and a level, and users choose which levels they see (the level filter in the Output panel, or **Developer: Set Log Level**). VS Code shows `info` and above by default.
+
+Every entry has:
+
+| Field | Rule |
+|---|---|
+| level | `debug`: useful only when hunting a bug (a format skipped because the file is mid-edit, a cache that didn't change). `info`: something a user may want to know happened. `warning`: something didn't work, but the extension carries on. `error`: something broke. |
+| code | `AREA_EVENT` in upper snake case: `SCHEMA_FETCH_FAILED`, `FORMAT_SKIPPED`. Stable and searchable, so a line in a bug report leads straight to the code that wrote it. |
+| message | One sentence: what happened, and why when it's known. |
+| details | Technical extra. For errors, the stack: pass the caught value through `describeError()`. |
+| file | The URI of the file involved, when there is one. The client shows it relative to the workspace. |
+
+```ts
+logger.warn('SCHEMA_FETCH_FAILED', `Schema fetch failed for "${name}" (offline?)`, describeError(err))
+```
+
+Pick the level by who needs it: if a user who never had a problem would see the line on every save or every keystroke, it's `debug`.
+
+The client keeps the last 200 entries of every level, including the ones filtered out of the channel. **Copy Bug Report Info** puts the last 50 into the report, with versions and settings.
 
 ## The reader in short
 

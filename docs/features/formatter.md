@@ -16,6 +16,7 @@ Experimental, off by default (`scs-intellisense.formatter.enabled`). Code: `apps
 - A `.sui` never gets a `SiiNunit` wrapper.
 - If the reader reported any structural issue, the file isn't formatted at all: the tree may be incomplete.
 - Format Document goes through `checkFormatting()` (see [the safety check](#the-safety-check)), so it returns no edit for a file that is already formatted, has structural issues, or would change content.
+- Every outcome is logged with the file: `FORMAT_APPLIED`, `FORMAT_UNCHANGED` and `FORMAT_SKIPPED` at debug (they happen on every save), `FORMAT_UNSAFE_RESULT` as a warning (a formatter bug) and `FORMAT_FAILED` as an error. Only rule problems in a name (`a..b`, a duplicate) don't stop formatting: the file's structure is intact, and the name is copied as it is.
 
 ## Format on save (`apps/client/src/formatOnSave.ts`)
 

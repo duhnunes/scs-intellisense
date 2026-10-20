@@ -15,9 +15,9 @@ import {
 
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { registerSemantic, semanticTokensLegend } from './semantic'
-import { getLogger, initLogger } from './logger'
+import { describeError, getLogger, initLogger } from './logger'
 import { getDiagnostics } from './diagnostic'
-import { SchemaClient, type SchemaClientLogger } from './schema/client'
+import { SchemaClient } from './schema/client'
 import { readScsDocument } from './sii'
 import { detectExtFromUri, detectModeFromExt } from './parser/docParser'
 import {
@@ -76,12 +76,6 @@ let formatterBraceStyle: FormatterOptions['braceStyle'] = '1tbs'
  *  and the client sent a usable storage path. */
 export function getSchemaClient(): SchemaClient | undefined {
   return schemaClient
-}
-
-const schemaLogger: SchemaClientLogger = {
-  info: (message) => logger.info('SCHEMA', message),
-  warn: (message) => logger.warn('SCHEMA', message),
-  error: (message, details) => logger.error('SCHEMA', message, details),
 }
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
@@ -147,7 +141,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
   if (globalStoragePath) {
     schemaClient = new SchemaClient({
       cacheDir: globalStoragePath,
-      logger: schemaLogger,
+      logger,
       fetchTimeoutMs: initOptions?.fetchTimeoutMs,
     })
     // Fire-and-forget: server startup (and the capabilities response
@@ -158,7 +152,11 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       .init()
       .then(() => schemaClient?.refreshManifest())
       .catch((err) => {
-        schemaLogger.error('Schema client startup failed', String(err))
+        logger.error(
+          'SCHEMA_STARTUP_FAILED',
+          'The schema database could not be loaded',
+          describeError(err)
+        )
       })
   } else {
     logger.warn(
@@ -167,7 +165,10 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     )
   }
 
-  logger.info('SERVER_INIT', 'SCS IntelliSense server initialized')
+  logger.info(
+    'SERVER_STARTED',
+    `Server started (completion: ${onOff(initOptions?.completionEnabled)}, hover: ${onOff(initOptions?.hoverEnabled)}, formatter: ${onOff(initOptions?.formatterEnabled)})`
+  )
 
   return result
 })
@@ -186,7 +187,11 @@ connection.onRequest('scsIntellisense/refreshSchema', async () => {
     const changed = await schemaClient.refreshManifest(true)
     return { ok: true, changed }
   } catch (err) {
-    schemaLogger.error('Manual schema refresh failed', String(err))
+    logger.error(
+      'SCHEMA_REFRESH_FAILED',
+      'Refresh Schema Database failed',
+      describeError(err)
+    )
     return { ok: false, message: String(err) }
   }
 })
@@ -207,9 +212,9 @@ connection.onCompletion(async (params) => {
   try {
     const doc = documents.get(params.textDocument.uri)
     if (!doc) {
-      logger.warn(
+      logger.debug(
         'DOC_NOT_FOUND',
-        'Document not found for completion',
+        'Completion requested for a document the server does not have open',
         undefined,
         params.textDocument.uri
       )
@@ -237,9 +242,9 @@ connection.onCompletion(async (params) => {
     const offset = normalizedDoc.offsetAt(params.position)
 
     if (!schemaClient) {
-      logger.warn(
-        'COMPLETION_NO_SCHEMA_CLIENT',
-        'Completion requested before schema client was ready'
+      logger.debug(
+        'COMPLETION_NO_SCHEMA',
+        'Completion requested before the schema database was ready'
       )
       return []
     }
@@ -273,12 +278,10 @@ connection.onCompletion(async (params) => {
 
     return []
   } catch (error) {
-    const details =
-      error && (error as Error).stack ? (error as Error).stack : String(error)
     logger.error(
-      'ON_COMPLETION_ERROR',
-      'onCompletion error',
-      details,
+      'COMPLETION_FAILED',
+      'Completion failed',
+      describeError(error),
       params.textDocument?.uri
     )
     return []
@@ -305,9 +308,22 @@ connection.onNotification(
 )
 
 documents.onDidChangeContent((change) => {
-  const diagnostics = getDiagnostics(change.document, enabledSeverities)
-  connection.sendDiagnostics({ uri: change.document.uri, diagnostics })
+  try {
+    const diagnostics = getDiagnostics(change.document, enabledSeverities)
+    connection.sendDiagnostics({ uri: change.document.uri, diagnostics })
+  } catch (error) {
+    logger.error(
+      'DIAGNOSTICS_FAILED',
+      'Checking the file for problems failed',
+      describeError(error),
+      change.document.uri
+    )
+  }
 })
+
+function onOff(enabled: boolean | undefined): string {
+  return enabled ? 'on' : 'off'
+}
 
 connection.onHover(async (params): Promise<Hover | null> => {
   try {
@@ -354,12 +370,10 @@ connection.onHover(async (params): Promise<Hover | null> => {
 
     return null
   } catch (error) {
-    const details =
-      error && (error as Error).stack ? (error as Error).stack : String(error)
     logger.error(
-      'ON_HOVER_ERROR',
-      'onHover error',
-      details,
+      'HOVER_FAILED',
+      'Hover failed',
+      describeError(error),
       params.textDocument?.uri
     )
     return null
@@ -388,12 +402,10 @@ connection.onDocumentSymbol((params): DocumentSymbol[] => {
 
     return buildDocumentSymbols(parsed, normalizedDoc)
   } catch (error) {
-    const details =
-      error && (error as Error).stack ? (error as Error).stack : String(error)
     logger.error(
-      'ON_DOCUMENT_SYMBOL_ERROR',
-      'onDocumentSymbol error',
-      details,
+      'SYMBOLS_FAILED',
+      'Building the Outline (document symbols) failed',
+      describeError(error),
       params.textDocument?.uri
     )
     return []
@@ -421,14 +433,36 @@ connection.onDocumentFormatting((params): TextEdit[] => {
       { braceStyle: formatterBraceStyle }
     )
 
-    if (result.status === 'unchanged') return []
-    if (result.status === 'skipped') {
-      logger.info(
-        'FORMAT_SKIPPED',
-        result.reason === 'structural'
-          ? `Skipped formatting ${params.textDocument.uri}: structural issue at line ${result.line} (${result.message})`
-          : `Skipped formatting ${params.textDocument.uri}: the result would change content, not just whitespace (a formatter bug, please report it)`
+    // Every outcome is logged, at debug for the routine ones, so a bug
+    // report can tell whether the formatter ran on a file and what it did.
+    if (result.status === 'unchanged') {
+      logger.debug(
+        'FORMAT_UNCHANGED',
+        'Already formatted, nothing to change',
+        undefined,
+        params.textDocument.uri
       )
+      return []
+    }
+    if (result.status === 'skipped') {
+      // A structural issue is normal while typing (format on save hits
+      // it all the time), so it's debug. A content mismatch is a
+      // formatter bug: a warning, so it shows up in bug reports.
+      if (result.reason === 'structural') {
+        logger.debug(
+          'FORMAT_SKIPPED',
+          `Not formatted: structural issue at line ${result.line} (${result.message})`,
+          undefined,
+          params.textDocument.uri
+        )
+      } else {
+        logger.warn(
+          'FORMAT_UNSAFE_RESULT',
+          'Not formatted: the result would change content, not just whitespace. This is a formatter bug, please report it',
+          undefined,
+          params.textDocument.uri
+        )
+      }
       return []
     }
 
@@ -440,14 +474,18 @@ connection.onDocumentFormatting((params): TextEdit[] => {
       end: doc.positionAt(doc.getText().length),
     }
 
+    logger.debug(
+      'FORMAT_APPLIED',
+      `Formatted (${formatterBraceStyle} brace style)`,
+      undefined,
+      params.textDocument.uri
+    )
     return [{ range: fullRange, newText: result.formatted }]
   } catch (error) {
-    const details =
-      error && (error as Error).stack ? (error as Error).stack : String(error)
     logger.error(
-      'ON_DOCUMENT_FORMATTING_ERROR',
-      'onDocumentFormatting error',
-      details,
+      'FORMAT_FAILED',
+      'Format Document failed',
+      describeError(error),
       params.textDocument?.uri
     )
     return []
@@ -465,17 +503,17 @@ function toHoverResult(markdown: string): Hover {
 
 process.on('uncaughtException', (err) => {
   logger.error(
-    'UNCAUGHT_EXCEPTION',
-    'Uncaught exception in server process',
-    (err && (err as Error).stack) || String(err)
+    'SERVER_UNCAUGHT_EXCEPTION',
+    'Uncaught exception in the server',
+    describeError(err)
   )
 })
 
 process.on('unhandledRejection', (reason) => {
   logger.error(
-    'UNHANDLED_REJECTION',
-    'Unhandled promise rejection',
-    String(reason)
+    'SERVER_UNHANDLED_REJECTION',
+    'Unhandled promise rejection in the server',
+    describeError(reason)
   )
 })
 

@@ -6,16 +6,17 @@ import {
   ServerOptions,
   TransportKind,
 } from 'vscode-languageclient/node'
+import { registerBugReportCommand } from './bugReport'
 import { ConfigManager } from './configManager'
-import { registerWorkspaceFormatCommands } from './workspaceFormat'
 import { registerFormatOnSave } from './formatOnSave'
+import { ExtensionLog, type LogEntry } from './log'
+import { registerWorkspaceFormatCommands } from './workspaceFormat'
 
 let client: LanguageClient | undefined
-let output: vscode.OutputChannel
 
 export function activate(context: vscode.ExtensionContext) {
-  output = vscode.window.createOutputChannel('SCS IntelliSense')
-  context.subscriptions.push(output)
+  const log = new ExtensionLog()
+  context.subscriptions.push(log)
 
   const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'))
 
@@ -31,7 +32,9 @@ export function activate(context: vscode.ExtensionContext) {
       { scheme: 'file', language: 'sii' },
       { scheme: 'file', language: 'sui' },
     ],
-    outputChannel: output,
+    // The LSP library's own messages (server crashes, protocol errors) go
+    // to the same channel as everything else.
+    outputChannel: log.channel,
     // The server has no `vscode` API of its own (it's a plain Node
     // process), so anything it needs from us — cache location, initial
     // settings — has to be handed over explicitly here. Only
@@ -55,9 +58,6 @@ export function activate(context: vscode.ExtensionContext) {
       formatterEnabled: extConfig.get('formatter.enabled', false),
       formatterBraceStyle: extConfig.get('formatter.braceStyle', '1tbs'),
     },
-    // synchronize: {
-    //   fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{sii,sui}')
-    // }
   }
 
   client = new LanguageClient(
@@ -67,85 +67,42 @@ export function activate(context: vscode.ExtensionContext) {
     clientOptions
   )
 
+  // Registered before start(), so not even the first entries the server
+  // sends while starting up are lost.
+  client.onNotification('scsIntellisense/log', (entry: LogEntry) =>
+    log.write(entry)
+  )
+
   context.subscriptions.push(client)
-  client.start()
+  client.start().catch((error) => {
+    log.error(
+      'CLIENT_START_FAILED',
+      'The language server failed to start',
+      error
+    )
+  })
 
   // ConfigManager registers the "refresh schema" command, which needs to
   // send a request through `client` — so it's created only once `client`
   // exists, not before.
-  new ConfigManager(context, client)
-  registerWorkspaceFormatCommands(context, client, output)
+  new ConfigManager(context, client, log)
+  registerWorkspaceFormatCommands(context, client, log)
   registerFormatOnSave(context, client)
-
-  const registerLogHandler = () => {
-    try {
-      client?.onNotification('scsIntellisense/log', (payload: any) => {
-        try {
-          const p = payload as {
-            timestamp?: string
-            severity?: string
-            code?: string
-            message: string
-            details?: string
-            file?: string
-          }
-          const time = p.timestamp ?? new Date().toISOString()
-          const sev = (p.severity ?? 'info').toUpperCase()
-          const code = p.code ? ` ${p.code}` : ''
-          const file = p.file ? `[${p.file}]` : ''
-          output.appendLine(`${time} ${sev}${code}${file} - ${p.message}`)
-          if (p.details) {
-            output.appendLine(p.details)
-          }
-          output.appendLine('')
-          if ((p.severity ?? 'info').toLowerCase() === 'error') {
-            output.show(true)
-          }
-        } catch (e) {
-          console.error('Failed to handle scsIntellisense/log', e)
-        }
-      })
-    } catch (e) {
-      console.error('Failed to scsIntellisense/log handle', e)
-    }
-  }
-
-  const anyClient = client as any
-  if (typeof anyClient.onReady === 'function') {
-    try {
-      const ready = anyClient.onReady()
-      if (ready && typeof ready.then === 'function') {
-        ready.then(registerLogHandler).catch((err: any) => {
-          console.error('client.onReady rejected', err)
-          setTimeout(registerLogHandler, 200)
-        })
-      } else {
-        try {
-          anyClient.onReady(registerLogHandler)
-        } catch {
-          setTimeout(registerLogHandler, 200)
-        }
-      }
-    } catch {
-      setTimeout(registerLogHandler, 200)
-    }
-  } else {
-    setTimeout(registerLogHandler, 200)
-  }
+  registerBugReportCommand(context, log)
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('scsIntellisense.showOutput', () => {
-      output.show(true)
-    })
+    vscode.commands.registerCommand('scsIntellisense.showOutput', () =>
+      log.channel.show(true)
+    ),
+    vscode.commands.registerCommand('scsIntellisense.clearOutput', () =>
+      log.clear()
+    )
   )
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand('scsIntellisense.clearOutput', () => {
-      output.clear()
-    })
+  log.info(
+    'CLIENT_STARTED',
+    `SCS IntelliSense ${context.extension.packageJSON.version} started (VS Code ${vscode.version})`
   )
-
-  console.log('SCS IntelliSense client started')
 }
 
 export function deactivate(): Thenable<void> | undefined {

@@ -356,6 +356,11 @@
         "category": "SCS IntelliSense"
       },
       {
+        "command": "scsIntellisense.copyBugReportInfo",
+        "title": "Copy Bug Report Info",
+        "category": "SCS IntelliSense"
+      },
+      {
         "command": "scsIntellisense.refreshSchema",
         "title": "Refresh Schema Database",
         "category": "SCS IntelliSense"

@@ -6,7 +6,7 @@ import {
   type TextDocuments,
 } from 'vscode-languageserver'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
-import { getLogger } from '../logger'
+import { describeError, getLogger } from '../logger'
 import { detectExtFromUri, detectModeFromExt } from '../parser/docParser'
 import { isNumericValueType, readScsDocument } from '../sii'
 import type { SiiAttribute, SiiRange } from '../interfaces/structure'
@@ -119,9 +119,12 @@ export function provideSemanticTokensForDocument(
     }
     return builder.build() as SemanticTokens
   } catch (err) {
-    const details =
-      err && (err as Error).stack ? (err as Error).stack : String(err)
-    logger.error('SEMANTIC_ERROR', 'Failed to build semantic tokens', details)
+    logger.error(
+      'SEMANTIC_FAILED',
+      'Building the highlighting (semantic tokens) failed',
+      describeError(err),
+      documentUri
+    )
     return { data: [] } as SemanticTokens
   }
 }
@@ -136,9 +139,9 @@ export function registerSemantic(
     try {
       const doc = documents.get(params.textDocument.uri)
       if (!doc) {
-        logger.warn(
+        logger.debug(
           'DOC_NOT_FOUND',
-          'Document not found for semantic tokens request',
+          'Highlighting requested for a document the server does not have open',
           undefined,
           params.textDocument.uri
         )
@@ -147,12 +150,10 @@ export function registerSemantic(
 
       return provideSemanticTokensForDocument(doc.getText(), doc.uri)
     } catch (err) {
-      const details =
-        err && (err as Error).stack ? (err as Error).stack : String(err)
       logger.error(
-        'SEMANTIC_HANDLER_ERROR',
-        'Semantic handler failed',
-        details,
+        'SEMANTIC_FAILED',
+        'Building the highlighting (semantic tokens) failed',
+        describeError(err),
         params.textDocument.uri
       )
       return { data: [] } as SemanticTokens

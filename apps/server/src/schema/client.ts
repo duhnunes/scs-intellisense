@@ -1,5 +1,6 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import type { Logger } from '../logger'
 import type {
   SchemaFileContent,
   SchemaManifest,
@@ -18,11 +19,8 @@ const DEFAULT_FETCH_TIMEOUT_MS = 8000
  *  "the fetch resolved to undefined" when racing the two. */
 const TIMED_OUT = Symbol('scs-schema-fetch-timed-out')
 
-export interface SchemaClientLogger {
-  info(message: string): void
-  warn(message: string): void
-  error(message: string, details?: string): void
-}
+/** The server's logger (logger.ts); injectable so tests can pass a stub. */
+export type SchemaClientLogger = Logger
 
 export interface SchemaClientOptions {
   /** Where cached manifest/schema files live. Usually the extension's
@@ -47,6 +45,7 @@ export interface SchemaClientOptions {
 }
 
 const noopLogger: SchemaClientLogger = {
+  debug: () => {},
   info: () => {},
   warn: () => {},
   error: () => {},
@@ -111,10 +110,14 @@ export class SchemaClient {
     if (cached) {
       this.manifest = cached
       this.logger.info(
+        'SCHEMA_CACHE_LOADED',
         `Loaded cached schema manifest (generated ${cached.generatedAt}, ${Object.keys(cached.schemas).length} classes)`
       )
     } else {
-      this.logger.info('No cached schema manifest on disk yet')
+      this.logger.debug(
+        'SCHEMA_CACHE_EMPTY',
+        'No cached schema manifest on disk yet'
+      )
     }
   }
 
@@ -154,6 +157,7 @@ export class SchemaClient {
       })
     } catch (err) {
       this.logger.warn(
+        'SCHEMA_MANIFEST_FETCH_FAILED',
         `Schema manifest fetch failed (offline?): ${String(err)}`
       )
       return false
@@ -161,6 +165,7 @@ export class SchemaClient {
 
     if (!response.ok) {
       this.logger.warn(
+        'SCHEMA_MANIFEST_HTTP_ERROR',
         `Schema manifest fetch returned ${response.status} ${response.statusText}`
       )
       return false
@@ -171,6 +176,7 @@ export class SchemaClient {
       incoming = (await response.json()) as SchemaManifest
     } catch (err) {
       this.logger.error(
+        'SCHEMA_MANIFEST_INVALID_JSON',
         'Schema manifest response was not valid JSON',
         String(err)
       )
@@ -178,7 +184,10 @@ export class SchemaClient {
     }
 
     if (!force && !manifestHasChanged(this.manifest, incoming)) {
-      this.logger.info('Schema manifest unchanged, skipping cache write')
+      this.logger.debug(
+        'SCHEMA_MANIFEST_UNCHANGED',
+        'Schema manifest unchanged, skipping cache write'
+      )
       return false
     }
 
@@ -193,10 +202,14 @@ export class SchemaClient {
       // The fetch succeeded and we're serving the new manifest from
       // memory either way — failing to persist it to disk just means
       // next session starts cold again. Worth logging, not fatal.
-      this.logger.warn(`Failed to persist schema manifest to disk: ${err}`)
+      this.logger.warn(
+        'SCHEMA_CACHE_WRITE_FAILED',
+        `Failed to persist schema manifest to disk: ${err}`
+      )
     }
 
     this.logger.info(
+      'SCHEMA_MANIFEST_UPDATED',
       `Schema manifest updated (generated ${incoming.generatedAt}, ${Object.keys(incoming.schemas).length} classes)`
     )
 
@@ -276,6 +289,7 @@ export class SchemaClient {
 
     if (result === TIMED_OUT) {
       this.logger.warn(
+        'SCHEMA_FETCH_TIMEOUT',
         `Schema fetch for "${entry.name}" is taking longer than ${this.fetchTimeoutMs}ms — giving up on this request only; it'll still be cached once it finishes`
       )
       return undefined
@@ -298,6 +312,7 @@ export class SchemaClient {
       response = await this.fetchImpl(entry.url)
     } catch (err) {
       this.logger.warn(
+        'SCHEMA_FETCH_FAILED',
         `Schema fetch failed for "${entry.name}" (offline?): ${String(err)}`
       )
       return undefined
@@ -305,6 +320,7 @@ export class SchemaClient {
 
     if (!response.ok) {
       this.logger.warn(
+        'SCHEMA_FETCH_HTTP_ERROR',
         `Schema fetch for "${entry.name}" returned ${response.status} ${response.statusText}`
       )
       return undefined
@@ -315,6 +331,7 @@ export class SchemaClient {
       content = (await response.json()) as SchemaFileContent
     } catch (err) {
       this.logger.error(
+        'SCHEMA_INVALID_JSON',
         `Schema response for "${entry.name}" was not valid JSON`,
         String(err)
       )
@@ -331,6 +348,7 @@ export class SchemaClient {
       // Same reasoning as the manifest: still serve it from memory this
       // session even if we couldn't persist it.
       this.logger.warn(
+        'SCHEMA_CACHE_WRITE_FAILED',
         `Failed to persist schema cache for "${entry.name}": ${err}`
       )
     }
@@ -388,7 +406,10 @@ export class SchemaClient {
     try {
       cachedFileNames = await readdir(this.schemasDir())
     } catch (err) {
-      this.logger.warn(`Failed to list schema cache dir for pruning: ${err}`)
+      this.logger.warn(
+        'SCHEMA_CACHE_PRUNE_FAILED',
+        `Failed to list schema cache dir for pruning: ${err}`
+      )
       return
     }
 
@@ -404,13 +425,15 @@ export class SchemaClient {
           await unlink(path.join(this.schemasDir(), fileName))
         } catch (err) {
           this.logger.warn(
+            'SCHEMA_CACHE_PRUNE_FAILED',
             `Failed to remove stale schema cache file "${fileName}": ${err}`
           )
         }
       })
     )
 
-    this.logger.info(
+    this.logger.debug(
+      'SCHEMA_CACHE_PRUNED',
       `Pruned ${staleFileNames.length} stale schema cache file(s)`
     )
   }

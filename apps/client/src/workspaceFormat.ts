@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import type { LanguageClient } from 'vscode-languageclient/node'
+import type { ExtensionLog } from './log'
 
 /** Mirrors FileFormatResult in the server's formatter/workspaceFormat.ts. */
 interface FileFormatResult {
@@ -30,21 +31,21 @@ const BATCH_SIZE = 100
 export function registerWorkspaceFormatCommands(
   context: vscode.ExtensionContext,
   client: LanguageClient,
-  output: vscode.OutputChannel
+  log: ExtensionLog
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand('scsIntellisense.checkFormatting', () =>
-      runWorkspaceFormat(client, output, false)
+      runWorkspaceFormat(client, log, false)
     ),
     vscode.commands.registerCommand('scsIntellisense.formatAllFiles', () =>
-      runWorkspaceFormat(client, output, true)
+      runWorkspaceFormat(client, log, true)
     )
   )
 }
 
 async function runWorkspaceFormat(
   client: LanguageClient,
-  output: vscode.OutputChannel,
+  log: ExtensionLog,
   write: boolean
 ) {
   const commandName = write ? 'Format All Files' : 'Check Formatting'
@@ -88,14 +89,14 @@ async function runWorkspaceFormat(
   if (!checked) return
 
   if (!write) {
-    report(output, commandName, uris.length, checked.results, checked.cancelled)
+    report(log, commandName, uris.length, checked.results, checked.cancelled)
     return
   }
 
   const toFormat = checked.results.filter((r) => r.status === 'changed')
   const skipped = checked.results.filter((r) => r.status === 'skipped')
   if (toFormat.length === 0) {
-    report(output, commandName, uris.length, checked.results, checked.cancelled)
+    report(log, commandName, uris.length, checked.results, checked.cancelled)
     return
   }
 
@@ -127,7 +128,7 @@ async function runWorkspaceFormat(
 
   const unchanged = checked.results.filter((r) => r.status === 'unchanged')
   report(
-    output,
+    log,
     commandName,
     uris.length,
     [...unchanged, ...skipped, ...formatted.results],
@@ -235,7 +236,7 @@ function describeSkip(result: FileFormatResult): string {
  *  already formatted needs no action, and listing thousands of them would
  *  bury the ones that do. */
 function report(
-  output: vscode.OutputChannel,
+  log: ExtensionLog,
   commandName: string,
   total: number,
   results: FileFormatResult[],
@@ -248,27 +249,24 @@ function report(
   const path = (r: FileFormatResult) =>
     vscode.workspace.asRelativePath(vscode.Uri.parse(r.uri))
 
-  output.appendLine(
+  log.reportLine(
     `${new Date().toISOString()} ${commandName} — ${total} .sii/.sui files`
   )
   for (const r of changed) {
-    output.appendLine(
-      `  ${write ? 'formatted   ' : 'would change'}  ${path(r)}`
-    )
+    log.reportLine(`  ${write ? 'formatted   ' : 'would change'}  ${path(r)}`)
   }
   for (const r of skipped) {
-    output.appendLine(`  skipped       ${path(r)} — ${describeSkip(r)}`)
+    log.reportLine(`  skipped       ${path(r)} — ${describeSkip(r)}`)
   }
   if (cancelled) {
-    output.appendLine(
+    log.reportLine(
       `  cancelled: ${total - results.length} file(s) were not processed`
     )
   }
 
   const summary = `${changed.length} ${write ? 'formatted' : 'would change'}, ${unchanged.length} already formatted, ${skipped.length} skipped`
-  output.appendLine(`Summary: ${summary}`)
-  output.appendLine('')
-  output.show(true)
+  log.reportLine(`Summary: ${summary}`)
+  log.channel.show(true)
 
   vscode.window.showInformationMessage(
     `SCS IntelliSense: ${commandName}${cancelled ? ' (cancelled)' : ''} — ${summary}.`
