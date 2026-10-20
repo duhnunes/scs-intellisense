@@ -7,6 +7,7 @@ import type {
   SiiDocument,
   SiiInclude,
   SiiIssue,
+  SiiIssueCode,
   SiiRange,
   SiiUnit,
 } from '../interfaces/structure'
@@ -93,6 +94,7 @@ export function readSiiDocument(
   const magicMark = reader.readExactWord('SiiNunit')
   if (!magicMark) {
     reader.issue(
+      'missing-siinunit',
       'Expected SiiNunit document marker',
       magicStart,
       magicStart + 1
@@ -103,7 +105,12 @@ export function readSiiDocument(
   reader.skipTrivia()
   const rootOpen = reader.position
   if (!reader.consume('{')) {
-    reader.issue("Expected '{' after SiiNunit", rootOpen, rootOpen + 1)
+    reader.issue(
+      'missing-siinunit-open-brace',
+      "Expected '{' after SiiNunit",
+      rootOpen,
+      rootOpen + 1
+    )
     return reader.document({
       magicMark: {
         text: 'SiiNunit',
@@ -126,8 +133,10 @@ export function readSiiDocument(
   // this.
   reader.skipTrivia()
   if (reader.position < text.length) {
+    const isDuplicate = text.startsWith('SiiNunit', reader.position)
     reader.issue(
-      text.startsWith('SiiNunit', reader.position)
+      isDuplicate ? 'duplicate-siinunit' : 'content-after-siinunit',
+      isDuplicate
         ? 'Duplicate SiiNunit block — only one is allowed per file'
         : 'Unexpected content after the SiiNunit closing brace',
       reader.position,
@@ -211,10 +220,10 @@ class SiiReader {
     }
   }
 
-  issue(message: string, start: number, end: number): void {
+  issue(code: SiiIssueCode, message: string, start: number, end: number): void {
     const safeStart = clamp(start, 0, this.text.length)
     const safeEnd = clamp(Math.max(end, safeStart), safeStart, this.text.length)
-    this.issues.push({ message, range: range(safeStart, safeEnd) })
+    this.issues.push({ code, message, range: range(safeStart, safeEnd) })
   }
 
   skipTrivia(): void {
@@ -264,7 +273,12 @@ class SiiReader {
           this.positionValue++
           return { units, includes, attributes }
         }
-        this.issue("Unexpected '}'", this.positionValue, this.positionValue + 1)
+        this.issue(
+          'unexpected-close-brace',
+          "Unexpected '}'",
+          this.positionValue,
+          this.positionValue + 1
+        )
         this.positionValue++
         continue
       }
@@ -293,6 +307,7 @@ class SiiReader {
 
     if (stopAtClosingBrace)
       this.issue(
+        'missing-siinunit-close-brace',
         "Expected '}' to close SiiNunit",
         this.positionValue,
         this.positionValue
@@ -330,7 +345,7 @@ class SiiReader {
     const start = this.positionValue
     const classNameRange = this.readClassNameRange()
     if (!classNameRange) {
-      this.issue('Expected className', start, start + 1)
+      this.issue('missing-class-name', 'Expected className', start, start + 1)
       return undefined
     }
 
@@ -346,6 +361,7 @@ class SiiReader {
       this.skipHorizontalTrivia()
     } else {
       this.issue(
+        'missing-unit-colon',
         "Expected ':' between className and unitName",
         colonStart,
         colonStart + 1
@@ -377,6 +393,7 @@ class SiiReader {
     const unitNameRange = this.readUnitNameRange()
     if (!unitNameRange) {
       this.issue(
+        'invalid-unit-name-format',
         'Invalid unitName format',
         this.positionValue,
         this.positionValue + 1
@@ -400,7 +417,12 @@ class SiiReader {
     this.skipTrivia()
     const bodyOpen = this.positionValue
     if (!this.consume('{')) {
-      this.issue("Expected '{' after unitName", bodyOpen, bodyOpen + 1)
+      this.issue(
+        'missing-unit-open-brace',
+        "Expected '{' after unitName",
+        bodyOpen,
+        bodyOpen + 1
+      )
       return {
         kind: 'unit',
         className,
@@ -421,7 +443,13 @@ class SiiReader {
     if (isClosed) this.positionValue++
     // Point at the '{' that was never closed: where the '}' should go
     // can't be known, but which unit is left open can.
-    else this.issue("Expected '}' to close unit", bodyOpen, bodyOpen + 1)
+    else
+      this.issue(
+        'missing-unit-close-brace',
+        "Expected '}' to close unit",
+        bodyOpen,
+        bodyOpen + 1
+      )
 
     return {
       kind: 'unit',
@@ -466,7 +494,12 @@ class SiiReader {
       ? this.readIncludeRange()
       : this.readAttributeKeyRange()
     if (!keyRange) {
-      this.issue('Expected attribute key', start, start + 1)
+      this.issue(
+        'missing-attribute-key',
+        'Expected attribute key',
+        start,
+        start + 1
+      )
       return undefined
     }
 
@@ -489,7 +522,12 @@ class SiiReader {
 
     const colonStart = this.positionValue
     if (!this.consume(':')) {
-      this.issue("Expected ':' after attribute key", colonStart, colonStart + 1)
+      this.issue(
+        'missing-attribute-colon',
+        "Expected ':' after attribute key",
+        colonStart,
+        colonStart + 1
+      )
       return undefined
     }
 
@@ -568,6 +606,7 @@ class SiiReader {
       this.skipHorizontalTrivia()
       if (!this.consume(']')) {
         this.issue(
+          'missing-array-close-bracket',
           "Expected ']' after array attribute key",
           this.positionValue,
           this.positionValue + 1

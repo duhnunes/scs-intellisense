@@ -92,6 +92,7 @@ function validateClassNamePart(
     const separatorStart = start + 2 <= classNameRange.end ? start : start - 2
     return [
       {
+        code: 'class-name-empty-part',
         message: 'className must not have an empty part around "::"',
         range: { start: separatorStart, end: separatorStart + 2 },
       },
@@ -106,6 +107,7 @@ function validateClassNamePart(
   for (const match of part.matchAll(/[^A-Za-z0-9_]/g)) {
     if (match.index === undefined) continue
     issues.push({
+      code: 'class-name-invalid-character',
       message: `Invalid character in className: "${match[0]}"`,
       range: {
         start: start + match.index,
@@ -118,6 +120,7 @@ function validateClassNamePart(
   // digits ARE allowed in a className, just not as the first character.
   if (/^[0-9]/.test(part)) {
     issues.push({
+      code: 'class-name-leading-digit',
       message: 'className must not start with a digit',
       range: { start, end: start + 1 },
     })
@@ -154,6 +157,7 @@ function validateUnitName(
       ? unitNameRange.start
       : unitNameRange.end - 1
     issues.push({
+      code: 'unit-name-unmatched-quote',
       message: 'Unmatched double quote in unitName',
       range: { start: quoteOffset, end: quoteOffset + 1 },
     })
@@ -166,7 +170,11 @@ function validateUnitName(
   )
 
   if (opensQuoted && closesQuoted && inner.length === 0) {
-    issues.push({ message: 'UnitName must not be empty', range: unitNameRange })
+    issues.push({
+      code: 'unit-name-empty',
+      message: 'UnitName must not be empty',
+      range: unitNameRange,
+    })
     return issues
   }
 
@@ -178,18 +186,21 @@ function validateUnitName(
 
     if (token.length > 12)
       issues.push({
+        code: 'unit-name-token-too-long',
         message: `UnitName token exceeds 12 characters: "${token}"`,
         range: tokenRange,
       })
 
     if (!/^[A-Za-z0-9_]*$/.test(token))
       issues.push({
+        code: 'unit-name-invalid-character',
         message: `UnitName token contains invalid characters: "${token}"`,
         range: tokenRange,
       })
 
     if (/[A-Z]/.test(token))
       issues.push({
+        code: 'unit-name-uppercase',
         message: `UnitName token contains uppercase letters: "${token}" (the docs specify lowercase, but some game files use uppercase here)`,
         range: tokenRange,
         severity: 'hint',
@@ -205,6 +216,7 @@ function validateUnitName(
         end: Math.min(offset + 1, innerEnd),
       }
       issues.push({
+        code: 'unit-name-empty-token',
         message: 'UnitName must not contain empty tokens (consecutive dots)',
         range: dotsRange,
       })
@@ -256,6 +268,7 @@ function validateDuplicateUnitNames(units: SiiUnit[]): SiiIssue[] {
     if (group.length < 2) continue
     for (const unit of group) {
       issues.push({
+        code: 'duplicate-unit-name',
         message: `Duplicate unit name ${name.startsWith('"') ? name : `"${name}"`} — used by ${group.length} units in this file`,
         range: unit.unitNameRange,
       })
@@ -280,6 +293,7 @@ function validateIncludePlacement(
   if (before === '\n') return []
   return [
     {
+      code: 'include-not-at-line-start',
       message:
         '@include must be at the start of a new line with no leading whitespace',
       range: includeRange,
@@ -299,6 +313,7 @@ function validateTrailingNewline(text: string): SiiIssue[] {
 
   return [
     {
+      code: 'missing-final-newline',
       message: 'File should end with a blank line, per SCS conventions',
       // A zero-length range at the very end has nothing for an editor
       // to underline (same reasoning as the empty-unitName-token fix)

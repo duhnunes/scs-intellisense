@@ -9,7 +9,9 @@ Diagnostics come from two places, and the difference matters when you add one:
 | **The reader** | `apps/server/src/sii/reader.ts` | *Structural*: the file can't be read as a tree there (a missing `:`, `{` or `}`) |
 | **The rules** | `apps/server/src/diagnostic/rules.ts` | *Business rules*: the tree is fine, but something in it isn't allowed (an invalid name, a duplicate) |
 
-`getDiagnostics()` in `diagnostic/index.ts` merges both, drops the severities the user turned off (`scs-intellisense.diagnostics.enabledSeverities`) and converts offsets to LSP positions.
+`checkDocument()` in `diagnostic/index.ts` merges both and drops the severities the user turned off (`scs-intellisense.diagnostics.enabledSeverities`); `getDiagnostics()` converts the result to LSP positions.
+
+Every issue has a **code** (`SiiIssueCode` in `interfaces/structure.ts`), such as `missing-final-newline`. VS Code shows it next to the message, and quick fixes key on it, so a code never changes when a message is reworded.
 
 **A new check almost always belongs in `rules.ts`.** Only touch the reader if the file can't be parsed at all; see rule 1 in [architecture.md](../architecture/overview.md).
 
@@ -57,6 +59,7 @@ function validateDuplicateAttributes(unit: SiiUnit): SiiIssue[] {
     if (attribute.kind !== 'attribute' || attribute.isArray) continue
     if (seen.has(attribute.key)) {
       issues.push({
+        code: 'duplicate-attribute', // add it to SiiIssueCode first
         message: `Attribute "${attribute.key}" is set more than once`,
         range: attribute.keyRange,
         severity: 'warning',
@@ -89,6 +92,28 @@ describe('rules: duplicate attributes', () => {
 **4. Check it against real game files.** A rule that fires on files the game loads is a false positive. The excerpts in `apps/server/test/fixtures/` come from the game and must stay free of errors and warnings, so `pnpm test` catches the obvious cases. If you have the game files extracted, open the folder in VS Code with your build: every error your rule reports there is one to explain.
 
 **5. Run `pnpm test`.**
+
+## Quick fixes
+
+The light bulb next to a diagnostic. Always on, like diagnostics: a fix only changes the file when the user picks it.
+
+- `diagnostic/quickFixes.ts`: `quickFixesFor(issue, document)` returns the fixes for one issue as offset edits into `document.text`, chosen by `issue.code`. Pure and LSP-free, like the rules.
+- `diagnostic/codeActions.ts`: the `textDocument/codeAction` handler. It checks the document again (the fix needs the tree, and fresh offsets), keeps the issues under the cursor or selection, converts the edits to LSP positions, writes line breaks the way the file does (CRLF stays CRLF), and links each fix to its diagnostic.
+
+**Offer a fix only when the right edit is certain from the text.** When there's more than one plausible fix, offer none, or offer each one and prefer none. `isPreferred` marks the single obvious fix, which VS Code applies with Auto Fix (`Shift+Alt+.`).
+
+| Code | Fix |
+|---|---|
+| `missing-final-newline` | Add the newline |
+| `include-not-at-line-start` | Remove the whitespace before it, or move it to its own line when other content comes first |
+| `unit-name-empty-token` | `a..b` → `a.b` (a whole run of dots at once); trailing dots are removed; leading ones keep one dot (a nameless unit) |
+| `unit-name-unmatched-quote` | Add the missing quote, or remove this one (neither preferred) |
+| `missing-unit-colon` | `class unit` → `class : unit`, or a stray character in its place (`;`) becomes `:` |
+| `missing-attribute-colon` | `key value` → `key: value`, `key = value` → `key: value` |
+
+Deliberately without a fix: uppercase in a unit name (the game loads it, and other files may use the name as written), duplicates (which one to rename is the user's call), and a missing `{` or `}` (where it goes is a guess).
+
+To add one: add a `case` to `quickFixesFor()`, then a test in `apps/server/test/quickFixes.test.ts` that applies the fix and checks the diagnostic is gone. Fixes that need the schema ("did you mean ...?" for a class or key) will be async, so they belong in `codeActions.ts`, not in the rules.
 
 ---
 

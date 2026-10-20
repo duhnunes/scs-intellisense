@@ -13,7 +13,7 @@ How the pieces fit together.
 
 How each feature works and how to extend it.
 
-- [Diagnostics](./features/diagnostics.md): where the rules live, the current checks, and how to add one.
+- [Diagnostics](./features/diagnostics.md): where the rules live, the current checks, how to add one, and the quick fixes.
 - [Formatter](./features/formatter.md): how files are rebuilt, and the safety check behind Format All Files.
 
 ## Reference

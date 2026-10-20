@@ -111,7 +111,43 @@ export interface SiiInclude {
 
 export type SiiSeverity = 'error' | 'warning' | 'information' | 'hint'
 
+/**
+ * Stable id of the rule behind an issue. Shown in the Problems panel next
+ * to the message, and what quick fixes (diagnostic/quickFixes.ts) key on,
+ * so it must not change when a message is reworded.
+ */
+export type SiiIssueCode =
+  // Structure (reader.ts)
+  | 'missing-siinunit'
+  | 'missing-siinunit-open-brace'
+  | 'missing-siinunit-close-brace'
+  | 'duplicate-siinunit'
+  | 'content-after-siinunit'
+  | 'unexpected-close-brace'
+  | 'missing-class-name'
+  | 'missing-unit-colon'
+  | 'invalid-unit-name-format'
+  | 'missing-unit-open-brace'
+  | 'missing-unit-close-brace'
+  | 'missing-attribute-key'
+  | 'missing-attribute-colon'
+  | 'missing-array-close-bracket'
+  // Rules (rules.ts)
+  | 'class-name-empty-part'
+  | 'class-name-invalid-character'
+  | 'class-name-leading-digit'
+  | 'unit-name-unmatched-quote'
+  | 'unit-name-empty'
+  | 'unit-name-token-too-long'
+  | 'unit-name-invalid-character'
+  | 'unit-name-uppercase'
+  | 'unit-name-empty-token'
+  | 'duplicate-unit-name'
+  | 'include-not-at-line-start'
+  | 'missing-final-newline'
+
 export interface SiiIssue {
+  code: SiiIssueCode
   message: string
   range: SiiRange
   /** Defaults to 'error' when omitted — every issue reader.ts and

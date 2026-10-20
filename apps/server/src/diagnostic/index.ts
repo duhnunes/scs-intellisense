@@ -2,7 +2,11 @@ import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { readScsDocument } from '../sii'
 import { detectExtFromUri, detectModeFromExt } from '../parser/docParser'
-import type { SiiIssue, SiiSeverity } from '../interfaces/structure'
+import type {
+  SiiDocument,
+  SiiIssue,
+  SiiSeverity,
+} from '../interfaces/structure'
 import { validateSiiDocument } from './rules'
 
 const DEFAULT_ENABLED_SEVERITIES: SiiSeverity[] = [
@@ -12,10 +16,21 @@ const DEFAULT_ENABLED_SEVERITIES: SiiSeverity[] = [
   'hint',
 ]
 
-export function getDiagnostics(
+export const DIAGNOSTIC_SOURCE = 'sii.reader'
+
+export interface CheckedDocument {
+  parsed: SiiDocument
+  /** The document over `parsed.text`, for converting issue offsets. */
+  normalizedDoc: TextDocument
+  issues: SiiIssue[]
+}
+
+/** Reads a document and collects every issue the user has enabled. Shared
+ *  by diagnostics and quick fixes, so both always see the same issues. */
+export function checkDocument(
   doc: TextDocument,
   enabledSeverities: SiiSeverity[] = DEFAULT_ENABLED_SEVERITIES
-): Diagnostic[] {
+): CheckedDocument {
   const ext = detectExtFromUri(doc.uri)
   const mode = detectModeFromExt(ext)
   const parsed = readScsDocument(
@@ -38,6 +53,14 @@ export function getDiagnostics(
     ...validateSiiDocument(parsed),
   ].filter((issue) => enabledSeverities.includes(issue.severity ?? 'error'))
 
+  return { parsed, normalizedDoc, issues }
+}
+
+export function getDiagnostics(
+  doc: TextDocument,
+  enabledSeverities: SiiSeverity[] = DEFAULT_ENABLED_SEVERITIES
+): Diagnostic[] {
+  const { normalizedDoc, issues } = checkDocument(doc, enabledSeverities)
   return issues.map((issue) => ({
     severity: toDiagnosticSeverity(issue.severity),
     range: {
@@ -45,7 +68,8 @@ export function getDiagnostics(
       end: normalizedDoc.positionAt(issue.range.end),
     },
     message: issue.message,
-    source: 'sii.reader',
+    code: issue.code,
+    source: DIAGNOSTIC_SOURCE,
   }))
 }
 

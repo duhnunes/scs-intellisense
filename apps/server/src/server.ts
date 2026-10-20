@@ -4,8 +4,10 @@ import {
   ProposedFeatures,
   InitializeParams,
   TextDocumentSyncKind,
+  CodeActionKind,
   CompletionItemKind,
   MarkupKind,
+  type CodeAction,
   type CompletionItem,
   type DocumentSymbol,
   type Hover,
@@ -17,6 +19,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { registerSemantic, semanticTokensLegend } from './semantic'
 import { describeError, getLogger, initLogger } from './logger'
 import { getDiagnostics } from './diagnostic'
+import { buildCodeActions } from './diagnostic/codeActions'
 import { SchemaClient } from './schema/client'
 import { readScsDocument } from './sii'
 import { detectExtFromUri, detectModeFromExt } from './parser/docParser'
@@ -103,6 +106,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       // Not experimental, not schema-dependent — always on. Powers the
       // Outline view, breadcrumbs, and "Go to Symbol in Editor".
       documentSymbolProvider: true,
+      // Quick fixes for diagnostics. Always on like diagnostics: a fix only
+      // changes the file when the user picks it.
+      codeActionProvider: { codeActionKinds: [CodeActionKind.QuickFix] },
     },
   }
 
@@ -409,6 +415,22 @@ connection.onHover(async (params): Promise<Hover | null> => {
       params.textDocument?.uri
     )
     return null
+  }
+})
+
+connection.onCodeAction((params): CodeAction[] => {
+  try {
+    const doc = documents.get(params.textDocument.uri)
+    if (!doc) return []
+    return buildCodeActions(doc, params, enabledSeverities)
+  } catch (error) {
+    logger.error(
+      'QUICKFIX_FAILED',
+      'Finding quick fixes failed',
+      describeError(error),
+      params.textDocument.uri
+    )
+    return []
   }
 })
 
