@@ -7,6 +7,7 @@
 <div align="center">
   <a href="./LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-FF6A00?style=for-the-badge" alt="MIT License" /></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="Latest release" /></a>
+  <img src="https://img.shields.io/badge/status-beta-FF6A00?style=for-the-badge" alt="MIT License" />
 </div>
 
 > **Unofficial community project.** SCS IntelliSense is not affiliated with or endorsed by SCS Software. Euro Truck Simulator 2, American Truck Simulator and SCS Software are trademarks of their respective owners.
