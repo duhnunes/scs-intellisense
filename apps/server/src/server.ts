@@ -6,6 +6,7 @@ import {
   TextDocumentSyncKind,
   CodeActionKind,
   CompletionItemKind,
+  CompletionTriggerKind,
   MarkupKind,
   type CodeAction,
   type CompletionItem,
@@ -16,6 +17,7 @@ import {
 } from 'vscode-languageserver/node'
 
 import { TextDocument } from 'vscode-languageserver-textdocument'
+import { URI } from 'vscode-uri'
 import {
   registerSemantic,
   semanticTokensLegend,
@@ -35,6 +37,11 @@ import {
   buildAttributeKeyCompletionItems,
   findAttributeKeyPosition,
 } from './completion/attributeKey'
+import {
+  findIncludePathAt,
+  listIncludeCandidates,
+  type IncludePathPosition,
+} from './completion/includePath'
 import { buildClassNameHover, findClassNameAtPosition } from './hover/className'
 import {
   buildAttributeKeyHover,
@@ -113,7 +120,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
   // unable to format these files, on every .sii.
   result.capabilities.completionProvider = {
     resolveProvider: false,
-    triggerCharacters: [],
+    // VS Code doesn't suggest inside strings on its own, so these open the
+    // @include path list: the opening quote, and each folder separator.
+    triggerCharacters: INCLUDE_TRIGGER_CHARACTERS,
   }
   result.capabilities.hoverProvider = true
   result.capabilities.documentFormattingProvider = true
@@ -216,11 +225,55 @@ connection.onRequest(
     )
 )
 
+const INCLUDE_TRIGGER_CHARACTERS = ['"', '/']
+
+async function buildIncludePathItems(
+  filePath: string,
+  position: IncludePathPosition,
+  normalizedDoc: TextDocument
+): Promise<CompletionItem[]> {
+  const range = {
+    start: normalizedDoc.positionAt(position.segment.start),
+    end: normalizedDoc.positionAt(position.segment.end),
+  }
+  const candidates = await listIncludeCandidates(filePath, position.typed)
+  return candidates.map(
+    (candidate): CompletionItem =>
+      candidate.isFolder
+        ? {
+            label: `${candidate.name}/`,
+            kind: CompletionItemKind.Folder,
+            // Files first: most includes are in the same folder.
+            sortText: `1${candidate.name}`,
+            textEdit: { range, newText: `${candidate.name}/` },
+            // Opens the list again inside the folder just picked.
+            command: { title: '', command: 'editor.action.triggerSuggest' },
+          }
+        : {
+            label: candidate.name,
+            kind: CompletionItemKind.File,
+            sortText: `0${candidate.name}`,
+            textEdit: { range, newText: candidate.name },
+          }
+  )
+}
+
 connection.onCompletion(async (params) => {
   try {
-    // Asked on every keystroke: off answers before any work, and quietly.
-    if (!settings.completionEnabled) return []
     const doc = documents.get(params.textDocument.uri)
+    // Asked on every keystroke. With the experimental completion off,
+    // only the @include path is suggested (it's always on, like
+    // diagnostics), so a line without "@include" answers before any work.
+    if (
+      !settings.completionEnabled &&
+      !doc
+        ?.getText({
+          start: { line: params.position.line, character: 0 },
+          end: { line: params.position.line + 1, character: 0 },
+        })
+        .includes('@include')
+    )
+      return []
     if (!doc) {
       logger.debug(
         'DOC_NOT_FOUND',
@@ -250,6 +303,22 @@ connection.onCompletion(async (params) => {
       parsed.text
     )
     const offset = normalizedDoc.offsetAt(params.position)
+
+    // The @include path needs no schema: just the files next to this one.
+    const includePath = findIncludePathAt(parsed, offset)
+    if (includePath) {
+      return buildIncludePathItems(
+        URI.parse(doc.uri).fsPath,
+        includePath,
+        normalizedDoc
+      )
+    }
+    // '"' and '/' are trigger characters only for the @include path; typed
+    // anywhere else (a string value, a comment), they suggest nothing.
+    if (params.context?.triggerKind === CompletionTriggerKind.TriggerCharacter)
+      return []
+    // Classes and attribute keys come from the schema: experimental.
+    if (!settings.completionEnabled) return []
 
     if (!schemaClient) {
       logger.debug(
