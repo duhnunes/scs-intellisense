@@ -57,7 +57,7 @@ Before a result is written, `checkFormatting()` confirms it changed nothing but 
 
 A file that fails is skipped and reported as a formatter bug. Check 2 catches changes *inside* a value or comment; check 3 catches anything the tree doesn't record as a piece.
 
-Last full run: all 34,843 `.sii`/`.sui` files of ATS 1.61 pass the check, and formatting a second time changes nothing, in both brace styles.
+Last full run: 44,503 `.sii`/`.sui` files of ATS 1.61 (16 of its 66 archives: the base game and 10 DLCs) pass the check, and formatting a second time changes nothing, in both brace styles, with tabs or spaces, units indented or not.
 
 ## Tests
 

@@ -196,3 +196,46 @@ describe('reader: missing colon recovery', () => {
     expect(document.units[0]?.attributes).toHaveLength(1)
   })
 })
+
+describe('reader: attribute keys and values', () => {
+  const attributes = (body: string) =>
+    readSiiDocument(sii(`truck : .a {\n${body}\n}`)).units[0]!.attributes.map(
+      (attribute) => {
+        const text = sii(`truck : .a {\n${body}\n}`)
+        return {
+          key: attribute.key,
+          keyText: text.slice(attribute.keyRange.start, attribute.keyRange.end),
+          value: text.slice(
+            attribute.valueRange.start,
+            attribute.valueRange.end
+          ),
+        }
+      }
+    )
+
+  it('leaves the spaces before ":" out of the key', () => {
+    expect(attributes('base_color : (1, 2, 3)')).toEqual([
+      { key: 'base_color', keyText: 'base_color', value: '(1, 2, 3)' },
+    ])
+  })
+
+  it('keeps the brackets of an array key', () => {
+    expect(attributes('items [2] : x')).toEqual([
+      { key: 'items', keyText: 'items [2]', value: 'x' },
+    ])
+  })
+
+  it('reads a quoted value from the line after the colon', () => {
+    expect(attributes('n_pml:\n"<img src=a.mat>"\nwidth: 24')).toEqual([
+      { key: 'n_pml', keyText: 'n_pml', value: '"<img src=a.mat>"' },
+      { key: 'width', keyText: 'width', value: '24' },
+    ])
+  })
+
+  it('keeps an empty value when the next line is another attribute', () => {
+    expect(attributes('name:\nwidth: 24')).toEqual([
+      { key: 'name', keyText: 'name', value: '' },
+      { key: 'width', keyText: 'width', value: '24' },
+    ])
+  })
+})

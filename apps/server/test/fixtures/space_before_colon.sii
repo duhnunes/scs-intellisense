@@ -1,0 +1,24 @@
+SiiNunit
+{
+# Excerpt of ATS 1.61 dlc_christmas
+# def/vehicle/truck/kenworth.t680/paint_job/paintjob_christmas_01_a.sii
+# (lines 3-19): keys written as "key : value".
+accessory_paint_job_data : chri_01_a.kenworth.t680.paint_job
+{
+	name: "@@pj_santa_driver@@"
+	price: 29000
+	unlock: 0
+	icon: "paint_santa_01"
+	part_type: aftermarket
+	base_color : (0.0202, 0.0021, 0.1022)
+	airbrush: true
+	flipflake : true
+
+	flip_color : (0.0015, 0, 0.0221)
+	flake_color: (0.3967, 0.4341, 1)
+
+	flip_strength: 1.3
+	flake_uvscale :  48.0
+	flake_density :  0.6
+}
+}

@@ -531,6 +531,7 @@ class SiiReader {
       return undefined
     }
 
+    this.skipToValueOnNextLine()
     const valueRange = this.readValueRange()
     return this.makeAttribute({
       kind: 'attribute',
@@ -598,20 +599,23 @@ class SiiReader {
     const start = this.positionValue
     while (isAttributeCharacter(this.current())) this.positionValue++
     if (this.positionValue === start) return undefined
+    // The key ends here unless "[...]" follows. Game files write
+    // `base_color : (...)`, so the spaces before ':' are not part of it.
+    const nameEnd = this.positionValue
 
     this.skipHorizontalTrivia()
-    if (this.current() === '[') {
-      this.positionValue++
-      while (/\d/.test(this.current())) this.positionValue++
-      this.skipHorizontalTrivia()
-      if (!this.consume(']')) {
-        this.issue(
-          'missing-array-close-bracket',
-          "Expected ']' after array attribute key",
-          this.positionValue,
-          this.positionValue + 1
-        )
-      }
+    if (this.current() !== '[') return range(start, nameEnd)
+
+    this.positionValue++
+    while (/\d/.test(this.current())) this.positionValue++
+    this.skipHorizontalTrivia()
+    if (!this.consume(']')) {
+      this.issue(
+        'missing-array-close-bracket',
+        "Expected ']' after array attribute key",
+        this.positionValue,
+        this.positionValue + 1
+      )
     }
 
     return range(start, this.positionValue)
@@ -718,6 +722,23 @@ class SiiReader {
     return this.positionValue > start
       ? range(start, this.positionValue)
       : undefined
+  }
+
+  /**
+   * After `key:`, a value can start on the next line: the game's own
+   * share/ui/template/button.sii writes `n_pml:` and then the string on
+   * the line below. Only a quoted string is taken from the next line: no
+   * key starts with '"', so it can't be the next attribute, while `key:`
+   * followed by another `key2: x` line stays an empty value.
+   */
+  private skipToValueOnNextLine(): void {
+    let next = this.positionValue
+    while (isHorizontalWhitespace(this.masked[next] ?? '')) next++
+    if (this.masked[next] === '\r') next++
+    if (this.masked[next] !== '\n') return
+    next++
+    while (isHorizontalWhitespace(this.masked[next] ?? '')) next++
+    if (this.masked[next] === '"') this.positionValue = next
   }
 
   private skipHorizontalTrivia(): void {

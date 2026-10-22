@@ -1,0 +1,21 @@
+SiiNunit
+{
+# Excerpt of ATS 1.61 share/ui/template/button.sii (lines 2698-2712):
+# string values on the line after "key:".
+ui::button_template : btn.gpin.tiny {
+	name:"Garage pin tiny"
+	n_pml:
+"<img src=/material/ui/company_manager/garage_ico_tiny_n.mat left=p4 top=p4>"
+	s_pml:
+"<img src=/material/ui/company_manager/garage_ico_tiny_s.mat left=p4 top=p4>"
+       s2_pml:
+"<img src=/material/ui/company_manager/garage_ico_tiny_p.mat left=p4 top=p4>"
+	p_pml:
+"<img src=/material/ui/company_manager/garage_ico_tiny_p.mat left=p4 top=p4>"
+	d_pml:
+"<img src=/material/ui/company_manager/garage_ico_tiny_d.mat left=p4 top=p4>"
+
+	width: 24
+	height: 24
+}
+}

@@ -16,6 +16,8 @@ const fixtures = [
   'namespace_ui.sii',
   'bare_attributes_includes.sui',
   'bare_attributes_strings.sui',
+  'value_on_next_line.sii',
+  'space_before_colon.sii',
 ]
 
 describe.each(fixtures)('real game file %s', (name) => {
@@ -31,8 +33,12 @@ describe.each(fixtures)('real game file %s', (name) => {
     const twice = formatSiiDocument(readScsDocument(once, mode))
     expect(twice).toBe(once)
 
-    const words = (source: string) => source.split(/\s+/).filter(Boolean).sort()
-    expect(words(once)).toEqual(words(text))
+    // Every non-whitespace character survives, in any order (a header
+    // comment may move past the '{'). Characters, not words: `key :`
+    // becomes `key:`, and `name:"x"` becomes `name: "x"`.
+    const characters = (source: string) =>
+      [...source.replace(/\s/g, '')].sort().join('')
+    expect(characters(once)).toBe(characters(text))
   })
 
   it('passes the workspace formatter safety check', () => {
