@@ -5,6 +5,7 @@ import {
   type Connection,
   type InitializeParams,
   type Location as LspLocation,
+  type LocationLink,
   type TextDocuments,
   type TextEdit,
   type WorkspaceEdit,
@@ -48,6 +49,7 @@ export function registerIndex(
   onInitialized: () => void
 } {
   let folders: string[] = []
+  let linkSupport = false
 
   const isPointer: PointerCheck = async (className, key, bracketed) => {
     const schema = await getSchemaClient()?.getSchemaContent(className)
@@ -81,6 +83,8 @@ export function registerIndex(
   // The connection takes one initialize/initialized handler, server.ts's:
   // it calls these from them.
   const onInitialize = (params: InitializeParams) => {
+    linkSupport =
+      params.capabilities.textDocument?.definition?.linkSupport === true
     folders =
       params.workspaceFolders?.map((folder) => URI.parse(folder.uri).fsPath) ??
       (params.rootUri ? [URI.parse(params.rootUri).fsPath] : [])
@@ -154,7 +158,28 @@ export function registerIndex(
         isPointer
       )
       if (!found) return null
-      return findDefinitions(index, found.name, file.uri).map(toLsp)
+      const definitions = findDefinitions(index, found.name, file.uri)
+      if (!linkSupport) return definitions.map(toLsp)
+      // A link says which text is the link: the whole name. Otherwise
+      // VS Code underlines the word under the mouse, which ends at a "."
+      // (sign_board.mt_0o004 would show as two links).
+      const origin = {
+        start: file.document.positionAt(found.range.start),
+        end: file.document.positionAt(found.range.end),
+      }
+      return definitions.map((definition): LocationLink => {
+        const { uri, range } = toLsp(definition)
+        const whole = definition.unitRange ?? definition.range
+        return {
+          originSelectionRange: origin,
+          targetUri: uri,
+          targetRange: {
+            start: definition.file.document.positionAt(whole.start),
+            end: definition.file.document.positionAt(whole.end),
+          },
+          targetSelectionRange: range,
+        }
+      })
     } catch (error) {
       logger.error(
         'DEFINITION_FAILED',

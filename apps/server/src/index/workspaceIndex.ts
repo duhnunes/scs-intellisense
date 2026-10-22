@@ -36,6 +36,8 @@ export interface IndexedUnit {
   className: string
   /** The name without its quotes. */
   nameRange: SiiRange
+  /** The whole unit, header to closing brace. */
+  range: SiiRange
 }
 
 export interface ValueCandidate {
@@ -245,6 +247,7 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
       name: unit.unitName,
       className: unit.className,
       nameRange: innerRange(parsed.text, unit.unitNameRange),
+      range: unit.range,
     }))
   const values: ValueCandidate[] = []
   const includes: IncludeRef[] = []

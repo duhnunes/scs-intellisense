@@ -46,6 +46,8 @@ export interface Location {
   uri: string
   file: IndexedFile
   range: SiiRange
+  /** For a definition: the whole unit. */
+  unitRange?: SiiRange
 }
 
 export function findDefinitions(
@@ -53,9 +55,12 @@ export function findDefinitions(
   name: string,
   fromUri: string
 ): Location[] {
-  return index
-    .definitions(name, fromUri)
-    .map(({ file, unit }) => ({ uri: file.uri, file, range: unit.nameRange }))
+  return index.definitions(name, fromUri).map(({ file, unit }) => ({
+    uri: file.uri,
+    file,
+    range: unit.nameRange,
+    unitRange: unit.range,
+  }))
 }
 
 export async function findReferences(
