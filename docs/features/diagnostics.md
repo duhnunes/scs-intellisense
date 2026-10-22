@@ -53,7 +53,7 @@ Choose by evidence. If a game file does what your rule forbids, it can't be an `
 
 These rules can't run in `rules.ts`: the class files load asynchronously. `checkDocument()` takes a `SchemaLookup` that only answers from memory (`SchemaClient.peekSchemaContent()`), so diagnostics stay synchronous. The server's `publishDiagnostics()` sends what it has, loads any class file still missing, and sends again once (unless the document changed meanwhile). After that the class stays in memory, so typing never makes a warning flicker. Open documents are checked again when the manifest loads or changes.
 
-On the 44,503 ATS 1.61 game files (195,357 units with a schema) it reported 6 warnings, all `rule[]` in `def/economy_trailer_data.sii`: a key missing from scs-schema, reported there. A hand-written mod (63 files) got none.
+On the 44,503 ATS 1.61 game files (195,503 units, all 736 classes in the manifest) it reports nothing since scs-schema added the one key and 19 classes this check found missing (2026-10-22). A hand-written mod (63 files) got none either.
 
 ## Adding a rule
 
