@@ -144,9 +144,9 @@ describe('quick fixes', () => {
     // Where a missing '}' goes can't be known.
     expect(quickFixes('SiiNunit\n{\ntruck : .a {\n}\n').titles).toEqual([])
     // Duplicates: which one to rename is the user's call.
-    expect(
-      quickFixes(sii('truck : .a {\n}\ntruck : .a {\n}')).titles
-    ).toEqual([])
+    expect(quickFixes(sii('truck : .a {\n}\ntruck : .a {\n}')).titles).toEqual(
+      []
+    )
   })
 
   it('only offers fixes for issues at the cursor or selection', () => {

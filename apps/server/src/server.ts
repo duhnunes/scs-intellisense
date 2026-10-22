@@ -39,6 +39,10 @@ import {
   findAttributeKeyPosition,
 } from './completion/attributeKey'
 import {
+  buildAttributeValueCompletionItems,
+  findAttributeValuePosition,
+} from './completion/attributeValue'
+import {
   findIncludePathAt,
   listIncludeCandidates,
   type IncludePathPosition,
@@ -343,6 +347,29 @@ connection.onCompletion(async (params) => {
           detail: item.detail,
           documentation: item.documentation,
           sortText: item.sortText,
+        })
+      )
+    }
+
+    const valuePosition = findAttributeValuePosition(parsed, offset)
+    if (valuePosition) {
+      // Only enums have a list to offer; every other value gets nothing.
+      const schema = await schemaClient.getSchemaContent(
+        valuePosition.unit.className
+      )
+      return buildAttributeValueCompletionItems(valuePosition, schema).map(
+        (item): CompletionItem => ({
+          label: item.label,
+          kind: CompletionItemKind.EnumMember,
+          detail: item.detail,
+          sortText: item.sortText,
+          textEdit: {
+            range: {
+              start: normalizedDoc.positionAt(item.range.start),
+              end: normalizedDoc.positionAt(item.range.end),
+            },
+            newText: item.newText,
+          },
         })
       )
     }

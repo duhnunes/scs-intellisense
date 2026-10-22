@@ -31,7 +31,7 @@ Always on:
 
 Experimental (off by default):
 
-- 💡 **Completion** for `class_name` and attribute keys.
+- 💡 **Completion** for `class_name`, attribute keys and `enum` values (`part_type: ` → `factory`, `aftermarket`...).
 - 🖱️ **Hover** with descriptions of classes and attributes.
 - ✨ **Formatter**: Format Document and Format Selection, plus **Check Formatting of All Files** and **Format All Files** for the whole workspace.
 
@@ -47,7 +47,7 @@ The extension hasn't been checked against Euro Truck Simulator 2's files yet.
 
 ## Schema database
 
-Completion and hover read class and attribute information from a separate repository, [scs-schema](https://github.com/duhnunes/scs-schema). It lists every class of the game (1,308 in ATS 1.61) with the attribute names and types the game uses; most classes have no descriptions yet. Contributions there are welcome: see its [contributing guide](https://github.com/duhnunes/scs-schema/blob/master/CONTRIBUTING.md).
+Completion and hover read class and attribute information from a separate repository, [scs-schema](https://github.com/duhnunes/scs-schema). It lists every class of the game (1,327 in ATS 1.61) with the attribute names and types the game uses; most classes have no descriptions yet. Contributions there are welcome: see its [contributing guide](https://github.com/duhnunes/scs-schema/blob/master/CONTRIBUTING.md).
 
 ## Reporting problems
 
