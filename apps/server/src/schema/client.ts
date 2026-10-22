@@ -20,6 +20,9 @@ const SUPPORTED_FORMAT_MAJOR = '3.'
 const SCHEMAS_CACHE_DIR = 'schemas'
 const DEFAULT_NEGATIVE_CACHE_TTL_MS = 5 * 60 * 1000
 const DEFAULT_FETCH_TIMEOUT_MS = 8000
+/** Class files kept in memory: a session touches a few dozen classes; this
+ *  only bounds a Format All over a huge workspace. */
+const MAX_SCHEMAS_IN_MEMORY = 300
 
 /** Sentinel used only internally to tell "the wait timed out" apart from
  *  "the fetch resolved to undefined" when racing the two. */
@@ -91,6 +94,8 @@ export class SchemaClient {
    *  TTL below only covers a *transient* failure (e.g. the CDN edge
    *  hiccuping) where the hash never changed at all. */
   private readonly failedSchemaFetches = new Map<string, number>()
+  /** hash -> class file already loaded, most recently used last. */
+  private readonly loadedSchemas = new Map<string, SchemaFileContent>()
 
   constructor(options: SchemaClientOptions) {
     this.cacheDir = options.cacheDir
@@ -264,10 +269,13 @@ export class SchemaClient {
     const entry = this.getSchemaEntry(className)
     if (!entry) return undefined
 
+    const inMemory = this.loadedSchemas.get(entry.hash)
+    if (inMemory) return inMemory
+
     const cached = await this.readJsonFile<SchemaFileContent>(
       this.schemaCachePath(entry)
     )
-    if (cached) return cached
+    if (cached) return this.remember(entry, cached)
 
     const failedAt = this.failedSchemaFetches.get(entry.hash)
     if (failedAt !== undefined) {
@@ -323,7 +331,33 @@ export class SchemaClient {
       return undefined
     }
 
-    return result
+    return result ? this.remember(entry, result) : result
+  }
+
+  /**
+   * The class's schema if it's already in memory, without waiting for the
+   * disk or the network: for code that must answer right away (the
+   * diagnostics run on every keystroke). getSchemaContent() loads it.
+   */
+  peekSchemaContent(className: string): SchemaFileContent | undefined {
+    const entry = this.getSchemaEntry(className)
+    return entry ? this.loadedSchemas.get(entry.hash) : undefined
+  }
+
+  /** Keeps a loaded class file in memory. Safe forever: files are keyed
+   *  by the hash of their content, so a hash never gets other content. The
+   *  oldest goes once the limit is reached. */
+  private remember(
+    entry: SchemaManifestEntry,
+    content: SchemaFileContent
+  ): SchemaFileContent {
+    this.loadedSchemas.delete(entry.hash)
+    this.loadedSchemas.set(entry.hash, content)
+    if (this.loadedSchemas.size > MAX_SCHEMAS_IN_MEMORY) {
+      const oldest = this.loadedSchemas.keys().next().value
+      if (oldest !== undefined) this.loadedSchemas.delete(oldest)
+    }
+    return content
   }
 
   private waitTimedOut(ms: number): Promise<typeof TIMED_OUT> {

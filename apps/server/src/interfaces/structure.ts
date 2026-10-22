@@ -145,6 +145,8 @@ export type SiiIssueCode =
   | 'duplicate-unit-name'
   | 'include-not-at-line-start'
   | 'missing-final-newline'
+  // Schema rules (schemaRules.ts)
+  | 'unknown-attribute'
 
 export interface SiiIssue {
   code: SiiIssueCode

@@ -8,6 +8,7 @@ import type {
   SiiSeverity,
 } from '../interfaces/structure'
 import { validateSiiDocument } from './rules'
+import { validateAttributeKeys, type SchemaLookup } from './schemaRules'
 
 const DEFAULT_ENABLED_SEVERITIES: SiiSeverity[] = [
   'error',
@@ -26,10 +27,13 @@ export interface CheckedDocument {
 }
 
 /** Reads a document and collects every issue the user has enabled. Shared
- *  by diagnostics and quick fixes, so both always see the same issues. */
+ *  by diagnostics and quick fixes, so both always see the same issues.
+ *  With `schemaFor`, the rules that need the schema run too, for the
+ *  classes it has loaded. */
 export function checkDocument(
   doc: TextDocument,
-  enabledSeverities: SiiSeverity[] = DEFAULT_ENABLED_SEVERITIES
+  enabledSeverities: SiiSeverity[] = DEFAULT_ENABLED_SEVERITIES,
+  schemaFor?: SchemaLookup
 ): CheckedDocument {
   const ext = detectExtFromUri(doc.uri)
   const mode = detectModeFromExt(ext)
@@ -51,6 +55,11 @@ export function checkDocument(
   const issues: SiiIssue[] = [
     ...parsed.issues,
     ...validateSiiDocument(parsed),
+    // Only on an intact tree: with a structural issue, attributes may be
+    // read in the wrong unit.
+    ...(schemaFor && parsed.issues.length === 0
+      ? validateAttributeKeys(parsed, schemaFor)
+      : []),
   ].filter((issue) => enabledSeverities.includes(issue.severity ?? 'error'))
 
   return { parsed, normalizedDoc, issues }
@@ -58,9 +67,16 @@ export function checkDocument(
 
 export function getDiagnostics(
   doc: TextDocument,
-  enabledSeverities: SiiSeverity[] = DEFAULT_ENABLED_SEVERITIES
+  enabledSeverities: SiiSeverity[] = DEFAULT_ENABLED_SEVERITIES,
+  schemaFor?: SchemaLookup
 ): Diagnostic[] {
-  const { normalizedDoc, issues } = checkDocument(doc, enabledSeverities)
+  return toDiagnostics(checkDocument(doc, enabledSeverities, schemaFor))
+}
+
+export function toDiagnostics({
+  normalizedDoc,
+  issues,
+}: CheckedDocument): Diagnostic[] {
   return issues.map((issue) => ({
     severity: toDiagnosticSeverity(issue.severity),
     range: {

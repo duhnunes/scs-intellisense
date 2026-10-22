@@ -9,6 +9,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument'
 import type { SiiIssue, SiiSeverity } from '../interfaces/structure'
 import { checkDocument, DIAGNOSTIC_SOURCE } from './index'
 import { quickFixesFor } from './quickFixes'
+import type { SchemaLookup } from './schemaRules'
 
 /**
  * The light bulb: quick fixes for the issues under the cursor or selection.
@@ -20,7 +21,8 @@ import { quickFixesFor } from './quickFixes'
 export function buildCodeActions(
   doc: TextDocument,
   params: CodeActionParams,
-  enabledSeverities: SiiSeverity[]
+  enabledSeverities: SiiSeverity[],
+  schemaFor?: SchemaLookup
 ): CodeAction[] {
   const only = params.context.only
   if (only && !only.some((kind) => CodeActionKind.QuickFix.startsWith(kind)))
@@ -28,7 +30,8 @@ export function buildCodeActions(
 
   const { parsed, normalizedDoc, issues } = checkDocument(
     doc,
-    enabledSeverities
+    enabledSeverities,
+    schemaFor
   )
   const start = normalizedDoc.offsetAt(params.range.start)
   const end = normalizedDoc.offsetAt(params.range.end)
@@ -41,7 +44,7 @@ export function buildCodeActions(
   for (const issue of issues) {
     if (!touches(issue, start, end)) continue
 
-    for (const fix of quickFixesFor(issue, parsed)) {
+    for (const fix of quickFixesFor(issue, parsed, schemaFor)) {
       const edits: TextEdit[] = fix.edits.map((edit) => ({
         range: {
           start: normalizedDoc.positionAt(edit.range.start),

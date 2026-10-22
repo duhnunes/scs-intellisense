@@ -24,7 +24,8 @@ import {
   setSemanticHighlighting,
 } from './semantic'
 import { describeError, getLogger, initLogger } from './logger'
-import { getDiagnostics } from './diagnostic'
+import { checkDocument, toDiagnostics } from './diagnostic'
+import type { SchemaLookup } from './diagnostic/schemaRules'
 import { buildCodeActions } from './diagnostic/codeActions'
 import { SchemaClient } from './schema/client'
 import { normalizeSiiText, readScsDocument } from './sii'
@@ -147,7 +148,12 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     // refreshManifest() checks for something newer in the background.
     void schemaClient
       .init()
+      // Files opened before the manifest was in get the schema rules now.
+      .then(() => publishAllDiagnostics())
       .then(() => schemaClient?.refreshManifest())
+      .then((changed) => {
+        if (changed) publishAllDiagnostics()
+      })
       .catch((err) => {
         logger.error(
           'SCHEMA_STARTUP_FAILED',
@@ -189,6 +195,7 @@ connection.onRequest('scsIntellisense/refreshSchema', async () => {
   }
   try {
     const changed = await schemaClient.refreshManifest(true)
+    if (changed) publishAllDiagnostics()
     return { ok: true, changed }
   } catch (err) {
     logger.error(
@@ -383,14 +390,8 @@ connection.onNotification('scsIntellisense/updateSettings', (raw: unknown) => {
 
   // Diagnostics already shown are re-sent with the new severities, for
   // every open document, instead of waiting for the next edit to each.
-  if (previous.enabledSeverities.join() !== settings.enabledSeverities.join()) {
-    for (const doc of documents.all()) {
-      connection.sendDiagnostics({
-        uri: doc.uri,
-        diagnostics: getDiagnostics(doc, settings.enabledSeverities),
-      })
-    }
-  }
+  if (previous.enabledSeverities.join() !== settings.enabledSeverities.join())
+    publishAllDiagnostics()
 
   // Asks VS Code to request the colors again, which now come back empty
   // (or full).
@@ -400,22 +401,59 @@ connection.onNotification('scsIntellisense/updateSettings', (raw: unknown) => {
   }
 })
 
-documents.onDidChangeContent((change) => {
+documents.onDidChangeContent((change) => publishDiagnostics(change.document))
+
+/** The schema rules read class files already in memory, so they answer
+ *  right away; publishDiagnostics() loads the missing ones. */
+const loadedSchema: SchemaLookup = (className) =>
+  schemaClient?.peekSchemaContent(className)
+
+/**
+ * Sends a document's diagnostics, with the schema rules for every class
+ * whose file is in memory. If some class file isn't loaded yet, it's
+ * loaded and the diagnostics are sent once more, unless the document
+ * changed meanwhile (the next edit checks it again anyway). After the
+ * first time, a class is in memory, so typing never makes a warning
+ * disappear and come back.
+ */
+function publishDiagnostics(doc: TextDocument): void {
   try {
-    const diagnostics = getDiagnostics(
-      change.document,
-      settings.enabledSeverities
+    const checked = checkDocument(doc, settings.enabledSeverities, loadedSchema)
+    connection.sendDiagnostics({
+      uri: doc.uri,
+      diagnostics: toDiagnostics(checked),
+    })
+
+    const client = schemaClient
+    if (!client || !settings.enabledSeverities.includes('warning')) return
+    const missing = [
+      ...new Set(checked.parsed.units.map((unit) => unit.className)),
+    ].filter(
+      (className) =>
+        client.getSchemaEntry(className) && !client.peekSchemaContent(className)
     )
-    connection.sendDiagnostics({ uri: change.document.uri, diagnostics })
+    if (missing.length === 0) return
+
+    void Promise.all(missing.map((c) => client.getSchemaContent(c))).then(
+      (loaded) => {
+        if (!loaded.some(Boolean)) return
+        if (documents.get(doc.uri)?.version !== doc.version) return
+        publishDiagnostics(doc)
+      }
+    )
   } catch (error) {
     logger.error(
       'DIAGNOSTICS_FAILED',
       'Checking the file for problems failed',
       describeError(error),
-      change.document.uri
+      doc.uri
     )
   }
-})
+}
+
+function publishAllDiagnostics(): void {
+  for (const doc of documents.all()) publishDiagnostics(doc)
+}
 
 interface EditorIndentOptions {
   tabSize: number
@@ -486,7 +524,12 @@ connection.onCodeAction((params): CodeAction[] => {
   try {
     const doc = documents.get(params.textDocument.uri)
     if (!doc) return []
-    return buildCodeActions(doc, params, settings.enabledSeverities)
+    return buildCodeActions(
+      doc,
+      params,
+      settings.enabledSeverities,
+      loadedSchema
+    )
   } catch (error) {
     logger.error(
       'QUICKFIX_FAILED',

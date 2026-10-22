@@ -45,6 +45,16 @@ Choose by evidence. If a game file does what your rule forbids, it can't be an `
 | `validateIncludePlacement` | `@include` must start its line, with no whitespace before it | error |
 | `validateTrailingNewline` | The file should end with a newline | warning |
 
+### From `schemaRules.ts` (need the schema database)
+
+| Function | Checks | Severity |
+|---|---|---|
+| `validateAttributeKeys` | An attribute key the unit's class doesn't have (`unknown-attribute`). Since scs-schema v3 the attribute lists come from the game itself, so this is almost always a typo. Legacy and internal-only keys are known keys, so never reported. Classes missing from the manifest are skipped, and nothing runs on a file with structural issues | warning |
+
+These rules can't run in `rules.ts`: the class files load asynchronously. `checkDocument()` takes a `SchemaLookup` that only answers from memory (`SchemaClient.peekSchemaContent()`), so diagnostics stay synchronous. The server's `publishDiagnostics()` sends what it has, loads any class file still missing, and sends again once (unless the document changed meanwhile). After that the class stays in memory, so typing never makes a warning flicker. Open documents are checked again when the manifest loads or changes.
+
+On the 44,503 ATS 1.61 game files (195,357 units with a schema) it reported 6 warnings, all `rule[]` in `def/economy_trailer_data.sii`: a key missing from scs-schema, reported there. A hand-written mod (63 files) got none.
+
 ## Adding a rule
 
 Say you want to warn about an attribute written twice in the same unit. (This is an example to show the steps; it isn't implemented.)
@@ -110,6 +120,7 @@ The light bulb next to a diagnostic. Always on, like diagnostics: a fix only cha
 | `unit-name-unmatched-quote` | Add the missing quote, or remove this one (neither preferred) |
 | `missing-unit-colon` | `class unit` → `class : unit`, or a stray character in its place (`;`) becomes `:` |
 | `missing-attribute-colon` | `key value` → `key: value`, `key = value` → `key: value` |
+| `unknown-attribute` | "Change to `price`": the class's closest key by edit distance (a swap of two letters is one edit), when it's within 1–3 edits depending on length and no other key is as close. Keys a modder writes win over legacy and internal-only ones |
 
 Deliberately without a fix: uppercase in a unit name (the game loads it, and other files may use the name as written), duplicates (which one to rename is the user's call), and a missing `{` or `}` (where it goes is a guess).
 

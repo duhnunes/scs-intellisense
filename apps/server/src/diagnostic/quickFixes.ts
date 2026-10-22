@@ -4,6 +4,7 @@ import type {
   SiiRange,
   SiiUnit,
 } from '../interfaces/structure'
+import { suggestAttributeKey, type SchemaLookup } from './schemaRules'
 
 export interface SiiTextEdit {
   range: SiiRange
@@ -31,7 +32,8 @@ export interface SiiQuickFix {
  */
 export function quickFixesFor(
   issue: SiiIssue,
-  document: SiiDocument
+  document: SiiDocument,
+  schemaFor?: SchemaLookup
 ): SiiQuickFix[] {
   const text = document.text
   switch (issue.code) {
@@ -53,6 +55,8 @@ export function quickFixesFor(
       return fixMissingUnitColon(issue.range.start, text)
     case 'missing-attribute-colon':
       return fixMissingAttributeColon(issue.range.start, text)
+    case 'unknown-attribute':
+      return fixUnknownAttribute(issue.range, document, schemaFor)
     default:
       return []
   }
@@ -207,6 +211,32 @@ function fixMissingAttributeColon(start: number, text: string): SiiQuickFix[] {
     {
       title: "Add ':' after the attribute key",
       edits: [insert(keyEnd, ':')],
+      isPreferred: true,
+    },
+  ]
+}
+
+/** `spead: 10` → `speed: 10`, when one of the class's keys is a
+ *  likely match (see suggestAttributeKey). */
+function fixUnknownAttribute(
+  range: SiiRange,
+  document: SiiDocument,
+  schemaFor: SchemaLookup | undefined
+): SiiQuickFix[] {
+  const unit = document.units.find(
+    (candidate) =>
+      candidate.bodyRange.start <= range.start &&
+      range.end <= candidate.bodyRange.end
+  )
+  const schema = unit && schemaFor?.(unit.className)
+  if (!schema) return []
+  const typed = document.text.slice(range.start, range.end)
+  const suggestion = suggestAttributeKey(typed, schema)
+  if (!suggestion) return []
+  return [
+    {
+      title: `Change to "${suggestion}"`,
+      edits: [replace(range.start, range.end, suggestion)],
       isPreferred: true,
     },
   ]
