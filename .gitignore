@@ -9,3 +9,5 @@ QA.md
 .env
 *.psd
 !apps/client/public/extensions/icon.psd
+CLAUDE.md
+.github/imgs/doc-design-gpt.png

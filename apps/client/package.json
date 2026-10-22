@@ -438,7 +438,7 @@
           "scs-intellisense.completion.enabled": {
             "type": "boolean",
             "default": false,
-            "markdownDescription": "**EXPERIMENTAL** — Enable `class_name` and `attribute_key` completion, backed by the community schema database. (`@include` paths are always suggested.) Off by default while this feature is still being validated. Takes effect right away.",
+            "markdownDescription": "**EXPERIMENTAL** — Enable `class_name`, `attribute_key` and `enum` value completion, backed by the community schema database. (`@include` paths are always suggested.) Off by default while this feature is still being validated. Takes effect right away.",
             "order": 1
           },
           "scs-intellisense.hover.enabled": {

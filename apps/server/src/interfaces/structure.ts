@@ -147,6 +147,7 @@ export type SiiIssueCode =
   | 'missing-final-newline'
   // Schema rules (schemaRules.ts)
   | 'unknown-attribute'
+  | 'invalid-enum-value'
 
 export interface SiiIssue {
   code: SiiIssueCode

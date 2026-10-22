@@ -4,7 +4,11 @@ import type {
   SiiRange,
   SiiUnit,
 } from '../interfaces/structure'
-import { suggestAttributeKey, type SchemaLookup } from './schemaRules'
+import {
+  suggestAttributeKey,
+  suggestEnumValue,
+  type SchemaLookup,
+} from './schemaRules'
 
 export interface SiiTextEdit {
   range: SiiRange
@@ -57,6 +61,8 @@ export function quickFixesFor(
       return fixMissingAttributeColon(issue.range.start, text)
     case 'unknown-attribute':
       return fixUnknownAttribute(issue.range, document, schemaFor)
+    case 'invalid-enum-value':
+      return fixInvalidEnumValue(issue.range, document, schemaFor)
     default:
       return []
   }
@@ -232,6 +238,38 @@ function fixUnknownAttribute(
   if (!schema) return []
   const typed = document.text.slice(range.start, range.end)
   const suggestion = suggestAttributeKey(typed, schema)
+  if (!suggestion) return []
+  return [
+    {
+      title: `Change to "${suggestion}"`,
+      edits: [replace(range.start, range.end, suggestion)],
+      isPreferred: true,
+    },
+  ]
+}
+
+function fixInvalidEnumValue(
+  range: SiiRange,
+  document: SiiDocument,
+  schemaFor: SchemaLookup | undefined
+): SiiQuickFix[] {
+  const unit = document.units.find(
+    (candidate) =>
+      candidate.bodyRange.start <= range.start &&
+      range.end <= candidate.bodyRange.end
+  )
+  const attribute = unit?.attributes.find(
+    (candidate) =>
+      candidate.valueRange.start <= range.start &&
+      range.end <= candidate.valueRange.end
+  )
+  const values =
+    attribute && schemaFor?.(unit!.className)?.key?.[attribute.key]?.values
+  if (!Array.isArray(values)) return []
+  const suggestion = suggestEnumValue(
+    document.text.slice(range.start, range.end),
+    values
+  )
   if (!suggestion) return []
   return [
     {

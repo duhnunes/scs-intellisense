@@ -8,7 +8,11 @@ import type {
   SiiSeverity,
 } from '../interfaces/structure'
 import { validateSiiDocument } from './rules'
-import { validateAttributeKeys, type SchemaLookup } from './schemaRules'
+import {
+  validateAttributeKeys,
+  validateEnumValues,
+  type SchemaLookup,
+} from './schemaRules'
 
 const DEFAULT_ENABLED_SEVERITIES: SiiSeverity[] = [
   'error',
@@ -58,7 +62,10 @@ export function checkDocument(
     // Only on an intact tree: with a structural issue, attributes may be
     // read in the wrong unit.
     ...(schemaFor && parsed.issues.length === 0
-      ? validateAttributeKeys(parsed, schemaFor)
+      ? [
+          ...validateAttributeKeys(parsed, schemaFor),
+          ...validateEnumValues(parsed, schemaFor),
+        ]
       : []),
   ].filter((issue) => enabledSeverities.includes(issue.severity ?? 'error'))
 

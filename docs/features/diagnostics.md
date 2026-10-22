@@ -50,10 +50,11 @@ Choose by evidence. If a game file does what your rule forbids, it can't be an `
 | Function | Checks | Severity |
 |---|---|---|
 | `validateAttributeKeys` | An attribute key the unit's class doesn't have (`unknown-attribute`). Since scs-schema v3 the attribute lists come from the game itself, so this is almost always a typo. Legacy and internal-only keys are known keys, so never reported. Classes missing from the manifest are skipped, and nothing runs on a file with structural issues | warning |
+| `validateEnumValues` | A value an `enum` attribute doesn't list (`invalid-enum-value`), compared as written (case matters), inside the quotes when quoted. An integer is never reported: the game writes some enums as numbers (`tr_semaphore_profile.type: 12`, 15 values in ATS 1.61), and which name it stands for isn't known. An empty value isn't either (still being typed). The message lists up to 8 values; completion has them all | warning |
 
 These rules can't run in `rules.ts`: the class files load asynchronously. `checkDocument()` takes a `SchemaLookup` that only answers from memory (`SchemaClient.peekSchemaContent()`), so diagnostics stay synchronous. The server's `publishDiagnostics()` sends what it has, loads any class file still missing, and sends again once (unless the document changed meanwhile). After that the class stays in memory, so typing never makes a warning flicker. Open documents are checked again when the manifest loads or changes.
 
-On the 44,503 ATS 1.61 game files (195,503 units, all 736 classes in the manifest) it reports nothing since scs-schema added the one key and 19 classes this check found missing (2026-10-22). A hand-written mod (63 files) got none either.
+On the 44,503 ATS 1.61 game files (195,503 units, all 736 classes in the manifest) `validateAttributeKeys` reports nothing since scs-schema added the one key and 19 classes this check found missing (2026-10-22), and `validateEnumValues` nothing on 59,057 enum values (852 of them quoted). A hand-written mod (63 files) got none either.
 
 ## Adding a rule
 
@@ -121,6 +122,7 @@ The light bulb next to a diagnostic. Always on, like diagnostics: a fix only cha
 | `missing-unit-colon` | `class unit` → `class : unit`, or a stray character in its place (`;`) becomes `:` |
 | `missing-attribute-colon` | `key value` → `key: value`, `key = value` → `key: value` |
 | `unknown-attribute` | "Change to `price`": the class's closest key by edit distance (a swap of two letters is one edit), when it's within 1–3 edits depending on length and no other key is as close. Keys a modder writes win over legacy and internal-only ones |
+| `invalid-enum-value` | "Change to `factory`": the closest value by the same measure; quotes are kept |
 
 Deliberately without a fix: uppercase in a unit name (the game loads it, and other files may use the name as written), duplicates (which one to rename is the user's call), and a missing `{` or `}` (where it goes is a guess).
 
