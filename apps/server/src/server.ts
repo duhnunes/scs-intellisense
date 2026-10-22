@@ -16,6 +16,7 @@ import {
   type TextEdit,
 } from 'vscode-languageserver/node'
 
+import path from 'node:path'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
 import {
@@ -28,6 +29,12 @@ import { checkDocument, toDiagnostics } from './diagnostic'
 import type { SchemaLookup } from './diagnostic/schemaRules'
 import { buildCodeActions } from './diagnostic/codeActions'
 import { SchemaClient } from './schema/client'
+import {
+  getWorkspaceIndex,
+  INDEX_CAPABILITIES,
+  registerIndex,
+} from './index/handlers'
+import { isFileLocalName } from './index/workspaceIndex'
 import { normalizeSiiText, readScsDocument } from './sii'
 import { detectExtFromUri, detectModeFromExt } from './parser/docParser'
 import {
@@ -47,7 +54,10 @@ import {
   listFilePathCandidates,
   type FilePathPosition,
 } from './completion/filePath'
-import { buildPointerCompletionItems } from './completion/pointer'
+import {
+  buildPointerCompletionItems,
+  type OtherFileUnit,
+} from './completion/pointer'
 import {
   findIncludePathAt,
   listIncludeCandidates,
@@ -82,6 +92,7 @@ initLogger(connection)
 const logger = getLogger()
 
 registerSemantic(connection, documents)
+const workspaceIndex = registerIndex(connection, documents, () => schemaClient)
 
 // The single schema fetch/cache instance for this server process.
 // Completion, hover, and future attribute validation all consult this —
@@ -118,8 +129,12 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       // Quick fixes for diagnostics. Always on like diagnostics: a fix only
       // changes the file when the user picks it.
       codeActionProvider: { codeActionKinds: [CodeActionKind.QuickFix] },
+      // Go to Definition, Find References, Rename across the open
+      // folders. Always on too: they only act when asked.
+      ...INDEX_CAPABILITIES,
     },
   }
+  workspaceIndex.onInitialize(params)
 
   // Every feature is declared, on or off, and each handler checks its
   // setting on every request: that's what lets a setting take effect
@@ -181,6 +196,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 // notifications after it gets the initialize response, so an entry sent
 // before that is dropped (and LSP doesn't allow it anyway).
 connection.onInitialized(() => {
+  workspaceIndex.onInitialized()
   logger.info(
     'SERVER_STARTED',
     `Server started (${describeSettings(settings)})`
@@ -243,6 +259,22 @@ connection.onRequest(
 )
 
 const INCLUDE_TRIGGER_CHARACTERS = ['"', '/']
+
+/** Named units of the other indexed files, for pointer completion. A
+ *  nameless unit (".x") only exists in its own file. */
+function unitsInOtherFiles(uri: string): OtherFileUnit[] {
+  const index = getWorkspaceIndex()
+  const here = index.get(uri)
+  const units: OtherFileUnit[] = []
+  for (const file of index.all()) {
+    if (file === here) continue
+    const where = path.basename(URI.parse(file.uri).fsPath)
+    for (const unit of file.units)
+      if (!isFileLocalName(unit.name))
+        units.push({ name: unit.name, className: unit.className, where })
+  }
+  return units
+}
 
 /** `className` is `target` or a subclass of it, by the manifest's
  *  superclass chain. */
@@ -433,7 +465,8 @@ connection.onCompletion(async (params) => {
         valuePosition,
         def,
         parsed,
-        (className, target) => isKindOf(client, className, target)
+        (className, target) => isKindOf(client, className, target),
+        unitsInOtherFiles(doc.uri)
       )
       if (pointers.length > 0) {
         return pointers.map(

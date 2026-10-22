@@ -30,6 +30,12 @@ export function activate(context: vscode.ExtensionContext) {
       { scheme: 'file', language: 'sii' },
       { scheme: 'file', language: 'sui' },
     ],
+    // Files changed outside the editor (git checkout, a converter, another
+    // program) reach the server's workspace index, which keeps every
+    // .sii/.sui of the open folders.
+    synchronize: {
+      fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{sii,sui}'),
+    },
     // The LSP library's own messages (server crashes, protocol errors) go
     // to the same channel as everything else.
     outputChannel: log.channel,

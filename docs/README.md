@@ -15,6 +15,7 @@ How each feature works and how to extend it.
 
 - [Diagnostics](./features/diagnostics.md): where the rules live, the current checks, how to add one, and the quick fixes.
 - [Formatter](./features/formatter.md): how files are rebuilt, and the safety check behind Format All Files.
+- [Navigation](./features/navigation.md): the workspace index behind Go to Definition, Find References and Rename.
 
 ## Reference
 

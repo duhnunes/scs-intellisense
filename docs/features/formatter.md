@@ -65,4 +65,4 @@ Last full run: 44,503 `.sii`/`.sui` files of ATS 1.61 (16 of its 66 archives: th
 
 ---
 
-← [Diagnostics](./diagnostics.md) · [File format](../reference/file-format.md) →
+← [Diagnostics](./diagnostics.md) · [Navigation](./navigation.md) →

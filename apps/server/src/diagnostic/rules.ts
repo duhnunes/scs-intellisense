@@ -144,7 +144,7 @@ function validateClassNamePart(
  * "icfg.steering.configured"`). The wiki doesn't mention this, so the
  * quotes are accepted and the token rules run on what's inside them.
  */
-function validateUnitName(
+export function validateUnitName(
   unitName: string,
   unitNameRange: SiiRange
 ): SiiIssue[] {
