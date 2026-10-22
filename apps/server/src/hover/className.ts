@@ -48,13 +48,20 @@ export function buildClassNameHover(
   const lines: string[] = [`**${entry.name}**`]
   if (entry.superclass) lines.push(`*extends ${entry.superclass}*`)
 
-  lines.push('')
-  lines.push(entry.description?.trim() || '*No description available yet.*')
+  // Paragraphs after the header, each separated by one blank line.
+  const paragraphs: string[] = []
+  if (entry.description?.trim()) paragraphs.push(entry.description.trim())
+  if (entry.documentationStatus === 'undocumented')
+    paragraphs.push(
+      'No description yet: only its attributes and their types are known.'
+    )
+  else if (!entry.description?.trim())
+    paragraphs.push('*No description available yet.*')
+  if (entry.documentationStatus === 'wip')
+    paragraphs.push(
+      '⚠️ Documentation for this class is still a work in progress.'
+    )
 
-  if (entry.documentationStatus === 'wip') {
-    lines.push('')
-    lines.push('⚠️ Documentation for this class is still a work in progress.')
-  }
-
+  for (const paragraph of paragraphs) lines.push('', paragraph)
   return { markdown: lines.join('\n') }
 }

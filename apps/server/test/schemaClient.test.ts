@@ -7,7 +7,7 @@ import type { SchemaManifest } from '../src/interfaces/schemas'
 
 function manifest(hash: string, generatedAt: string): SchemaManifest {
   return {
-    formatVersion: '2',
+    formatVersion: '3.0.0',
     generatedAt,
     schemas: {
       accessory_data: {

@@ -335,6 +335,7 @@ connection.onCompletion(async (params) => {
           kind: CompletionItemKind.Class,
           detail: item.detail,
           documentation: item.documentation,
+          sortText: item.sortText,
         })
       )
     }

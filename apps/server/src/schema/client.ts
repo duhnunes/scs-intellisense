@@ -7,10 +7,16 @@ import type {
   SchemaManifestEntry,
 } from '../interfaces/schemas'
 
+// Format v3. v2 (data/manifest.json) is frozen in scs-schema but still
+// served, so extension versions that read it keep working.
 const DEFAULT_MANIFEST_URL =
-  'https://raw.githubusercontent.com/duhnunes/scs-schema/refs/heads/master/data/manifest.json'
+  'https://raw.githubusercontent.com/duhnunes/scs-schema/refs/heads/master/data/manifest.v3.json'
 
-const MANIFEST_CACHE_FILE = 'manifest.json'
+// Its own name, so a v2 manifest cached by an older version is never read
+// as v3 (the shapes differ).
+const MANIFEST_CACHE_FILE = 'manifest.v3.json'
+/** The manifest format this client reads: "3.x.y". */
+const SUPPORTED_FORMAT_MAJOR = '3.'
 const SCHEMAS_CACHE_DIR = 'schemas'
 const DEFAULT_NEGATIVE_CACHE_TTL_MS = 5 * 60 * 1000
 const DEFAULT_FETCH_TIMEOUT_MS = 8000
@@ -112,7 +118,12 @@ export class SchemaClient {
     const cached = await this.readJsonFile<SchemaManifest>(
       this.manifestCachePath()
     )
-    if (cached) {
+    if (cached && !isSupportedManifest(cached)) {
+      this.logger.warn(
+        'SCHEMA_CACHE_UNSUPPORTED',
+        `Ignoring the cached schema manifest: format ${String(cached.formatVersion)} isn't supported (expected 3.x)`
+      )
+    } else if (cached) {
       this.manifest = cached
       this.logger.info(
         'SCHEMA_CACHE_LOADED',
@@ -185,6 +196,14 @@ export class SchemaClient {
         'SCHEMA_MANIFEST_INVALID_JSON',
         'Schema manifest response was not valid JSON',
         String(err)
+      )
+      return false
+    }
+
+    if (!isSupportedManifest(incoming)) {
+      this.logger.error(
+        'SCHEMA_MANIFEST_UNSUPPORTED',
+        `The schema manifest has format ${String(incoming?.formatVersion)}; this version of the extension reads 3.x, so the database it has is kept`
       )
       return false
     }
@@ -462,6 +481,17 @@ export class SchemaClient {
  * currently loaded. Compared by `version` (bumped by scs-schema's own CI
  * on every real change) rather than deep-diffing every entry.
  */
+/** A v3 manifest with a schemas map: anything else (a v2 manifest, an
+ *  HTML error page parsed as JSON) is not read. */
+export function isSupportedManifest(manifest: SchemaManifest): boolean {
+  return (
+    typeof manifest?.formatVersion === 'string' &&
+    manifest.formatVersion.startsWith(SUPPORTED_FORMAT_MAJOR) &&
+    typeof manifest.schemas === 'object' &&
+    manifest.schemas !== null
+  )
+}
+
 export function manifestHasChanged(
   current: SchemaManifest | undefined,
   incoming: SchemaManifest

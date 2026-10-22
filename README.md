@@ -39,7 +39,7 @@ To turn experimental features on, open the Settings (`Ctrl+,`), search for `@ext
 
 ## Tested against the game
 
-The diagnostics are checked against **all 34,843 `.sii`/`.sui` files of American Truck Simulator 1.61**, with no false errors, and the formatter was run over the same files without changing any content.
+The diagnostics are checked against **44,503 `.sii`/`.sui` files of American Truck Simulator 1.61** (the base game and 10 DLCs), with no false errors, and the formatter was run over the same files without changing any content.
 
 SCS's [modding wiki](https://modding.scssoft.com/wiki/Main_Page) is incomplete, and in some places the game's own files differ from it: unit names with uppercase letters or in double quotes, class names such as `ui::text`, `.sui` files that hold only attributes. When the game and the wiki disagree, the extension follows the game.
 
@@ -47,7 +47,7 @@ The extension hasn't been checked against Euro Truck Simulator 2's files yet.
 
 ## Schema database
 
-Completion and hover read class and attribute information from a separate repository, [scs-schema](https://github.com/duhnunes/scs-schema), which is still being written. Contributions there are welcome: see its [contributing guide](https://github.com/duhnunes/scs-schema/blob/master/CONTRIBUTING.md).
+Completion and hover read class and attribute information from a separate repository, [scs-schema](https://github.com/duhnunes/scs-schema). It lists every class of the game (1,308 in ATS 1.61) with the attribute names and types the game uses; most classes have no descriptions yet. Contributions there are welcome: see its [contributing guide](https://github.com/duhnunes/scs-schema/blob/master/CONTRIBUTING.md).
 
 ## Reporting problems
 

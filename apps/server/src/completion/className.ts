@@ -63,6 +63,8 @@ export interface ClassNameCompletionItem {
   label: string
   detail: string
   documentation: string | undefined
+  /** The list order (VS Code sorts by this, then by label). */
+  sortText: string
 }
 
 /**
@@ -70,6 +72,12 @@ export interface ClassNameCompletionItem {
  * no fetch, no CDN lookup. Everything here (description, superclass,
  * documentationStatus) is exactly what the manifest already carries per
  * class.
+ *
+ * The manifest lists every class of the game (1,308 in ATS 1.61),
+ * including save-game, editor and UI-handler classes a modder never
+ * writes, so the order matters: documented classes first, then classes
+ * the game's own files use (most used first), then the rest. VS Code
+ * keeps this order among items that match what's typed equally well.
  */
 export function buildClassNameCompletionItems(
   manifest: SchemaManifest | undefined
@@ -80,7 +88,22 @@ export function buildClassNameCompletionItems(
     label: entry.name,
     detail: entry.superclass ? `extends ${entry.superclass}` : '',
     documentation: buildDocumentation(entry),
+    sortText: classSortText(entry),
   }))
+}
+
+/** "0" documented, "1" used in the game's files, "2" the rest; within
+ *  "1", more units first (the count, inverted and zero-padded, sorts as
+ *  text). The name breaks ties. */
+function classSortText(entry: SchemaManifestEntry): string {
+  if (entry.documentationStatus !== 'undocumented') return `0_${entry.name}`
+  const units =
+    typeof entry.gameUnits === 'number' && entry.gameUnits > 0
+      ? Math.floor(entry.gameUnits)
+      : 0
+  if (units === 0) return `2_${entry.name}`
+  const inverted = String(Math.max(0, 999_999_999 - units)).padStart(9, '0')
+  return `1_${inverted}_${entry.name}`
 }
 
 function buildDocumentation(entry: SchemaManifestEntry): string | undefined {
@@ -88,6 +111,11 @@ function buildDocumentation(entry: SchemaManifestEntry): string | undefined {
   if (entry.description) parts.push(entry.description)
   if (entry.documentationStatus === 'wip') {
     parts.push('⚠️ Documentation for this class is still a work in progress.')
+  }
+  if (entry.documentationStatus === 'undocumented') {
+    parts.push(
+      'No description yet: only its attributes and their types are known.'
+    )
   }
   return parts.length > 0 ? parts.join('\n\n') : undefined
 }

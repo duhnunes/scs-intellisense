@@ -60,9 +60,9 @@ export interface AttributeKeyCompletionItem {
  * deliberately defensive: a missing/malformed `key` map just yields no
  * items rather than throwing.
  *
- * Filters out `internalOnly` attributes — the docs say these shouldn't
- * be set manually in a definition, so suggesting them for completion
- * would just invite exactly the mistake the docs warn against.
+ * Leaves out `internalOnly` attributes (engine/save-game managed or
+ * SCS-only: a modder shouldn't set them) and `legacy` ones (the game
+ * still accepts them but doesn't use them, so writing one does nothing).
  *
  * Deliberately does NOT filter out attribute keys already present on
  * the unit — whether a repeated key is valid depends on the array
@@ -75,7 +75,7 @@ export function buildAttributeKeyCompletionItems(
   if (!schema?.key || typeof schema.key !== 'object') return []
 
   return Object.entries(schema.key)
-    .filter(([, def]) => !def.internalOnly)
+    .filter(([, def]) => !def.internalOnly && def.status !== 'legacy')
     .map(([key, def]) => ({
       label: key,
       detail: formatAttributeType(def),
@@ -87,13 +87,17 @@ function buildDocumentation(def: SchemaAttributeDef): string | undefined {
   const parts: string[] = []
   if (def.required) parts.push('**Required**')
   if (def.description) parts.push(def.description)
+  if (def.default !== null && def.default !== undefined)
+    parts.push(`Default: \`${def.default}\``)
   if (def.versionNote) parts.push(`⚠️ ${def.versionNote}`)
   if (def.notes) parts.push(def.notes)
   return parts.length > 0 ? parts.join('\n\n') : undefined
 }
 
+/** The type as shown to the user: `float3`, or `string[]` for an
+ *  array (whose `type` is the element type). */
 export function formatAttributeType(def: SchemaAttributeDef): string {
-  const types = def.isArray ? def.arrayElementType : def.type
-  const joined = types && types.length > 0 ? types.join(' | ') : 'unknown'
-  return def.isArray ? `${joined}[]` : joined
+  const type =
+    typeof def.type === 'string' && def.type.length > 0 ? def.type : 'unknown'
+  return def.isArray ? `${type}[]` : type
 }

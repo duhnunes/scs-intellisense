@@ -81,6 +81,13 @@ export function buildAttributeKeyHover(
     lines.push(`⚠️ ${def.versionNote}`)
   }
 
+  if (def.status === 'legacy') {
+    lines.push('')
+    lines.push(
+      "⚠️ Legacy: the game still accepts it but doesn't use it, so setting it has no effect."
+    )
+  }
+
   if (def.internalOnly) {
     lines.push('')
     lines.push(
@@ -99,6 +106,9 @@ export function buildAttributeKeyHover(
 function buildExtraLines(def: SchemaAttributeDef): string[] {
   const lines: string[] = []
 
+  if (def.default !== null && def.default !== undefined) {
+    lines.push(`Default: \`${def.default}\``)
+  }
   if (def.values && def.values.length > 0) {
     lines.push(`Valid values: ${def.values.map((v) => `\`${v}\``).join(', ')}`)
   }
