@@ -43,6 +43,12 @@ import {
   findAttributeValuePosition,
 } from './completion/attributeValue'
 import {
+  findFilePathAt,
+  listFilePathCandidates,
+  type FilePathPosition,
+} from './completion/filePath'
+import { buildPointerCompletionItems } from './completion/pointer'
+import {
   findIncludePathAt,
   listIncludeCandidates,
   type IncludePathPosition,
@@ -238,6 +244,61 @@ connection.onRequest(
 
 const INCLUDE_TRIGGER_CHARACTERS = ['"', '/']
 
+/** `className` is `target` or a subclass of it, by the manifest's
+ *  superclass chain. */
+function isKindOf(
+  client: SchemaClient,
+  className: string,
+  target: string
+): boolean {
+  let current: string | null | undefined = className
+  // A cycle in the data would never end: the chain is short anyway.
+  for (let depth = 0; current && depth < 32; depth++) {
+    if (current === target) return true
+    current = client.getSchemaEntry(current)?.superclass
+  }
+  return false
+}
+
+async function buildFilePathItems(
+  filePath: string,
+  position: FilePathPosition,
+  extensions: string[],
+  normalizedDoc: TextDocument
+): Promise<CompletionItem[]> {
+  const range = {
+    start: normalizedDoc.positionAt(position.segment.start),
+    end: normalizedDoc.positionAt(position.segment.end),
+  }
+  // Right after the opening quote: the "/" comes with the item.
+  const prefix = position.typed === '' ? '/' : ''
+  const candidates = await listFilePathCandidates(
+    filePath,
+    position.typed,
+    extensions
+  )
+  return candidates.map(
+    (candidate): CompletionItem =>
+      candidate.isFolder
+        ? {
+            label: `${candidate.name}/`,
+            kind: CompletionItemKind.Folder,
+            // Files first, as in @include.
+            sortText: `1${candidate.name}`,
+            filterText: `${prefix}${candidate.name}/`,
+            textEdit: { range, newText: `${prefix}${candidate.name}/` },
+            command: { title: '', command: 'editor.action.triggerSuggest' },
+          }
+        : {
+            label: candidate.name,
+            kind: CompletionItemKind.File,
+            sortText: `0${candidate.name}`,
+            filterText: `${prefix}${candidate.name}`,
+            textEdit: { range, newText: `${prefix}${candidate.name}` },
+          }
+  )
+}
+
 async function buildIncludePathItems(
   filePath: string,
   position: IncludePathPosition,
@@ -324,11 +385,7 @@ connection.onCompletion(async (params) => {
         normalizedDoc
       )
     }
-    // '"' and '/' are trigger characters only for the @include path; typed
-    // anywhere else (a string value, a comment), they suggest nothing.
-    if (params.context?.triggerKind === CompletionTriggerKind.TriggerCharacter)
-      return []
-    // Classes and attribute keys come from the schema: experimental.
+    // Everything else comes from the schema: experimental.
     if (!settings.completionEnabled) return []
 
     if (!schemaClient) {
@@ -339,6 +396,69 @@ connection.onCompletion(async (params) => {
       return []
     }
 
+    // '"' and '/' are trigger characters only for paths (@include, and
+    // attributes that take a file); typed anywhere else (a string value,
+    // a comment), they suggest nothing.
+    const triggered =
+      params.context?.triggerKind === CompletionTriggerKind.TriggerCharacter
+
+    const valuePosition = findAttributeValuePosition(parsed, offset)
+    if (valuePosition) {
+      const schema = await schemaClient.getSchemaContent(
+        valuePosition.unit.className
+      )
+      const def = schema?.key?.[valuePosition.attribute.key]
+      if (
+        Array.isArray(def?.expectedExtensions) &&
+        def.expectedExtensions.length
+      ) {
+        const filePath = findFilePathAt(valuePosition, parsed.text, offset)
+        return filePath
+          ? buildFilePathItems(
+              URI.parse(doc.uri).fsPath,
+              filePath,
+              def.expectedExtensions,
+              normalizedDoc
+            )
+          : []
+      }
+      if (triggered || !def) return []
+
+      const toRange = (range: { start: number; end: number }) => ({
+        start: normalizedDoc.positionAt(range.start),
+        end: normalizedDoc.positionAt(range.end),
+      })
+      const client = schemaClient
+      const pointers = buildPointerCompletionItems(
+        valuePosition,
+        def,
+        parsed,
+        (className, target) => isKindOf(client, className, target)
+      )
+      if (pointers.length > 0) {
+        return pointers.map(
+          (item): CompletionItem => ({
+            label: item.label,
+            kind: CompletionItemKind.Reference,
+            detail: item.detail,
+            sortText: item.sortText,
+            textEdit: { range: toRange(item.range), newText: item.newText },
+          })
+        )
+      }
+      // Enums have a list to offer; every other value gets nothing.
+      return buildAttributeValueCompletionItems(valuePosition, schema).map(
+        (item): CompletionItem => ({
+          label: item.label,
+          kind: CompletionItemKind.EnumMember,
+          detail: item.detail,
+          sortText: item.sortText,
+          textEdit: { range: toRange(item.range), newText: item.newText },
+        })
+      )
+    }
+    if (triggered) return []
+
     if (isClassNamePosition(parsed, offset)) {
       return buildClassNameCompletionItems(schemaClient.getManifest()).map(
         (item): CompletionItem => ({
@@ -347,29 +467,6 @@ connection.onCompletion(async (params) => {
           detail: item.detail,
           documentation: item.documentation,
           sortText: item.sortText,
-        })
-      )
-    }
-
-    const valuePosition = findAttributeValuePosition(parsed, offset)
-    if (valuePosition) {
-      // Only enums have a list to offer; every other value gets nothing.
-      const schema = await schemaClient.getSchemaContent(
-        valuePosition.unit.className
-      )
-      return buildAttributeValueCompletionItems(valuePosition, schema).map(
-        (item): CompletionItem => ({
-          label: item.label,
-          kind: CompletionItemKind.EnumMember,
-          detail: item.detail,
-          sortText: item.sortText,
-          textEdit: {
-            range: {
-              start: normalizedDoc.positionAt(item.range.start),
-              end: normalizedDoc.positionAt(item.range.end),
-            },
-            newText: item.newText,
-          },
         })
       )
     }

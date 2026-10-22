@@ -37,7 +37,7 @@ VS Code ── apps/client ──(LSP over IPC)── apps/server
 | `symbols/documentSymbols.ts` | Outline, breadcrumbs, Go to Symbol |
 | `formatter/format.ts` | Format Document. See [formatter.md](../features/formatter.md) |
 | `formatter/workspaceFormat.ts` | Format/check many files, including the ones that aren't open |
-| `completion/`, `hover/` | Class name, attribute key and enum value completion; class name and attribute key hover |
+| `completion/`, `hover/` | Completion of class names, attribute keys, enum values, pointers (same file) and paths (`@include` and file attributes, from `modFiles.ts`); class name and attribute key hover |
 | `schema/client.ts` | `SchemaClient`: fetches and caches the [scs-schema](https://github.com/duhnunes/scs-schema) database, format v3 only (`data/manifest.v3.json`; see its `docs/migrating-to-v3.md`). The manifest is cached as `manifest.v3.json`, and one whose `formatVersion` isn't 3.x is never read |
 | `logger.ts` | Logging, sent to the client as `scsIntellisense/log` notifications |
 

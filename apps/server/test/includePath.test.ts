@@ -4,9 +4,9 @@ import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   findIncludePathAt,
-  findModRoot,
   listIncludeCandidates,
 } from '../src/completion/includePath'
+import { findPathRoots } from '../src/completion/modFiles'
 import { readScsDocument } from '../src/sii'
 import { sii } from './helpers'
 
@@ -60,6 +60,7 @@ describe('@include path: where the cursor is', () => {
 describe('@include path: what is listed', () => {
   let mod: string
   let game: string
+  let parted: string
 
   beforeAll(async () => {
     const root = await mkdtemp(join(tmpdir(), 'scs-include-test-'))
@@ -77,6 +78,21 @@ describe('@include path: what is listed', () => {
     game = join(root, 'ATS_161', 'def')
     await mkdir(join(game, 'def', 'world'), { recursive: true })
     await writeFile(join(game, 'def', 'world', 'sign.sii'), '')
+    // A mod split in parts (1.48+): manifest.sii next to base/ and dlc_*/,
+    // each mounted on the same "/".
+    parted = join(root, 'parted_mod')
+    await mkdir(join(parted, 'base', 'def', 'vehicle'), { recursive: true })
+    await mkdir(join(parted, 'dlc_arizona', 'def', 'vehicle'), {
+      recursive: true,
+    })
+    await writeFile(join(parted, 'manifest.sii'), '')
+    await writeFile(join(parted, 'base', 'def', 'vehicle', 'base.sui'), '')
+    await writeFile(join(parted, 'base', 'def', 'vehicle', 'both.sui'), '')
+    await writeFile(join(parted, 'dlc_arizona', 'def', 'vehicle', 'az.sui'), '')
+    await writeFile(
+      join(parted, 'dlc_arizona', 'def', 'vehicle', 'Both.sui'),
+      ''
+    )
   })
 
   afterAll(async () => {
@@ -115,7 +131,7 @@ describe('@include path: what is listed', () => {
 
   it('starts a "/" path at the mod root (the folder with manifest.sii)', async () => {
     const cab = join(mod, 'def', 'vehicle', 'parts', 'cab.sui')
-    expect(findModRoot(cab)).toBe(mod)
+    expect(findPathRoots(cab)).toEqual([mod])
     expect(await names(cab, '/def/vehicle/')).toEqual([
       'Mirrors.SUI',
       'lights.sui',
@@ -123,7 +139,23 @@ describe('@include path: what is listed', () => {
     ])
   })
 
+  it('starts a "/" path in every part of a mod split in base/ and dlc_*/', async () => {
+    const file = join(parted, 'dlc_arizona', 'def', 'vehicle', 'truck.sii')
+    expect(findPathRoots(file)).toEqual([
+      join(parted, 'base'),
+      join(parted, 'dlc_arizona'),
+    ])
+    // The same name in two parts shows once (base wins).
+    expect(await names(file, '/def/vehicle/')).toEqual([
+      'az.sui',
+      'base.sui',
+      'both.sui',
+    ])
+  })
+
   it('starts a "/" path above the nearest def folder in extracted game files', () => {
-    expect(findModRoot(join(game, 'def', 'world', 'sign.sii'))).toBe(game)
+    expect(findPathRoots(join(game, 'def', 'world', 'sign.sii'))).toEqual([
+      game,
+    ])
   })
 })

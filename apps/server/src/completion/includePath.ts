@@ -1,7 +1,6 @@
-import { existsSync } from 'node:fs'
-import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 import type { SiiDocument, SiiRange } from '../interfaces/structure'
+import { findPathRoots, listFolder } from './modFiles'
 
 /**
  * Completion of the path in `@include "..."`.
@@ -10,7 +9,7 @@ import type { SiiDocument, SiiRange } from '../interfaces/structure'
  * (2,814, all to .sui files): a relative path starts at the including
  * file's folder (796 in the same folder, 1,916 in a subfolder, none with
  * "../"), and a path starting with "/" (102) starts at the root of the
- * game or mod. Listing a folder is all this needs, so it works without a
+ * game or mod (findPathRoots()). Listing a folder is all this needs, so it works without a
  * workspace index.
  */
 
@@ -71,52 +70,18 @@ export async function listIncludeCandidates(
   typed: string
 ): Promise<IncludeCandidate[]> {
   const typedFolder = typed.slice(0, typed.lastIndexOf('/') + 1)
-  let base: string | undefined
-  if (typedFolder.startsWith('/')) base = findModRoot(filePath)
-  else base = path.dirname(filePath)
-  if (!base) return []
-
-  const folder = path.join(base, typedFolder)
-  let entries
-  try {
-    entries = await readdir(folder, { withFileTypes: true })
-  } catch {
-    return []
-  }
+  const roots = typedFolder.startsWith('/')
+    ? findPathRoots(filePath)
+    : [path.dirname(filePath)]
 
   const self = path.resolve(filePath).toLowerCase()
-  const candidates: IncludeCandidate[] = []
-  for (const entry of entries) {
-    if (entry.name.startsWith('.')) continue
-    if (entry.isDirectory()) {
-      candidates.push({ name: entry.name, isFolder: true })
-    } else if (
-      entry.isFile() &&
-      entry.name.toLowerCase().endsWith('.sui') &&
-      path.resolve(folder, entry.name).toLowerCase() !== self
-    ) {
-      candidates.push({ name: entry.name, isFolder: false })
-    }
-  }
-  return candidates
-}
-
-/**
- * Where a path starting with "/" begins: the mod's folder (the nearest
- * one holding a manifest.sii), or else the folder above the nearest
- * `def` folder, which is also how the game's extracted archives are laid
- * out (`ATS_161/def/def/...` → `ATS_161/def`). Undefined when neither is
- * found, rather than guessing.
- */
-export function findModRoot(filePath: string): string | undefined {
-  let folder = path.dirname(path.resolve(filePath))
-  let defParent: string | undefined
-  for (;;) {
-    if (existsSync(path.join(folder, 'manifest.sii'))) return folder
-    if (!defParent && path.basename(folder).toLowerCase() === 'def')
-      defParent = path.dirname(folder)
-    const parent = path.dirname(folder)
-    if (parent === folder) return defParent
-    folder = parent
-  }
+  const entries = await listFolder(roots, typedFolder, (name) =>
+    name.toLowerCase().endsWith('.sui')
+  )
+  return entries
+    .filter(
+      (entry) =>
+        entry.isFolder || path.resolve(entry.fullPath).toLowerCase() !== self
+    )
+    .map(({ name, isFolder }) => ({ name, isFolder }))
 }

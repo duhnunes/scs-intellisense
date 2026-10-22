@@ -31,7 +31,7 @@ Always on:
 
 Experimental (off by default):
 
-- 💡 **Completion** for `class_name`, attribute keys and `enum` values (`part_type: ` → `factory`, `aftermarket`...).
+- 💡 **Completion** for `class_name`, attribute keys, `enum` values (`part_type: ` → `factory`, `aftermarket`...), the units of the same file for pointers (filtered by the class the attribute expects), and the mod's own files for attributes that take one (`model: "/vehicle/..."` lists only `.pmd`).
 - 🖱️ **Hover** with descriptions of classes and attributes.
 - ✨ **Formatter**: Format Document and Format Selection, plus **Check Formatting of All Files** and **Format All Files** for the whole workspace.
 
