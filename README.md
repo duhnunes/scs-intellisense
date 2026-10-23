@@ -27,7 +27,9 @@ Always on:
 - 🔧 **Quick fixes** (light bulb, `Ctrl+.`) for problems with one obvious fix: a missing `:` or final newline, `a..b` in a unit name, an unmatched quote, an indented `@include`, a misspelled attribute key or `enum` value.
 - 📎 **`@include` paths**: type `@include "` to pick a `.sui` file or folder.
 - 🧭 **Outline, breadcrumbs and Go to Symbol** for units, attributes and includes.
+- 🧩 **`.sui` fragments** (bare attributes pasted into a unit by `@include`) get completion, hover and the same checks as the unit that includes them.
 - 🔗 **Go to Definition, Find References and Rename (F2)** for unit names, across every file of the open folder: Ctrl+click a pointer to jump to its unit, and renaming a unit updates every pointer to it.
+- 📦 **Paths follow your files:** rename or move a file or folder in VS Code, and every `@include` and file path pointing to it (`model: "/vehicle/..."`) is updated.
 - 📂 **File icons** for SCS file types.
 
 Experimental (off by default):

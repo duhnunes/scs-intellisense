@@ -34,6 +34,17 @@ A value is a pointer when its class's schema types the key `owner_ptr` or `link_
 - **Array counts.** `items: 5` on an array attribute is how many elements follow (`items[0]: ...`), not a pointer. Ignoring this gave 30,482 false pointers in ATS 1.61.
 - **`.sui` fragments.** Bare attributes in a `.sui` have no class of their own: they take the class of every unit that `@include`s the file. Without this, a rename would miss the pointers inside fragments.
 
+## .sui fragments
+
+A `.sui` of bare attributes is a unit body fragment: `@include` pastes it into a unit whose class is in another file. The index gives it that class (`classesOf()`), and `index/fragments.ts` shows its attributes to completion, hover, the schema rules and their quick fixes as the body of a nameless unit of that class (`asFragmentDocument()`). Highlighting, Outline and the structure rules still see the file as written.
+
+- **Nested fragments:** a fragment included by another fragment takes that one's classes (`goal_bonus_time_limit.sui` → `goal_bonus.sui` in ATS 1.61).
+- **`/` includes** resolve from the mod's root or part, like completion does.
+- **Several classes:** a fragment included by units of different classes gets them all (`a|b`), and its schema is their union (`mergeSchemas()`): a key is unknown only when no class has it, and an enum accepts the values of all. While one of the classes is still loading there is no union, so its keys never show as unknown for a moment.
+- **No includer:** a fragment nothing includes in the open folders gets nothing, as before.
+
+On ATS 1.61, the 469 fragments (7,961 attributes) get no unknown-attribute or invalid-enum-value warning; 2 are included by units of two classes. Those of ATS Expansion (10, written by Mods Studio 2) get none either.
+
 ## Rename
 
 F2 on a unit's name, in its header or in a pointer to it, renames the definitions and every pointer in the open folders. The quotes stay as written. The new name goes through the same rules as the diagnostics (`validateUnitName`), so `a..b` is refused with the diagnostic's message. Renaming `.a` to `a.b` makes the unit global; that's the user's call.
@@ -41,6 +52,17 @@ F2 on a unit's name, in its header or in a pointer to it, renames the definition
 A name that isn't defined in the open folders (a unit of the game, or of another mod) can't be renamed: only the pointers would change.
 
 **What it can't see:** only the text files of the open folders. A map (binary `.base`/`.data` files) or another mod that uses the old name keeps it. For example, the prefab units of a map mod are used by its map, not by any `.sii`.
+
+## Moving files
+
+Renaming or moving a file or folder in VS Code (Explorer, drag and drop) updates every path that points to it, in the same step and without asking, like TypeScript does with imports. `index/fileMoves.ts` computes the edits on `workspace/willRenameFiles`, which VS Code sends before the move.
+
+- **What is updated:** `@include` paths, and the quoted file paths of attributes (`model: "/vehicle/truck/cabin.pmd"`), including after a `name|` (`sounds[]: "OY|/sound/horn.soundref"`), in every `.sii`/`.sui` of the open folders. A path to anything inside a moved folder is updated too. So are the relative `@include`s of a moved `.sii`/`.sui` itself.
+- **How paths are written:** a `/` path stays a `/` path, from the mod's root or its `base/`/`dlc_*` part (`findPathRoots`). A relative one stays relative while it can. None of the 2,814 `@include`s of ATS 1.61 uses `../`, so one that would need it becomes a `/` path instead.
+- **What is left alone:** a path that can't be written either way (the file moved out of the mod), and moves made outside VS Code (another program, the command line), which VS Code doesn't announce.
+- **Not yet:** `.mat` files (text, `texture : "welker.tobj"`) and text `.tobj` files of a source mod (`map 2d barn_a.tga`). A compiled `.tobj` is binary.
+
+Renaming the `f350_heavy_duty` folder of ATS Expansion (4,426 `.sii`/`.sui`) gives 21 edits in 5 files, the same as a search for the path, in about 0.2 s.
 
 ---
 

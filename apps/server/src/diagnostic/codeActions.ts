@@ -22,16 +22,18 @@ export function buildCodeActions(
   doc: TextDocument,
   params: CodeActionParams,
   enabledSeverities: SiiSeverity[],
-  schemaFor?: SchemaLookup
+  schemaFor?: SchemaLookup,
+  fragmentClass?: string
 ): CodeAction[] {
   const only = params.context.only
   if (only && !only.some((kind) => CodeActionKind.QuickFix.startsWith(kind)))
     return []
 
-  const { parsed, normalizedDoc, issues } = checkDocument(
+  const { classed, normalizedDoc, issues } = checkDocument(
     doc,
     enabledSeverities,
-    schemaFor
+    schemaFor,
+    fragmentClass
   )
   const start = normalizedDoc.offsetAt(params.range.start)
   const end = normalizedDoc.offsetAt(params.range.end)
@@ -44,7 +46,7 @@ export function buildCodeActions(
   for (const issue of issues) {
     if (!touches(issue, start, end)) continue
 
-    for (const fix of quickFixesFor(issue, parsed, schemaFor)) {
+    for (const fix of quickFixesFor(issue, classed, schemaFor)) {
       const edits: TextEdit[] = fix.edits.map((edit) => ({
         range: {
           start: normalizedDoc.positionAt(edit.range.start),

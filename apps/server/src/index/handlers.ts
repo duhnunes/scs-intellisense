@@ -6,6 +6,7 @@ import {
   type InitializeParams,
   type Location as LspLocation,
   type LocationLink,
+  type ServerCapabilities,
   type TextDocuments,
   type TextEdit,
   type WorkspaceEdit,
@@ -14,6 +15,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
 import { describeError, getLogger } from '../logger'
 import type { SchemaClient } from '../schema/client'
+import { moveEdits } from './fileMoves'
 import {
   findDefinitions,
   findReferences,
@@ -43,7 +45,9 @@ export function getWorkspaceIndex(): WorkspaceIndex {
 export function registerIndex(
   connection: Connection,
   documents: TextDocuments<TextDocument>,
-  getSchemaClient: () => SchemaClient | undefined
+  getSchemaClient: () => SchemaClient | undefined,
+  /** After each full read of the folders. */
+  onIndexed?: () => void
 ): {
   onInitialize: (params: InitializeParams) => void
   onInitialized: () => void
@@ -71,6 +75,7 @@ export function registerIndex(
         'INDEX_READY',
         `Indexed ${count} .sii/.sui files in ${Date.now() - started} ms`
       )
+      onIndexed?.()
     } catch (error) {
       logger.error(
         'INDEX_FAILED',
@@ -278,15 +283,57 @@ export function registerIndex(
     return { changes }
   })
 
+  // Before VS Code renames or moves a file or folder (Explorer, drag and
+  // drop): the paths pointing at it are rewritten in the same step, with
+  // no question asked, like TypeScript's imports. Moves done outside VS
+  // Code don't pass through here.
+  connection.workspace.onWillRenameFiles((params): WorkspaceEdit | null => {
+    try {
+      const edits = moveEdits(
+        index,
+        params.files.map((file) => ({
+          from: URI.parse(file.oldUri).fsPath,
+          to: URI.parse(file.newUri).fsPath,
+        }))
+      )
+      if (edits.length === 0) return null
+      const changes: Record<string, TextEdit[]> = {}
+      for (const edit of edits)
+        (changes[edit.file.uri] ??= []).push({
+          range: {
+            start: edit.file.document.positionAt(edit.range.start),
+            end: edit.file.document.positionAt(edit.range.end),
+          },
+          newText: edit.newText,
+        })
+      logger.info(
+        'PATHS_UPDATED',
+        `Moved ${params.files.length} item(s): ${edits.length} paths updated in ${Object.keys(changes).length} files`
+      )
+      return { changes }
+    } catch (error) {
+      logger.error(
+        'PATHS_UPDATE_FAILED',
+        'Updating paths after a move failed',
+        describeError(error)
+      )
+      return null
+    }
+  })
+
   return { onInitialize, onInitialized }
 }
 
 /** What the server declares for these features. */
-export const INDEX_CAPABILITIES = {
+export const INDEX_CAPABILITIES: ServerCapabilities = {
   definitionProvider: true,
   referencesProvider: true,
   renameProvider: { prepareProvider: true },
   workspace: {
     workspaceFolders: { supported: true, changeNotifications: true },
+    // Any file or folder: a moved .pmd or .tobj is pointed at too.
+    fileOperations: {
+      willRename: { filters: [{ scheme: 'file', pattern: { glob: '**/*' } }] },
+    },
   },
-} as const
+}

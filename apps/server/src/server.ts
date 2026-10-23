@@ -35,6 +35,13 @@ import {
   registerIndex,
 } from './index/handlers'
 import { isFileLocalName } from './index/workspaceIndex'
+import {
+  asFragmentDocument,
+  CLASS_SEPARATOR,
+  fragmentClassName,
+  lookupClasses,
+  lookupClassesAsync,
+} from './index/fragments'
 import { normalizeSiiText, readScsDocument } from './sii'
 import { detectExtFromUri, detectModeFromExt } from './parser/docParser'
 import {
@@ -92,7 +99,13 @@ initLogger(connection)
 const logger = getLogger()
 
 registerSemantic(connection, documents)
-const workspaceIndex = registerIndex(connection, documents, () => schemaClient)
+// Once the folders are read, open .sui fragments know their class.
+const workspaceIndex = registerIndex(
+  connection,
+  documents,
+  () => schemaClient,
+  () => publishAllDiagnostics()
+)
 
 // The single schema fetch/cache instance for this server process.
 // Completion, hover, and future attribute validation all consult this —
@@ -434,11 +447,11 @@ connection.onCompletion(async (params) => {
     const triggered =
       params.context?.triggerKind === CompletionTriggerKind.TriggerCharacter
 
-    const valuePosition = findAttributeValuePosition(parsed, offset)
+    // A .sui fragment's attributes, as the body of the including unit.
+    const classed = asFragmentDocument(parsed, fragmentClassOf(doc.uri))
+    const valuePosition = findAttributeValuePosition(classed, offset)
     if (valuePosition) {
-      const schema = await schemaClient.getSchemaContent(
-        valuePosition.unit.className
-      )
+      const schema = await schemaOf(valuePosition.unit.className)
       const def = schema?.key?.[valuePosition.attribute.key]
       if (
         Array.isArray(def?.expectedExtensions) &&
@@ -464,7 +477,7 @@ connection.onCompletion(async (params) => {
       const pointers = buildPointerCompletionItems(
         valuePosition,
         def,
-        parsed,
+        classed,
         (className, target) => isKindOf(client, className, target),
         unitsInOtherFiles(doc.uri)
       )
@@ -504,12 +517,12 @@ connection.onCompletion(async (params) => {
       )
     }
 
-    const unit = findAttributeKeyPosition(parsed, offset)
+    const unit = findAttributeKeyPosition(classed, offset)
     if (unit) {
       // First real (non-mocked) use of the lazy per-class fetch: this
       // is the only completion path that ever needs a specific class's
       // full attribute list, not just what's already in the manifest.
-      const schema = await schemaClient.getSchemaContent(unit.className)
+      const schema = await schemaOf(unit.className)
       return buildAttributeKeyCompletionItems(schema).map(
         (item): CompletionItem => ({
           label: item.label,
@@ -563,7 +576,24 @@ documents.onDidChangeContent((change) => publishDiagnostics(change.document))
 /** The schema rules read class files already in memory, so they answer
  *  right away; publishDiagnostics() loads the missing ones. */
 const loadedSchema: SchemaLookup = (className) =>
-  schemaClient?.peekSchemaContent(className)
+  lookupClasses(className, (one) => schemaClient?.peekSchemaContent(one))
+
+/** A class's schema, loading it if needed; a .sui fragment included by
+ *  units of several classes gets them merged. */
+function schemaOf(className: string) {
+  return lookupClassesAsync(className, async (one) =>
+    schemaClient?.getSchemaContent(one)
+  )
+}
+
+/** The class(es) of the units that @include this .sui, if it's a
+ *  fragment of bare attributes; undefined otherwise. */
+function fragmentClassOf(uri: string): string | undefined {
+  if (!uri.toLowerCase().endsWith('.sui')) return undefined
+  const index = getWorkspaceIndex()
+  const file = index.get(uri)
+  return file ? fragmentClassName(index.classesOf(file)) : undefined
+}
 
 /**
  * Sends a document's diagnostics, with the schema rules for every class
@@ -575,7 +605,12 @@ const loadedSchema: SchemaLookup = (className) =>
  */
 function publishDiagnostics(doc: TextDocument): void {
   try {
-    const checked = checkDocument(doc, settings.enabledSeverities, loadedSchema)
+    const checked = checkDocument(
+      doc,
+      settings.enabledSeverities,
+      loadedSchema,
+      fragmentClassOf(doc.uri)
+    )
     connection.sendDiagnostics({
       uri: doc.uri,
       diagnostics: toDiagnostics(checked),
@@ -584,7 +619,11 @@ function publishDiagnostics(doc: TextDocument): void {
     const client = schemaClient
     if (!client || !settings.enabledSeverities.includes('warning')) return
     const missing = [
-      ...new Set(checked.parsed.units.map((unit) => unit.className)),
+      ...new Set(
+        checked.classed.units.flatMap((unit) =>
+          unit.className.split(CLASS_SEPARATOR)
+        )
+      ),
     ].filter(
       (className) =>
         client.getSchemaEntry(className) && !client.peekSchemaContent(className)
@@ -654,13 +693,16 @@ connection.onHover(async (params): Promise<Hover | null> => {
       return hover ? toHoverResult(hover.markdown) : null
     }
 
-    const attribute = findAttributeKeyAtPosition(parsed, offset)
+    const attribute = findAttributeKeyAtPosition(
+      asFragmentDocument(parsed, fragmentClassOf(doc.uri)),
+      offset
+    )
     if (attribute) {
       if (!schemaClient) return null
       // Same lazy per-class fetch completion's attribute_key path
       // already uses — cached after the first hover/completion for
       // this class, whichever happens first.
-      const schema = await schemaClient.getSchemaContent(attribute.className)
+      const schema = await schemaOf(attribute.className)
       const hover = buildAttributeKeyHover(attribute.key, schema)
       return hover ? toHoverResult(hover.markdown) : null
     }
@@ -685,7 +727,8 @@ connection.onCodeAction((params): CodeAction[] => {
       doc,
       params,
       settings.enabledSeverities,
-      loadedSchema
+      loadedSchema,
+      fragmentClassOf(doc.uri)
     )
   } catch (error) {
     logger.error(

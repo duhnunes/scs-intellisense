@@ -7,6 +7,7 @@ import type {
   SiiIssue,
   SiiSeverity,
 } from '../interfaces/structure'
+import { asFragmentDocument } from '../index/fragments'
 import { validateSiiDocument } from './rules'
 import {
   validateAttributeKeys,
@@ -27,17 +28,23 @@ export interface CheckedDocument {
   parsed: SiiDocument
   /** The document over `parsed.text`, for converting issue offsets. */
   normalizedDoc: TextDocument
+  /** `parsed`, with a .sui fragment's bare attributes in a unit of the
+   *  including class (asFragmentDocument()): what the schema rules and
+   *  their quick fixes read. */
+  classed: SiiDocument
   issues: SiiIssue[]
 }
 
 /** Reads a document and collects every issue the user has enabled. Shared
  *  by diagnostics and quick fixes, so both always see the same issues.
  *  With `schemaFor`, the rules that need the schema run too, for the
- *  classes it has loaded. */
+ *  classes it has loaded; `fragmentClass` gives a .sui fragment the class
+ *  of the units that @include it. */
 export function checkDocument(
   doc: TextDocument,
   enabledSeverities: SiiSeverity[] = DEFAULT_ENABLED_SEVERITIES,
-  schemaFor?: SchemaLookup
+  schemaFor?: SchemaLookup,
+  fragmentClass?: string
 ): CheckedDocument {
   const ext = detectExtFromUri(doc.uri)
   const mode = detectModeFromExt(ext)
@@ -56,6 +63,7 @@ export function checkDocument(
   // Structural issues come straight from the reader (e.g. a missing '{');
   // business-rule issues come from rules.ts, running against the tree the
   // reader already built. This is the merge point for both.
+  const classed = asFragmentDocument(parsed, fragmentClass)
   const issues: SiiIssue[] = [
     ...parsed.issues,
     ...validateSiiDocument(parsed),
@@ -63,13 +71,13 @@ export function checkDocument(
     // read in the wrong unit.
     ...(schemaFor && parsed.issues.length === 0
       ? [
-          ...validateAttributeKeys(parsed, schemaFor),
-          ...validateEnumValues(parsed, schemaFor),
+          ...validateAttributeKeys(classed, schemaFor),
+          ...validateEnumValues(classed, schemaFor),
         ]
       : []),
   ].filter((issue) => enabledSeverities.includes(issue.severity ?? 'error'))
 
-  return { parsed, normalizedDoc, issues }
+  return { parsed, normalizedDoc, classed, issues }
 }
 
 export function getDiagnostics(

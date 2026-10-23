@@ -1,8 +1,9 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
+import { findPathRoots } from '../completion/modFiles'
 import { decodeSiiFile } from '../formatter/workspaceFormat'
 import type {
   SiiAttribute,
@@ -62,8 +63,20 @@ export interface IncludeRef {
   className: string | undefined
 }
 
+/** A path written in the file: an @include, or a file attribute's value
+ *  (`model: "/vehicle/a.pmd"`, `sounds[]: "OY|/sound/b.soundref"`). */
+export interface PathRef {
+  kind: 'include' | 'file'
+  /** As written: relative, or starting with "/". */
+  text: string
+  /** Of `text` only: inside the quotes, after any "name|". */
+  range: SiiRange
+}
+
 export interface IndexedFile {
   uri: string
+  /** The file system path, as the file system spells it. */
+  filePath: string
   /** Lowercased file system path: the map key. */
   key: string
   /** Normalized text (no BOM, LF), for offset → position. */
@@ -71,6 +84,7 @@ export interface IndexedFile {
   units: IndexedUnit[]
   values: ValueCandidate[]
   includes: IncludeRef[]
+  paths: PathRef[]
 }
 
 /** Is `key` of class `className` an owner_ptr/link_ptr element? */
@@ -106,6 +120,7 @@ export class WorkspaceIndex {
    *  set from an open editor keep their text. */
   async scan(folders: string[], isOpen: (uri: string) => boolean) {
     this.folders = folders
+    rootsCache.clear()
     const found: string[] = []
     for (const folder of folders) await collect(folder, found)
 
@@ -214,13 +229,20 @@ export class WorkspaceIndex {
   }
 
   /** The classes a .sui fragment's bare attributes belong to: those of
-   *  the units that @include it. */
-  classesOf(file: IndexedFile): string[] {
+   *  the units that @include it, or, when another fragment includes it
+   *  (`goal_bonus_time_limit.sui` → `goal_bonus.sui` in ATS 1.61), that
+   *  fragment's classes. */
+  classesOf(file: IndexedFile, seen = new Set<string>()): string[] {
+    seen.add(file.key)
     const classes = new Set<string>()
     for (const other of this.files.values())
-      for (const include of other.includes)
-        if (include.target === file.key && include.className)
-          classes.add(include.className)
+      for (const include of other.includes) {
+        if (include.target !== file.key) continue
+        if (include.className) classes.add(include.className)
+        else if (!seen.has(other.key))
+          for (const className of this.classesOf(other, seen))
+            classes.add(className)
+      }
     return [...classes]
   }
 
@@ -251,6 +273,7 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
     }))
   const values: ValueCandidate[] = []
   const includes: IncludeRef[] = []
+  const paths: PathRef[] = []
   const addValues = (
     attributes: SiiAttribute[],
     className: string | undefined
@@ -259,9 +282,11 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
       if (attribute.kind === 'include') {
         const target = resolveInclude(filePath, parsed, attribute)
         if (target) includes.push({ target, className })
+        addInclude(attribute.valueRange)
         continue
       }
       const range = innerRange(parsed.text, attribute.valueRange)
+      addFilePath(attribute.valueRange, range)
       const name = parsed.text.slice(range.start, range.end)
       if (
         name === 'null' ||
@@ -278,13 +303,38 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
       })
     }
   }
+  const addInclude = (valueRange: SiiRange) => {
+    const range = innerRange(parsed.text, valueRange)
+    const text = parsed.text.slice(range.start, range.end)
+    if (text !== '') paths.push({ kind: 'include', text, range })
+  }
+  // Only quoted values whose path starts with "/": that's how the game
+  // writes all of them (135,133 in ATS 1.61).
+  const addFilePath = (valueRange: SiiRange, inner: SiiRange) => {
+    if (inner.start === valueRange.start) return // not quoted
+    const value = parsed.text.slice(inner.start, inner.end)
+    const start = inner.start + value.lastIndexOf('|') + 1
+    const text = parsed.text.slice(start, inner.end)
+    if (text.startsWith('/') && text.length > 1 && !text.includes('\n'))
+      paths.push({ kind: 'file', text, range: { start, end: inner.end } })
+  }
   for (const unit of parsed.units) addValues(unit.attributes, unit.className)
   addValues(parsed.attributes, undefined)
   for (const include of parsed.includes) {
     const target = resolveRelative(filePath, include.path)
     if (target) includes.push({ target, className: undefined })
+    addInclude(include.valueRange)
   }
-  return { uri, key: fileKey(filePath), document, units, values, includes }
+  return {
+    uri,
+    filePath: path.resolve(filePath),
+    key: fileKey(filePath),
+    document,
+    units,
+    values,
+    includes,
+    paths,
+  }
 }
 
 function resolveInclude(
@@ -296,13 +346,35 @@ function resolveInclude(
   return resolveRelative(filePath, parsed.text.slice(range.start, range.end))
 }
 
-/** Only relative @include paths: 2,712 of the 2,814 in ATS 1.61. */
+/** A relative @include starts at the file's folder (2,712 of the 2,814 in
+ *  ATS 1.61); a "/" one at the mod's root or part, the one that has the
+ *  file (base/ or a dlc_* folder). */
 function resolveRelative(
   filePath: string,
   includePath: string
 ): string | undefined {
-  if (includePath === '' || includePath.startsWith('/')) return undefined
-  return fileKey(path.join(path.dirname(filePath), includePath))
+  if (includePath === '') return undefined
+  if (!includePath.startsWith('/'))
+    return fileKey(path.join(path.dirname(filePath), includePath))
+  const roots = rootsOfFolder(path.dirname(filePath))
+  const candidates = roots.map((root) => path.join(root, includePath))
+  const found = candidates.find((candidate) => existsSync(candidate))
+  const target = found ?? candidates[0]
+  return target ? fileKey(target) : undefined
+}
+
+// Files of one folder share their roots; cleared on every scan, in case a
+// manifest.sii or base/ folder appeared.
+const rootsCache = new Map<string, string[]>()
+
+function rootsOfFolder(folder: string): string[] {
+  const key = folder.toLowerCase()
+  let roots = rootsCache.get(key)
+  if (!roots) {
+    roots = findPathRoots(path.join(folder, 'x.sii'))
+    rootsCache.set(key, roots)
+  }
+  return roots
 }
 
 function innerRange(text: string, range: SiiRange): SiiRange {
