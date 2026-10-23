@@ -99,12 +99,13 @@ initLogger(connection)
 const logger = getLogger()
 
 registerSemantic(connection, documents)
-// Once the folders are read, open .sui fragments know their class.
+// Once the folders are read, or a file changes on disk, open .sui
+// fragments are checked again with their including units' class.
 const workspaceIndex = registerIndex(
   connection,
   documents,
   () => schemaClient,
-  () => publishAllDiagnostics()
+  () => recheckOpenFragments()
 )
 
 // The single schema fetch/cache instance for this server process.
@@ -505,7 +506,8 @@ connection.onCompletion(async (params) => {
     }
     if (triggered) return []
 
-    if (isClassNamePosition(parsed, offset)) {
+    // A fragment with a class is a unit body: no unit header goes in it.
+    if (classed === parsed && isClassNamePosition(parsed, offset)) {
       return buildClassNameCompletionItems(schemaClient.getManifest()).map(
         (item): CompletionItem => ({
           label: item.label,
@@ -571,7 +573,27 @@ connection.onNotification('scsIntellisense/updateSettings', (raw: unknown) => {
   }
 })
 
-documents.onDidChangeContent((change) => publishDiagnostics(change.document))
+documents.onDidChangeContent((change) => {
+  publishDiagnostics(change.document)
+  recheckOpenFragments(change.document.uri)
+})
+
+let fragmentRecheck: NodeJS.Timeout | undefined
+
+/**
+ * A .sui fragment's checks depend on the files that @include it, so an
+ * open one is checked again when any other file changes (in the editor,
+ * on disk, or once the folders are read), after a short pause so typing
+ * elsewhere doesn't redo it on every key.
+ */
+function recheckOpenFragments(exceptUri?: string): void {
+  clearTimeout(fragmentRecheck)
+  fragmentRecheck = setTimeout(() => {
+    for (const doc of documents.all())
+      if (doc.uri !== exceptUri && doc.uri.toLowerCase().endsWith('.sui'))
+        publishDiagnostics(doc)
+  }, 300)
+}
 
 /** The schema rules read class files already in memory, so they answer
  *  right away; publishDiagnostics() loads the missing ones. */

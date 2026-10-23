@@ -9,6 +9,7 @@ import {
 import { registerBugReportCommand } from './bugReport'
 import { ConfigManager, serverSettings } from './configManager'
 import { registerFormatOnSave } from './formatOnSave'
+import { PathEditMarks } from './pathEditMarks'
 import { ExtensionLog, type LogEntry } from './log'
 import { registerWorkspaceFormatCommands } from './workspaceFormat'
 
@@ -25,6 +26,10 @@ export function activate(context: vscode.ExtensionContext) {
     debug: { module: serverModule, transport: TransportKind.ipc },
   }
 
+  // Marks the lines whose paths the server rewrites when a file moves.
+  const pathEditMarks = new PathEditMarks(log)
+  context.subscriptions.push(pathEditMarks)
+
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
       { scheme: 'file', language: 'sii' },
@@ -32,9 +37,20 @@ export function activate(context: vscode.ExtensionContext) {
     ],
     // Files changed outside the editor (git checkout, a converter, another
     // program) reach the server's workspace index, which keeps every
-    // .sii/.sui of the open folders.
+    // .sii/.sui of the open folders, and the paths in .mat/.tobj files.
     synchronize: {
-      fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{sii,sui}'),
+      fileEvents: vscode.workspace.createFileSystemWatcher(
+        '**/*.{sii,sui,mat,tobj}'
+      ),
+    },
+    middleware: {
+      workspace: {
+        willRenameFiles: async (event, next) => {
+          const edit = await next(event)
+          pathEditMarks.remember(event, edit)
+          return edit
+        },
+      },
     },
     // The LSP library's own messages (server crashes, protocol errors) go
     // to the same channel as everything else.

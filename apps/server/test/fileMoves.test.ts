@@ -24,6 +24,17 @@ accessory_cabin_data : cab.truck {
 `,
   'base/vehicle/truck/cabin.pmd': '',
   'base/sound/horn.soundref': '',
+  // A .mat in the older format (relative) and the game's (nested, "/").
+  'base/material/sign/welker.mat':
+    'material : "eut2.dif" {\r\n\ttexture : "welker.tobj"\r\n\ttexture_name : "texture"\r\n}\r\n',
+  'base/material/sign/board.mat':
+    'effect : "eut2.dif.rfx" {\n\ttexture : "texture_base" {\n\t\tsource : "/material/sign/welker.tobj"\n\t}\n}\n',
+  // A text .tobj (as SCS Blender Tools exports it) and a compiled one.
+  'base/material/sign/welker.tobj':
+    'map\t2d\twelker.dds\naddr\tclamp_to_edge\tclamp_to_edge\n',
+  'base/material/sign/welker.dds': '',
+  'base/material/sign/compiled.tobj':
+    '\u0001\n\u0000\u0000/material/sign/welker.dds',
 }
 
 describe('updating paths when files move', () => {
@@ -108,5 +119,33 @@ describe('updating paths when files move', () => {
       'base/def/vehicle/truck.sii: /vehicle/share/shadow.tobj -> /vehicle/shadow.tobj',
     ])
     expect(edits([['base/textures/a.dds', 'base/textures/b.dds']])).toEqual([])
+  })
+
+  it('rewrites the textures of .mat and text .tobj files', () => {
+    expect(
+      edits([
+        ['base/material/sign/welker.tobj', 'base/material/sign/welker_v2.tobj'],
+      ])
+    ).toEqual([
+      'base/material/sign/board.mat: /material/sign/welker.tobj -> /material/sign/welker_v2.tobj',
+      'base/material/sign/welker.mat: welker.tobj -> welker_v2.tobj',
+    ])
+    expect(
+      edits([
+        ['base/material/sign/welker.dds', 'base/material/sign/welker_a.dds'],
+      ])
+    ).toEqual(['base/material/sign/welker.tobj: welker.dds -> welker_a.dds'])
+  })
+
+  it("fixes a moved .tobj's own relative texture, and leaves binary .tobj alone", () => {
+    expect(
+      edits([
+        ['base/material/sign/welker.tobj', 'base/material/other/welker.tobj'],
+      ])
+    ).toEqual([
+      'base/material/sign/board.mat: /material/sign/welker.tobj -> /material/other/welker.tobj',
+      'base/material/sign/welker.mat: welker.tobj -> /material/other/welker.tobj',
+      'base/material/sign/welker.tobj: welker.dds -> /material/sign/welker.dds',
+    ])
   })
 })

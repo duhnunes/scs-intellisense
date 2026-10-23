@@ -10,7 +10,8 @@ import type {
   SiiDocument,
   SiiRange,
 } from '../interfaces/structure'
-import { readScsDocument } from '../sii'
+import { normalizeSiiText, readScsDocument } from '../sii'
+import { texturePathRefs } from './texturePaths'
 
 /**
  * What every .sii/.sui of the open folders defines and points to, so Go
@@ -260,6 +261,8 @@ export class WorkspaceIndex {
 }
 
 function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
+  if (/\.(mat|tobj)$/i.test(filePath))
+    return buildPathsEntry(uri, filePath, text)
   const mode = filePath.toLowerCase().endsWith('.sui') ? 'sui' : 'sii'
   const parsed = readScsDocument(text, mode)
   const document = TextDocument.create(uri, mode, 0, parsed.text)
@@ -325,6 +328,7 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
     if (target) includes.push({ target, className: undefined })
     addInclude(include.valueRange)
   }
+  if (paths.length > 0) rootsOfFile(filePath)
   return {
     uri,
     filePath: path.resolve(filePath),
@@ -367,6 +371,12 @@ function resolveRelative(
 // manifest.sii or base/ folder appeared.
 const rootsCache = new Map<string, string[]>()
 
+/** Where the "/" paths of `filePath` start (findPathRoots), remembered
+ *  per folder: moving a file looks them up for every file with paths. */
+export function rootsOfFile(filePath: string): string[] {
+  return rootsOfFolder(path.dirname(path.resolve(filePath)))
+}
+
 function rootsOfFolder(folder: string): string[] {
   const key = folder.toLowerCase()
   let roots = rootsCache.get(key)
@@ -393,6 +403,31 @@ function isDefined<T>(value: T | undefined): value is T {
   return value !== undefined
 }
 
+/** .sii/.sui for everything; .mat and text .tobj for their paths only. */
+export const INDEXED_FILE = /\.(sii|sui|mat|tobj)$/i
+
+/** A .mat or text .tobj: only the paths it holds, for file moves. */
+function buildPathsEntry(
+  uri: string,
+  filePath: string,
+  text: string
+): IndexedFile {
+  const normalized = normalizeSiiText(text)
+  const paths = texturePathRefs(filePath, normalized)
+  // Looked up now, in the background, rather than when a file moves.
+  if (paths.length > 0) rootsOfFile(filePath)
+  return {
+    uri,
+    filePath: path.resolve(filePath),
+    key: fileKey(filePath),
+    document: TextDocument.create(uri, 'plaintext', 0, normalized),
+    units: [],
+    values: [],
+    includes: [],
+    paths,
+  }
+}
+
 async function collect(folder: string, found: string[]): Promise<void> {
   let entries
   try {
@@ -404,7 +439,6 @@ async function collect(folder: string, found: string[]): Promise<void> {
     if (entry.name.startsWith('.') || entry.name === 'node_modules') continue
     const full = path.join(folder, entry.name)
     if (entry.isDirectory()) await collect(full, found)
-    else if (entry.isFile() && /\.(sii|sui)$/i.test(entry.name))
-      found.push(full)
+    else if (entry.isFile() && INDEXED_FILE.test(entry.name)) found.push(full)
   }
 }

@@ -46,7 +46,7 @@ export function registerIndex(
   connection: Connection,
   documents: TextDocuments<TextDocument>,
   getSchemaClient: () => SchemaClient | undefined,
-  /** After each full read of the folders. */
+  /** After the folders are read, and after files change on disk. */
   onIndexed?: () => void
 ): {
   onInitialize: (params: InitializeParams) => void
@@ -73,7 +73,7 @@ export function registerIndex(
       )
       logger.info(
         'INDEX_READY',
-        `Indexed ${count} .sii/.sui files in ${Date.now() - started} ms`
+        `Indexed ${count} .sii/.sui/.mat/.tobj files in ${Date.now() - started} ms`
       )
       onIndexed?.()
     } catch (error) {
@@ -136,6 +136,7 @@ export function registerIndex(
       if (change.type === FileChangeType.Deleted) index.remove(filePath)
       else index.refreshFromDisk(filePath)
     }
+    onIndexed?.()
   })
 
   const fileAt = (uri: string) => {

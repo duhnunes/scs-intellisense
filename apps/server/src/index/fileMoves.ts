@@ -1,7 +1,11 @@
 import path from 'node:path'
-import { findPathRoots } from '../completion/modFiles'
 import type { SiiRange } from '../interfaces/structure'
-import type { IndexedFile, PathRef, WorkspaceIndex } from './workspaceIndex'
+import {
+  rootsOfFile,
+  type IndexedFile,
+  type PathRef,
+  type WorkspaceIndex,
+} from './workspaceIndex'
 
 /** A file or folder renamed or moved: absolute paths. */
 export interface FileMove {
@@ -18,9 +22,9 @@ export interface PathEdit {
 /**
  * The edits that keep every path in the open folders pointing at the same
  * file after `moves`, like TypeScript's "update imports on file move":
- * `@include`s and file attributes (`model: "/vehicle/a.pmd"`) to a moved
- * file or anything in a moved folder, and the relative `@include`s of a
- * moved .sii/.sui itself.
+ * `@include`s, file attributes (`model: "/vehicle/a.pmd"`) and the
+ * texture paths of .mat and text .tobj files, to a moved file or anything
+ * in a moved folder, and the relative paths of a moved file itself.
  *
  * A "/" path stays a "/" path (from the mod's root, or its `base/` /
  * `dlc_*` part); a relative one stays relative while it can. The game's
@@ -31,7 +35,7 @@ export interface PathEdit {
 export function moveEdits(
   index: WorkspaceIndex,
   moves: FileMove[],
-  rootsOf: (filePath: string) => string[] = findPathRoots
+  rootsOf: (filePath: string) => string[] = rootsOfFile
 ): PathEdit[] {
   const moved = (target: string): string | undefined => {
     for (const move of moves) {
@@ -43,20 +47,31 @@ export function moveEdits(
     return undefined
   }
 
+  // A path can only reach a moved item through its name: a "/" path names
+  // every folder on the way, and a relative one every folder below the
+  // file (never "../"). So most paths are skipped with a string check;
+  // only a moved file's own paths always need a look. VS Code waits for
+  // this before moving (17,000 indexed files of ATS Expansion).
+  const names = moves.map((move) => path.basename(move.from).toLowerCase())
+  const mayPoint = (ref: PathRef) => {
+    const lower = ref.text.toLowerCase()
+    return names.some((name) => lower.includes(name))
+  }
+
   const edits: PathEdit[] = []
-  const rootsByFolder = new Map<string, string[]>()
   for (const file of index.all()) {
-    // Files of one folder share their roots: looked up once per folder
-    // (4,426 files of ATS Expansion took 1.7 s otherwise).
-    const folder = path.dirname(file.filePath).toLowerCase()
-    let roots = rootsByFolder.get(folder)
-    if (!roots) {
-      roots = rootsOf(file.filePath)
-      rootsByFolder.set(folder, roots)
-    }
-    const newFile = moved(file.filePath) ?? file.filePath
-    for (const ref of file.paths) {
-      const newText = rewrite(ref, file.filePath, newFile, roots, moved)
+    const newFile = moved(file.filePath)
+    const refs = newFile ? file.paths : file.paths.filter(mayPoint)
+    if (refs.length === 0) continue
+    const roots = rootsOf(file.filePath)
+    for (const ref of refs) {
+      const newText = rewrite(
+        ref,
+        file.filePath,
+        newFile ?? file.filePath,
+        roots,
+        moved
+      )
       if (newText !== undefined && newText !== ref.text)
         edits.push({ file, range: ref.range, newText })
     }
@@ -81,7 +96,7 @@ function rewrite(
     return undefined
   }
 
-  // Relative: only @include paths are written this way.
+  // Relative: @include paths, and the textures of a .mat or .tobj.
   const target = path.resolve(path.dirname(oldFile), ref.text)
   const newTarget = moved(target) ?? target
   if (newTarget === target && newFile === oldFile) return undefined
