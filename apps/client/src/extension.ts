@@ -9,6 +9,7 @@ import {
 import { registerBugReportCommand } from './bugReport'
 import { ConfigManager, serverSettings } from './configManager'
 import { registerFormatOnSave } from './formatOnSave'
+import { MoveUndo } from './moveUndo'
 import { PathEditMarks } from './pathEditMarks'
 import { ExtensionLog, type LogEntry } from './log'
 import { registerWorkspaceFormatCommands } from './workspaceFormat'
@@ -28,7 +29,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Marks the lines whose paths the server rewrites when a file moves.
   const pathEditMarks = new PathEditMarks(log)
-  context.subscriptions.push(pathEditMarks)
+  // Puts the paths back if VS Code undoes the move but not the edits.
+  const moveUndo = new MoveUndo(log)
+  context.subscriptions.push(pathEditMarks, moveUndo)
 
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
@@ -47,6 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
       workspace: {
         willRenameFiles: async (event, next) => {
           const edit = await next(event)
+          await moveUndo.remember(event, edit)
           pathEditMarks.remember(event, edit)
           return edit
         },
@@ -78,7 +82,7 @@ export function activate(context: vscode.ExtensionContext) {
     log.write(entry)
   )
 
-  context.subscriptions.push(client)
+  context.subscriptions.push(client, syncTextureFiles(client))
   client.start().catch((error) => {
     log.error(
       'CLIENT_START_FAILED',
@@ -115,4 +119,31 @@ export function deactivate(): Thenable<void> | undefined {
     return undefined
   }
   return client.stop()
+}
+
+/**
+ * .mat and .tobj aren't this extension's languages, so VS Code doesn't
+ * send their text to the server; it would read them from disk and miss
+ * unsaved changes (the paths a move just rewrote, before saving). Their
+ * text goes over when it changes, and back to disk when they close.
+ */
+function syncTextureFiles(client: LanguageClient): vscode.Disposable {
+  const isTextureFile = (document: vscode.TextDocument) =>
+    document.uri.scheme === 'file' &&
+    /[.](mat|tobj)$/i.test(document.uri.fsPath)
+  return vscode.Disposable.from(
+    vscode.workspace.onDidChangeTextDocument(({ document }) => {
+      if (isTextureFile(document) && client.isRunning())
+        void client.sendNotification('scsIntellisense/textureFileChanged', {
+          uri: document.uri.toString(),
+          text: document.getText(),
+        })
+    }),
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      if (isTextureFile(document) && client.isRunning())
+        void client.sendNotification('scsIntellisense/textureFileClosed', {
+          uri: document.uri.toString(),
+        })
+    })
+  )
 }

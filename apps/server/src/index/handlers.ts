@@ -288,6 +288,22 @@ export function registerIndex(
   // drop): the paths pointing at it are rewritten in the same step, with
   // no question asked, like TypeScript's imports. Moves done outside VS
   // Code don't pass through here.
+  // .mat/.tobj in the editor: the client sends their text (they aren't
+  // this server's languages), so unsaved paths are seen.
+  connection.onNotification(
+    'scsIntellisense/textureFileChanged',
+    (params: { uri: string; text: string }) =>
+      index.setFromText(params.uri, params.text)
+  )
+  connection.onNotification(
+    'scsIntellisense/textureFileClosed',
+    (params: { uri: string }) => {
+      const filePath = URI.parse(params.uri).fsPath
+      if (index.covers(filePath)) index.refreshFromDisk(filePath)
+      else index.remove(filePath)
+    }
+  )
+
   connection.workspace.onWillRenameFiles((params): WorkspaceEdit | null => {
     try {
       const edits = moveEdits(

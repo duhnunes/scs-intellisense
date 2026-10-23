@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import type { ExtensionLog } from './log'
+import { movedUri } from './moveUndo'
 
 /**
  * Marks the lines whose paths the server rewrote when a file or folder
@@ -21,8 +22,8 @@ export class PathEditMarks implements vscode.Disposable {
     ),
     overviewRulerLane: vscode.OverviewRulerLane.Left,
   })
-  /** Marked lines (0-based), by document URI. */
-  private readonly marks = new Map<string, Set<number>>()
+  /** Marked lines (0-based) and the path written there, by document URI. */
+  private readonly marks = new Map<string, Map<number, string>>()
   private readonly subscriptions: vscode.Disposable[] = []
 
   private readonly log: ExtensionLog
@@ -51,10 +52,14 @@ export class PathEditMarks implements vscode.Disposable {
   ): void {
     if (!edit) return
     for (const [uri, edits] of edit.entries()) {
-      const key = movedUri(uri, event.files).toString()
-      const lines = this.marks.get(key) ?? new Set<number>()
+      const key = movedUri(
+        uri,
+        event.files.map((file) => ({ from: file.oldUri, to: file.newUri }))
+      ).toString()
+      const lines = this.marks.get(key) ?? new Map<number, string>()
       for (const change of edits)
-        if ('range' in change) lines.add(change.range.start.line)
+        if ('range' in change && 'newText' in change)
+          lines.set(change.range.start.line, change.newText)
       if (lines.size > 0) this.marks.set(key, lines)
     }
     const files = this.marks.size
@@ -77,7 +82,7 @@ export class PathEditMarks implements vscode.Disposable {
       if (!lines) continue
       editor.setDecorations(
         this.decoration,
-        [...lines].map((line) => ({
+        [...lines.keys()].map((line) => ({
           range: editor.document.lineAt(
             Math.min(line, editor.document.lineCount - 1)
           ).range,
@@ -87,31 +92,40 @@ export class PathEditMarks implements vscode.Disposable {
     }
   }
 
-  /** Keeps the marks on their lines as the user edits above them; drops
-   *  them when the file is back to what's saved. */
+  /**
+   * Keeps the marks on their lines as the user edits above them, and
+   * drops a mark once its line no longer holds the path written there:
+   * undone (Ctrl+Z on the move, which VS Code doesn't always report as an
+   * undo), or edited by hand. All go when the file is saved or closed.
+   */
   private follow(event: vscode.TextDocumentChangeEvent): void {
-    const key = event.document.uri.toString()
+    const { document } = event
+    const key = document.uri.toString()
     const lines = this.marks.get(key)
+    // Not `!document.isDirty`: when VS Code opens a file to apply the move's
+    // edits, the change arrives before the file counts as unsaved, and the
+    // marks went at once (owner's test, 61 .mat files).
     if (!lines) return
-    // Undone back to what's saved (Ctrl+Z on the move).
-    const undoing =
-      event.reason === vscode.TextDocumentChangeReason.Undo ||
-      event.reason === vscode.TextDocumentChangeReason.Redo
-    if (undoing && !event.document.isDirty) {
-      this.clear(event.document.uri)
-      return
-    }
     let moved = [...lines]
     for (const change of event.contentChanges) {
       const removed = change.range.end.line - change.range.start.line
       const added = change.text.split('\n').length - 1
       const delta = added - removed
       if (delta === 0) continue
-      moved = moved.map((line) =>
-        line > change.range.end.line ? line + delta : line
-      )
+      moved = moved.map(([line, text]) => [
+        line > change.range.end.line ? line + delta : line,
+        text,
+      ])
     }
-    this.marks.set(key, new Set(moved))
+    const kept = moved.filter(
+      ([line, text]) =>
+        line < document.lineCount && document.lineAt(line).text.includes(text)
+    )
+    if (kept.length === 0) {
+      this.clear(document.uri)
+      return
+    }
+    this.marks.set(key, new Map(kept))
     this.paint()
   }
 
@@ -122,24 +136,4 @@ export class PathEditMarks implements vscode.Disposable {
       if (editor.document.uri.toString() === key)
         editor.setDecorations(this.decoration, [])
   }
-}
-
-/** Where `uri` is after the renames: a moved file, or one inside a moved
- *  folder. */
-function movedUri(
-  uri: vscode.Uri,
-  files: readonly { oldUri: vscode.Uri; newUri: vscode.Uri }[]
-): vscode.Uri {
-  const path = uri.fsPath.toLowerCase()
-  for (const { oldUri, newUri } of files) {
-    const from = oldUri.fsPath.toLowerCase()
-    if (path === from) return newUri
-    const inside = path.startsWith(from + '\\') || path.startsWith(from + '/')
-    if (inside)
-      return vscode.Uri.joinPath(
-        newUri,
-        ...uri.fsPath.slice(from.length + 1).split(/[\\/]/)
-      )
-  }
-  return uri
 }
