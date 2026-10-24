@@ -7,9 +7,7 @@ import type {
   SiiIssue,
   SiiSeverity,
 } from '../interfaces/structure'
-import { URI } from 'vscode-uri'
 import { asFragmentDocument } from '../index/fragments'
-import { validateIncludeTargets, type FileExists } from './fileRules'
 import { validateSiiDocument } from './rules'
 import {
   validateAttributeKeys,
@@ -41,14 +39,12 @@ export interface CheckedDocument {
  *  by diagnostics and quick fixes, so both always see the same issues.
  *  With `schemaFor`, the rules that need the schema run too, for the
  *  classes it has loaded; `fragmentClass` gives a .sui fragment the class
- *  of the units that @include it; with `fileExists`, a file on disk gets
- *  the rules that look at other files (fileRules.ts). */
+ *  of the units that @include it. */
 export function checkDocument(
   doc: TextDocument,
   enabledSeverities: SiiSeverity[] = DEFAULT_ENABLED_SEVERITIES,
   schemaFor?: SchemaLookup,
-  fragmentClass?: string,
-  fileExists?: FileExists
+  fragmentClass?: string
 ): CheckedDocument {
   const ext = detectExtFromUri(doc.uri)
   const mode = detectModeFromExt(ext)
@@ -78,9 +74,6 @@ export function checkDocument(
           ...validateAttributeKeys(classed, schemaFor),
           ...validateEnumValues(classed, schemaFor),
         ]
-      : []),
-    ...(fileExists && doc.uri.startsWith('file:')
-      ? validateIncludeTargets(parsed, URI.parse(doc.uri).fsPath, fileExists)
       : []),
   ].filter((issue) => enabledSeverities.includes(issue.severity ?? 'error'))
 
