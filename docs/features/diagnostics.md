@@ -54,7 +54,7 @@ Choose by evidence. If a game file does what your rule forbids, it can't be an `
 
 These rules can't run in `rules.ts`: the class files load asynchronously. `checkDocument()` takes a `SchemaLookup` that only answers from memory (`SchemaClient.peekSchemaContent()`), so diagnostics stay synchronous. The server's `publishDiagnostics()` sends what it has, loads any class file still missing, and sends again once (unless the document changed meanwhile). After that the class stays in memory, so typing never makes a warning flicker. Open documents are checked again when the manifest loads or changes.
 
-On the 44,503 ATS 1.61 game files (195,503 units, all 736 classes in the manifest) `validateAttributeKeys` reports nothing since scs-schema added the one key and 19 classes this check found missing (2026-10-22), and `validateEnumValues` nothing on 59,057 enum values (852 of them quoted). A hand-written mod (63 files) got none either.
+On the 73,224 ATS 1.61 game files (the base game and 56 DLCs: 257,638 units, all 743 classes in the manifest) neither `validateAttributeKeys` nor `validateEnumValues` reports anything (2026-10-24), since scs-schema added the one key and 19 classes the first run found missing (2026-10-22). The enum figures (59,057 values, 852 of them quoted) come from that first run, on 44,503 files. A hand-written mod (63 files) got none either.
 
 ## Adding a rule
 

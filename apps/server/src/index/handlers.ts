@@ -3,6 +3,7 @@ import {
   FileChangeType,
   ResponseError,
   type Connection,
+  type DocumentLink,
   type InitializeParams,
   type Location as LspLocation,
   type LocationLink,
@@ -160,28 +161,7 @@ export function registerIndex(
       if (!file) return null
       const offset = file.document.offsetAt(params.position)
 
-      // A path: the file it names, when it's in the mod.
-      const ref = pathAt(file, offset)
-      if (ref) {
-        const target = resolvePathRef(file, ref)
-        if (!target) return null
-        const start = { line: 0, character: 0 }
-        const targetUri = URI.file(target).toString()
-        if (!linkSupport)
-          return { uri: targetUri, range: { start, end: start } }
-        return [
-          {
-            originSelectionRange: {
-              start: file.document.positionAt(ref.range.start),
-              end: file.document.positionAt(ref.range.end),
-            },
-            targetUri,
-            targetRange: { start, end: start },
-            targetSelectionRange: { start, end: start },
-          },
-        ]
-      }
-
+      // Paths are document links (onDocumentLinks), not definitions.
       const found = await nameAt(file, offset, index, isPointer)
       if (!found) return null
       const definitions = findDefinitions(index, found.name, file.uri)
@@ -214,6 +194,38 @@ export function registerIndex(
         params.textDocument.uri
       )
       return null
+    }
+  })
+
+  // Every path naming a file of the mod is a link: Ctrl+click opens it.
+  // A link, not a definition: VS Code underlines it on Ctrl+hover without
+  // trying to preview the target, which for a binary .pmd showed nothing
+  // (owner's test). A path to one of the game's files gets no link.
+  connection.onDocumentLinks((params): DocumentLink[] => {
+    try {
+      const file = fileAt(params.textDocument.uri)
+      if (!file) return []
+      const links: DocumentLink[] = []
+      for (const ref of file.paths) {
+        const target = resolvePathRef(file, ref)
+        if (!target) continue
+        links.push({
+          range: {
+            start: file.document.positionAt(ref.range.start),
+            end: file.document.positionAt(ref.range.end),
+          },
+          target: URI.file(target).toString(),
+        })
+      }
+      return links
+    } catch (error) {
+      logger.error(
+        'LINKS_FAILED',
+        'Finding the links to files failed',
+        describeError(error),
+        params.textDocument.uri
+      )
+      return []
     }
   })
 
@@ -372,6 +384,7 @@ export function registerIndex(
 export const INDEX_CAPABILITIES: ServerCapabilities = {
   definitionProvider: true,
   referencesProvider: true,
+  documentLinkProvider: { resolveProvider: false },
   renameProvider: { prepareProvider: true },
   workspace: {
     workspaceFolders: { supported: true, changeNotifications: true },

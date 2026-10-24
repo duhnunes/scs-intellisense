@@ -42,7 +42,7 @@ To turn experimental features on, open the Settings (`Ctrl+,`), search for `@ext
 
 ## Tested against the game
 
-The diagnostics are checked against **44,503 `.sii`/`.sui` files of American Truck Simulator 1.61** (the base game and 10 DLCs), with no false errors, and the formatter was run over the same files without changing any content.
+The diagnostics are checked against **73,224 `.sii`/`.sui` files of American Truck Simulator 1.61** (the base game and 56 DLCs), with no false errors, and the formatter was run over the same files without changing any content.
 
 SCS's [modding wiki](https://modding.scssoft.com/wiki/Main_Page) is incomplete, and in some places the game's own files differ from it: unit names with uppercase letters or in double quotes, class names such as `ui::text`, `.sui` files that hold only attributes. When the game and the wiki disagree, the extension follows the game.
 
