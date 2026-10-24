@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
+import { relativeBases } from '../completion/modFiles'
 import {
   rootsOfFile,
   type IndexedFile,
@@ -30,10 +31,11 @@ export function resolvePathRef(
   ref: PathRef,
   exists: (filePath: string) => boolean = existsSync
 ): string | undefined {
-  const candidates = ref.text.startsWith('/')
-    ? rootsOfFile(file.filePath).map((root) => path.join(root, ref.text))
-    : [path.join(path.dirname(file.filePath), ref.text)]
-  return candidates.find(exists)
+  const roots = rootsOfFile(file.filePath)
+  const bases = ref.text.startsWith('/')
+    ? roots
+    : relativeBases(file.filePath, roots)
+  return bases.map((base) => path.join(base, ref.text)).find(exists)
 }
 
 /** Every path in the open folders naming `target` (an absolute path). */

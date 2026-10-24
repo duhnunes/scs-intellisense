@@ -3,7 +3,7 @@ import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
-import { findPathRoots } from '../completion/modFiles'
+import { findPathRoots, relativeBases } from '../completion/modFiles'
 import { decodeSiiFile } from '../formatter/workspaceFormat'
 import type {
   SiiAttribute,
@@ -358,10 +358,12 @@ function resolveRelative(
   includePath: string
 ): string | undefined {
   if (includePath === '') return undefined
-  if (!includePath.startsWith('/'))
-    return fileKey(path.join(path.dirname(filePath), includePath))
   const roots = rootsOfFolder(path.dirname(filePath))
-  const candidates = roots.map((root) => path.join(root, includePath))
+  // Relative: next to the file, or in the same folder of another part.
+  const bases = includePath.startsWith('/')
+    ? roots
+    : relativeBases(filePath, roots)
+  const candidates = bases.map((base) => path.join(base, includePath))
   const found = candidates.find((candidate) => existsSync(candidate))
   const target = found ?? candidates[0]
   return target ? fileKey(target) : undefined

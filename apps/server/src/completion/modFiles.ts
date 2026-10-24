@@ -53,6 +53,37 @@ function modParts(modFolder: string): string[] | undefined {
     : undefined
 }
 
+/**
+ * The folders a relative path written in `filePath` can start in: the
+ * file's own folder first, then the same folder in the mod's other parts.
+ * Every part mounts on one "/" (with the game's archives), and a relative
+ * path resolves there: 204 @includes of ATS 1.61 name a file in the same
+ * folder of another archive (dlc_w900_tuning -> dlc_kenworth_w900: 160).
+ * `roots` are the file's findPathRoots().
+ */
+export function relativeBases(filePath: string, roots: string[]): string[] {
+  const own = path.dirname(path.resolve(filePath))
+  const root = roots.find((candidate) => isWithin(own, candidate))
+  if (!root) return [own]
+  const virtualDir = path.relative(root, own)
+  return [
+    own,
+    ...roots
+      .filter((other) => other !== root)
+      .map((other) => path.join(other, virtualDir)),
+  ]
+}
+
+/** `filePath` is `folder` or inside it, whatever the case (Windows). */
+function isWithin(filePath: string, folder: string): boolean {
+  const file = filePath.toLowerCase()
+  const dir = path.resolve(folder).toLowerCase()
+  return (
+    file === dir ||
+    file.startsWith(dir.endsWith(path.sep) ? dir : dir + path.sep)
+  )
+}
+
 export interface FolderEntry {
   name: string
   isFolder: boolean

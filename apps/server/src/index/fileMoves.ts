@@ -1,4 +1,6 @@
+import { existsSync } from 'node:fs'
 import path from 'node:path'
+import { relativeBases } from '../completion/modFiles'
 import type { SiiRange } from '../interfaces/structure'
 import {
   rootsOfFile,
@@ -96,10 +98,28 @@ function rewrite(
     return undefined
   }
 
-  // Relative: @include paths, and the textures of a .mat or .tobj.
-  const target = path.resolve(path.dirname(oldFile), ref.text)
+  // Relative: @include paths, and the textures of a .mat or .tobj. The
+  // file they name is next to this one, or in the same folder of another
+  // part of the mod (all parts mount on one "/").
+  const candidates = relativeBases(oldFile, roots).map((base) =>
+    path.resolve(base, ref.text)
+  )
+  const target =
+    candidates.find((candidate) => moved(candidate) || existsSync(candidate)) ??
+    candidates[0]!
   const newTarget = moved(target) ?? target
   if (newTarget === target && newFile === oldFile) return undefined
+
+  // Still below the file's folder, in the virtual "/": stays relative.
+  const virtualTarget = fromRoot(newTarget, roots)
+  const virtualDir = virtualFolder(path.dirname(newFile), roots)
+  if (virtualTarget && virtualDir !== undefined) {
+    const prefix = virtualDir === '/' ? '/' : virtualDir + '/'
+    if (virtualTarget.toLowerCase().startsWith(prefix.toLowerCase()))
+      return virtualTarget.slice(prefix.length)
+    return virtualTarget
+  }
+  // Not in a mod part (no manifest.sii found): only the disk to go by.
   const relative = path.relative(path.dirname(newFile), newTarget)
   if (
     relative !== '' &&
@@ -108,6 +128,12 @@ function rewrite(
   )
     return relative.split(path.sep).join('/')
   return fromRoot(newTarget, roots)
+}
+
+/** A folder as a "/" path: "/" for a root itself. */
+function virtualFolder(folder: string, roots: string[]): string | undefined {
+  if (roots.some((root) => same(folder, root))) return '/'
+  return fromRoot(folder, roots)
 }
 
 /** `filePath` as a "/" path from one of `roots`, or undefined when it's

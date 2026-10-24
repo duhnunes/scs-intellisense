@@ -19,6 +19,10 @@ On startup the server reads every `.sii`/`.sui` under the workspace folders (hid
 - Files changed outside the editor (git, a converter) arrive through the client's file watcher (`synchronize.fileEvents` in `extension.ts`).
 - Added or removed workspace folders are read again.
 
+## Relative paths
+
+Every archive (the game's, its DLCs', a mod and its `base/`/`dlc_*` parts) mounts on one virtual `/`, and a relative path resolves there: 204 `@include`s of ATS 1.61 name a file in the same folder of another archive (`dlc_w900_tuning` → `dlc_kenworth_w900`: 160; `dlc_oversize` → `def`: 36), and ATS Expansion includes the game's `drivers_generic.sui`. So a relative path starts in the file's folder, then in the same folder of the mod's other parts (`relativeBases()` in `completion/modFiles.ts`), for the index (a fragment's class), links, moves and `@include` completion. For the same reason a relative `@include` whose file isn't in the mod can't be reported: it may be the game's.
+
 ## What a name means
 
 A name starting with `.` is a nameless unit: it exists only in its file (wiki). `_nameless.*` names are treated the same way: that is how SCS's tools write nameless units out, and in ATS 1.61 the same `_nameless.*` name is defined in dozens of files with different content (`_nameless._.window`: 39), so it can't be one unit. This part is inferred from the files, not documented.

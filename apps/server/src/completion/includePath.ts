@@ -1,6 +1,6 @@
 import path from 'node:path'
 import type { SiiDocument, SiiRange } from '../interfaces/structure'
-import { findPathRoots, listFolder } from './modFiles'
+import { findPathRoots, listFolder, relativeBases } from './modFiles'
 
 /**
  * Completion of the path in `@include "..."`.
@@ -70,9 +70,11 @@ export async function listIncludeCandidates(
   typed: string
 ): Promise<IncludeCandidate[]> {
   const typedFolder = typed.slice(0, typed.lastIndexOf('/') + 1)
+  // Relative: the file's folder, and the same folder of the other parts.
+  const pathRoots = findPathRoots(filePath)
   const roots = typedFolder.startsWith('/')
-    ? findPathRoots(filePath)
-    : [path.dirname(filePath)]
+    ? pathRoots
+    : relativeBases(filePath, pathRoots)
 
   const self = path.resolve(filePath).toLowerCase()
   const entries = await listFolder(roots, typedFolder, (name) =>
