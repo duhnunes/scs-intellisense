@@ -1,3 +1,4 @@
+import type { FileExists } from './fileRules'
 import {
   CodeActionKind,
   type CodeAction,
@@ -23,7 +24,8 @@ export function buildCodeActions(
   params: CodeActionParams,
   enabledSeverities: SiiSeverity[],
   schemaFor?: SchemaLookup,
-  fragmentClass?: string
+  fragmentClass?: string,
+  fileExists?: FileExists
 ): CodeAction[] {
   const only = params.context.only
   if (only && !only.some((kind) => CodeActionKind.QuickFix.startsWith(kind)))
@@ -33,7 +35,8 @@ export function buildCodeActions(
     doc,
     enabledSeverities,
     schemaFor,
-    fragmentClass
+    fragmentClass,
+    fileExists
   )
   const start = normalizedDoc.offsetAt(params.range.start)
   const end = normalizedDoc.offsetAt(params.range.end)

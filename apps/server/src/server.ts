@@ -16,6 +16,7 @@ import {
   type TextEdit,
 } from 'vscode-languageserver/node'
 
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
@@ -99,13 +100,14 @@ initLogger(connection)
 const logger = getLogger()
 
 registerSemantic(connection, documents)
-// Once the folders are read, or a file changes on disk, open .sui
-// fragments are checked again with their including units' class.
+// Once the folders are read, or a file changes on disk, open files are
+// checked again: .sui fragments get their including units' class, and an
+// @include may now find its file, or no longer.
 const workspaceIndex = registerIndex(
   connection,
   documents,
   () => schemaClient,
-  () => recheckOpenFragments()
+  () => recheckOpenDocuments()
 )
 
 // The single schema fetch/cache instance for this server process.
@@ -595,6 +597,15 @@ function recheckOpenFragments(exceptUri?: string): void {
   }, 300)
 }
 
+let openRecheck: NodeJS.Timeout | undefined
+
+/** After files appear, change or go on disk: every open file is checked
+ *  again, since an @include may now find its file, or no longer. */
+function recheckOpenDocuments(): void {
+  clearTimeout(openRecheck)
+  openRecheck = setTimeout(() => publishAllDiagnostics(), 300)
+}
+
 /** The schema rules read class files already in memory, so they answer
  *  right away; publishDiagnostics() loads the missing ones. */
 const loadedSchema: SchemaLookup = (className) =>
@@ -631,7 +642,8 @@ function publishDiagnostics(doc: TextDocument): void {
       doc,
       settings.enabledSeverities,
       loadedSchema,
-      fragmentClassOf(doc.uri)
+      fragmentClassOf(doc.uri),
+      existsSync
     )
     connection.sendDiagnostics({
       uri: doc.uri,
@@ -750,7 +762,8 @@ connection.onCodeAction((params): CodeAction[] => {
       params,
       settings.enabledSeverities,
       loadedSchema,
-      fragmentClassOf(doc.uri)
+      fragmentClassOf(doc.uri),
+      existsSync
     )
   } catch (error) {
     logger.error(

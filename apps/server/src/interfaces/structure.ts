@@ -144,6 +144,8 @@ export type SiiIssueCode =
   | 'unit-name-empty-token'
   | 'duplicate-unit-name'
   | 'include-not-at-line-start'
+  // File rules (fileRules.ts)
+  | 'include-not-found'
   | 'missing-final-newline'
   // Schema rules (schemaRules.ts)
   | 'unknown-attribute'
