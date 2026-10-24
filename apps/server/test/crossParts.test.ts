@@ -90,3 +90,74 @@ describe('relative paths across the parts of a mod', () => {
     expect(edits).toEqual(['/def/vehicle/drivers.sui'])
   })
 })
+
+describe('the game, extracted one folder per archive', () => {
+  let game: string
+  const at = (file: string) => join(game, ...file.split('/'))
+
+  beforeAll(async () => {
+    game = await mkdtemp(join(tmpdir(), 'scs-game-test-'))
+    for (const file of [
+      'base/font/sign/us_sign_e.font',
+      'base/material/sign/frame/white_box.mat',
+      'def/def/sign/board/info/mt_white_markers.sii',
+      'dlc_arizona/def/def/sign/az.sii',
+    ]) {
+      await mkdir(join(at(file), '..'), { recursive: true })
+      await writeFile(at(file), '')
+    }
+  })
+
+  afterAll(async () => {
+    await rm(game, { recursive: true, force: true })
+  })
+
+  it('mounts every archive on "/": the file\'s own first, then base', () => {
+    expect(
+      findPathRoots(at('def/def/sign/board/info/mt_white_markers.sii'))
+    ).toEqual([at('def'), at('base'), at('dlc_arizona')])
+  })
+
+  it('finds the archive of a file with no def folder above it', () => {
+    expect(findPathRoots(at('base/material/sign/frame/white_box.mat'))[0]).toBe(
+      at('base')
+    )
+  })
+
+  it('links a path to a file of another archive', () => {
+    const index = new WorkspaceIndex()
+    const sii = at('def/def/sign/board/info/mt_white_markers.sii')
+    const uri = URI.file(sii).toString()
+    index.setFromText(
+      uri,
+      'SiiNunit\n{\nsign_board : .b {\n  font_face: "/font/sign/us_sign_e.font"\n  material: "/material/sign/frame/white_box.mat"\n}\n}\n'
+    )
+    const file = index.get(uri)!
+    const text = file.document.getText()
+    // URIs give the drive letter in lowercase.
+    const resolved = (needle: string) =>
+      resolvePathRef(
+        file,
+        pathAt(file, text.indexOf(needle) + 2)!
+      )?.toLowerCase()
+    expect(resolved('/font/')).toBe(
+      at('base/font/sign/us_sign_e.font').toLowerCase()
+    )
+    expect(resolved('/material/')).toBe(
+      at('base/material/sign/frame/white_box.mat').toLowerCase()
+    )
+  })
+})
+
+describe('a mod without manifest.sii', () => {
+  // Only the game extracted has def/def (the def.scs archive holds a def
+  // folder); a mod has def/ right at its root.
+  it('starts "/" at the folder holding def/', async () => {
+    const mod = await mkdtemp(join(tmpdir(), 'scs-nomanifest-test-'))
+    const file = join(mod, 'def', 'vehicle', 'truck.sii')
+    await mkdir(join(file, '..'), { recursive: true })
+    await writeFile(file, '')
+    expect(findPathRoots(file)).toEqual([mod])
+    await rm(mod, { recursive: true, force: true })
+  })
+})

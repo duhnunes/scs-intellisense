@@ -13,10 +13,15 @@ import path from 'node:path'
  * manifest.sii next to `base/`, `/vehicle/ai/...` is in
  * `base/vehicle/ai/...`).
  *
- * Without a manifest.sii, the folder above the nearest `def` folder,
- * which is also how the game's extracted archives are laid out
- * (`ATS_161/def/def/...` → `ATS_161/def`). Empty when neither is found,
- * rather than guessing.
+ * The game's archives, extracted one folder each next to each other
+ * (`ATS_161_full/base`, `.../def`, `.../dlc_*`), also mount on one "/":
+ * a file's own archive comes first, then the others, base first
+ * (`def/def/sign/...` names `/font/sign/us_sign_e.font`, which is in
+ * `base/`). Such a folder is recognised by `base` and `def` side by side.
+ *
+ * Otherwise, the folder above the nearest `def` folder, as one archive
+ * extracted alone is laid out (`ATS_158/def/def/...` → `ATS_158/def`).
+ * Empty when none is found, rather than guessing.
  */
 export function findPathRoots(filePath: string): string[] {
   let folder = path.dirname(path.resolve(filePath))
@@ -24,12 +29,41 @@ export function findPathRoots(filePath: string): string[] {
   for (;;) {
     if (existsSync(path.join(folder, 'manifest.sii')))
       return modParts(folder) ?? [folder]
-    if (!defParent && path.basename(folder).toLowerCase() === 'def')
-      defParent = path.dirname(folder)
     const parent = path.dirname(folder)
     if (parent === folder) return defParent ? [defParent] : []
+    if (isExtractedGame(parent)) return gameArchives(folder)
+    if (!defParent && path.basename(folder).toLowerCase() === 'def')
+      defParent = parent
     folder = parent
   }
+}
+
+/** A folder holding the game's archives extracted side by side. */
+function isExtractedGame(folder: string): boolean {
+  return (
+    existsSync(path.join(folder, 'base')) &&
+    existsSync(path.join(folder, 'def'))
+  )
+}
+
+/** Every archive next to `archive`: that one first, then base, then the
+ *  rest. */
+function gameArchives(archive: string): string[] {
+  const parent = path.dirname(archive)
+  let names: string[]
+  try {
+    names = readdirSync(parent, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+      .map((entry) => entry.name)
+  } catch {
+    return [archive]
+  }
+  const own = path.basename(archive).toLowerCase()
+  const rank = (name: string) =>
+    name.toLowerCase() === own ? 0 : name.toLowerCase() === 'base' ? 1 : 2
+  return names
+    .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+    .map((name) => path.join(parent, name))
 }
 
 /** The mod's `base` and `dlc_*` folders, base first, or undefined when
