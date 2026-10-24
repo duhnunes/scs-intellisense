@@ -16,6 +16,7 @@ import { URI } from 'vscode-uri'
 import { describeError, getLogger } from '../logger'
 import type { SchemaClient } from '../schema/client'
 import { moveEdits } from './fileMoves'
+import { pathAt, pathReferences, resolvePathRef } from './filePaths'
 import {
   findDefinitions,
   findReferences,
@@ -157,12 +158,31 @@ export function registerIndex(
     try {
       const file = fileAt(params.textDocument.uri)
       if (!file) return null
-      const found = await nameAt(
-        file,
-        file.document.offsetAt(params.position),
-        index,
-        isPointer
-      )
+      const offset = file.document.offsetAt(params.position)
+
+      // A path: the file it names, when it's in the mod.
+      const ref = pathAt(file, offset)
+      if (ref) {
+        const target = resolvePathRef(file, ref)
+        if (!target) return null
+        const start = { line: 0, character: 0 }
+        const targetUri = URI.file(target).toString()
+        if (!linkSupport)
+          return { uri: targetUri, range: { start, end: start } }
+        return [
+          {
+            originSelectionRange: {
+              start: file.document.positionAt(ref.range.start),
+              end: file.document.positionAt(ref.range.end),
+            },
+            targetUri,
+            targetRange: { start, end: start },
+            targetSelectionRange: { start, end: start },
+          },
+        ]
+      }
+
+      const found = await nameAt(file, offset, index, isPointer)
       if (!found) return null
       const definitions = findDefinitions(index, found.name, file.uri)
       if (!linkSupport) return definitions.map(toLsp)
@@ -201,12 +221,19 @@ export function registerIndex(
     try {
       const file = fileAt(params.textDocument.uri)
       if (!file) return null
-      const found = await nameAt(
-        file,
-        file.document.offsetAt(params.position),
-        index,
-        isPointer
-      )
+      const offset = file.document.offsetAt(params.position)
+
+      // A path: every path naming the same file, .mat and .tobj included.
+      const ref = pathAt(file, offset)
+      if (ref) {
+        const target = resolvePathRef(file, ref)
+        if (!target) return null
+        return pathReferences(index, target).map(({ file: other, ref: r }) =>
+          toLsp({ uri: other.uri, file: other, range: r.range })
+        )
+      }
+
+      const found = await nameAt(file, offset, index, isPointer)
       if (!found) return null
       const locations = await findReferences(
         index,

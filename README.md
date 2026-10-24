@@ -28,7 +28,7 @@ Always on:
 - 📎 **`@include` paths**: type `@include "` to pick a `.sui` file or folder.
 - 🧭 **Outline, breadcrumbs and Go to Symbol** for units, attributes and includes.
 - 🧩 **`.sui` fragments** (bare attributes pasted into a unit by `@include`) get completion, hover and the same checks as the unit that includes them.
-- 🔗 **Go to Definition, Find References and Rename (F2)** for unit names, across every file of the open folder: Ctrl+click a pointer to jump to its unit, and renaming a unit updates every pointer to it.
+- 🔗 **Go to Definition, Find References and Rename (F2)** for unit names, across every file of the open folder: Ctrl+click a pointer to jump to its unit, and renaming a unit updates every pointer to it. Ctrl+click a path (`model: "/vehicle/..."`, `@include`) to open the file, Shift+F12 to see who else uses it.
 - 📦 **Paths follow your files:** rename or move a file or folder in VS Code, and every `@include`, file path (`model: "/vehicle/..."`) and texture path in `.mat`/`.tobj` files pointing to it is updated, with the changed lines marked until you save.
 - 📂 **File icons** for SCS file types.
 

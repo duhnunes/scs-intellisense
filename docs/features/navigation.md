@@ -53,6 +53,10 @@ A name that isn't defined in the open folders (a unit of the game, or of another
 
 **What it can't see:** only the text files of the open folders. A map (binary `.base`/`.data` files) or another mod that uses the old name keeps it. For example, the prefab units of a map mod are used by its map, not by any `.sii`.
 
+## Paths
+
+Go to Definition on a path (`model: "/vehicle/truck/cabin.pmd"`, `@include "parts/cab.sui"`, after a `name|` too) opens the file it names; Find References on it lists every path in the open folders naming the same file, `.mat` and text `.tobj` included (`index/filePaths.ts`). A `/` path resolves from the mod's root or whichever `base/`/`dlc_*` part has the file; a relative one from the file's folder. A path to one of the game's files has nowhere to go, like a pointer to one of its units. The link covers the whole path, as with unit names. On ATS Expansion, the references of `ai_comp_cust.pmd` (4 files, the same as a search) come in 11 ms: a path ends with its file's name, so most are skipped without resolving.
+
 ## Moving files
 
 Renaming or moving a file or folder in VS Code (Explorer, drag and drop) updates every path that points to it, in the same step and without asking, like TypeScript does with imports. `index/fileMoves.ts` computes the edits on `workspace/willRenameFiles`, which VS Code sends before the move.
