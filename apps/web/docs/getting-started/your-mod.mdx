@@ -133,6 +133,18 @@ in the open folders includes gets only the basic checks.
 ## Large folders
 
 When a folder opens, the extension reads all its `.sii`, `.sui`, `.mat` and
-`.tobj` files in the background. A typical mod takes a second or two; the whole
-extracted game can take half a minute. You can keep working meanwhile: navigation
-and path updates catch up as soon as reading ends.
+`.tobj` files in the background. A typical mod takes a few seconds. You can keep
+working meanwhile: navigation and path updates catch up as soon as reading ends.
+
+<Callout variant="warning" title="The whole extracted game is big">
+
+Every archive of ATS 1.61 extracted is about 230,000 files. Opening all of it, the
+extension takes one to three minutes to read them (depending on your disk) and
+about 450 MB of memory. VS Code itself also slows down with that many files: the
+Explorer, the search and git.
+
+To study the game's files, open only the archive or the folder you need, such as
+`def`, or `def/vehicle`: it opens in seconds. Go to Definition and Find References
+then see only the files of what you opened.
+
+</Callout>

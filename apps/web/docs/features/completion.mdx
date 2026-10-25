@@ -20,11 +20,16 @@ every class of the game with the attributes the game itself reads.
 
 At the start of a unit, the list shows every class. Documented classes come first,
 then the ones the game uses most, so the class you need is usually near the top.
+A documented class shows its description next to the list.
+
+![Class name suggestions, with the description of accessory_addon_data](/images/screenshots/comp-className.png)
 
 ## Attribute keys
 
 Inside a unit, the list shows the attributes of its class, with their type.
 Attributes the game no longer uses, and those it manages itself, aren't suggested.
+
+![The attributes of prefab_model suggested inside its unit](/images/screenshots/comp-attributes.png)
 
 This works in a [`.sui` fragment](../getting-started/your-mod.mdx#sui-fragments)
 too: it gets the attributes of the unit that includes it.
@@ -38,13 +43,7 @@ After the `:` of an attribute, the list depends on what the attribute takes.
 For an attribute with a fixed set of values, the list shows them all, and the
 default one is marked:
 
-```text
-part_type: |
-           unknown      (default)
-           factory
-           aftermarket
-           licensed
-```
+![The values of part_type suggested, unknown marked as the default](/images/screenshots/comp-part_type.png)
 
 The value is written without quotes. If you typed a quote first, the quotes are
 kept.
@@ -65,12 +64,10 @@ For an attribute that takes a file, such as `model` (a `.pmd`) or
 `shadow_texture` (a `.tobj`), type `"/` and the list shows your mod's folders and
 only the files of the right type:
 
-```text
-model: "/vehicle/truck/my_truck/|
-                                cabin.pmd
-                                chassis.pmd
-                                interior/
-```
+![Only the .pmd files of /model/props/street/ listed for model, though the folder also has .pmc and .pma files](/images/screenshots/comp-model.png)
+
+In this folder `collision` would list only the `.pmc` files, and `animation` only
+the `.pma` ones.
 
 The game's own files aren't listed: the extension doesn't read the game's
 archives.
@@ -81,6 +78,11 @@ Type `@include "` and the list shows the folders and `.sui` files next to the
 current file. Start with `/` to list from your mod's root instead. This works
 even with completion turned off, since it doesn't need the schema database.
 
+![Folders and .sui files of /def/vehicle/truck/ suggested after @include](/images/screenshots/include.png)
+
+If your mod is split into `base/` and `dlc_*` folders, the list joins the same
+folder of all of them, as the game does.
+
 ## Hover
 
 Point at a class name or an attribute key to see what it is: its type, its
@@ -89,4 +91,6 @@ an attribute that has no effect any more (the game still accepts it but ignores
 it), or one the game manages itself and you shouldn't set.
 
 Most classes of the game have no description yet. The database is a community
-effort; for those, hover shows the type only.
+effort; for those, hover says so and shows the type only.
+
+![Hover on prefab_model, a class with no description yet](/images/screenshots/hover.png)
