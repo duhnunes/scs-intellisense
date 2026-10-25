@@ -66,7 +66,21 @@ export function registerIndex(
     return bracketed || !def.isArray
   }
 
+  // Settled once the folders are read, and again after each new read.
+  // A move must wait for it: computed on a half-read index, the edits
+  // missed every file not read yet (renaming a folder 10 s after opening
+  // ATS Expansion: 36 paths of 105, owner's test), and nothing said so.
+  // Made before the first read starts, so a move even before it waits.
+  let indexed!: () => void
+  let ready = new Promise<void>((resolve) => (indexed = resolve))
+  let reads = 0
+  let readsDone = 0
+
   const rescan = async () => {
+    // A new read after the index was ready: moves wait for it again.
+    if (reads > 0 && reads === readsDone)
+      ready = new Promise<void>((resolve) => (indexed = resolve))
+    reads++
     const started = Date.now()
     try {
       const count = await index.scan(
@@ -85,6 +99,8 @@ export function registerIndex(
         describeError(error)
       )
     }
+    readsDone++
+    if (readsDone === reads) indexed()
   }
 
   // The connection takes one initialize/initialized handler, server.ts's:
@@ -343,8 +359,15 @@ export function registerIndex(
     }
   )
 
-  connection.workspace.onWillRenameFiles((params): WorkspaceEdit | null => {
+  connection.workspace.onWillRenameFiles(async (params) => {
     try {
+      if (reads === 0 || readsDone < reads) {
+        logger.info(
+          'PATHS_WAITING',
+          `A move waits for the folders to be read (${index.size} files so far)`
+        )
+        await ready
+      }
       const edits = moveEdits(
         index,
         params.files.map((file) => ({
@@ -352,7 +375,15 @@ export function registerIndex(
           to: URI.parse(file.newUri).fsPath,
         }))
       )
-      if (edits.length === 0) return null
+      if (edits.length === 0) {
+        // Said, so a move that changes nothing isn't a mystery (no dialog
+        // from VS Code either: it only asks when there are edits).
+        logger.info(
+          'PATHS_NONE',
+          `Moved ${params.files.length} item(s): no path in the open folders points to them`
+        )
+        return null
+      }
       const changes: Record<string, TextEdit[]> = {}
       for (const edit of edits)
         (changes[edit.file.uri] ??= []).push({

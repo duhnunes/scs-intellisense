@@ -93,6 +93,8 @@ Renaming or moving a file or folder in VS Code (Explorer, drag and drop) updates
 - **Unsaved `.mat`/`.tobj`:** they aren't the extension's languages, so VS Code doesn't send their text to the server. The client sends it (`scsIntellisense/textureFileChanged`/`textureFileClosed`), so a second move before saving sees the paths the first one wrote.
 - **What is left alone:** a path that can't be written either way (the file moved out of the mod), and moves made outside VS Code (another program, the command line), which VS Code doesn't announce.
 
+A move waits for the folders to be read (`PATHS_WAITING`; `ready` in `index/handlers.ts`): computed on a half-read index, renaming a folder 10 s after opening ATS Expansion updated 36 paths of 105, silently (owner's test). VS Code waits for participants up to `files.participants.timeout` (60 s). A move that changes nothing logs `PATHS_NONE` (VS Code shows no dialog then).
+
 VS Code waits for the edits before moving, so most paths are skipped with a string check: a path can only reach a moved item through its name. Renaming the `f350_heavy_duty` folder of ATS Expansion (16,990 indexed files, 11,345 of them `.mat`) gives 105 edits in 66 files, the same as a search for the path, in under 0.1 s. Indexing those files takes about 12 s, in the background.
 
 ---

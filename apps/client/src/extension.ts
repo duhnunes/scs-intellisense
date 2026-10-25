@@ -7,7 +7,11 @@ import {
   TransportKind,
 } from 'vscode-languageclient/node'
 import { registerBugReportCommand } from './bugReport'
-import { ConfigManager, serverSettings } from './configManager'
+import {
+  ConfigManager,
+  describeClientSettings,
+  serverSettings,
+} from './configManager'
 import { registerFormatOnSave } from './formatOnSave'
 import { MoveAutoSave } from './moveAutoSave'
 import { MoveUndo } from './moveUndo'
@@ -114,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   log.info(
     'CLIENT_STARTED',
-    `SCS IntelliSense ${context.extension.packageJSON.version} started (VS Code ${vscode.version})`
+    `SCS IntelliSense ${context.extension.packageJSON.version} started (VS Code ${vscode.version}; ${describeClientSettings()})`
   )
 }
 

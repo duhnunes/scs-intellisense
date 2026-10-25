@@ -71,5 +71,5 @@ export function parseSettings(raw: unknown): ServerSettings {
 /** One line for the log: what's on, at startup and after each change. */
 export function describeSettings(settings: ServerSettings): string {
   const onOff = (enabled: boolean) => (enabled ? 'on' : 'off')
-  return `completion: ${onOff(settings.completionEnabled)}, hover: ${onOff(settings.hoverEnabled)}, formatter: ${onOff(settings.formatterEnabled)}, highlighting: ${onOff(settings.semanticHighlighting)}`
+  return `completion: ${onOff(settings.completionEnabled)}, hover: ${onOff(settings.hoverEnabled)}, formatter: ${onOff(settings.formatterEnabled)} (braces: ${settings.formatterBraceStyle}, indent units: ${onOff(settings.formatterIndentUnits)}), highlighting: ${onOff(settings.semanticHighlighting)}, diagnostics: ${settings.enabledSeverities.join('/') || 'none'}, schema timeout: ${settings.fetchTimeoutMs} ms`
 }

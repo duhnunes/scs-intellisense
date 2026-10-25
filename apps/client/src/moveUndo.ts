@@ -76,13 +76,19 @@ export class MoveUndo implements vscode.Disposable {
 
   private renamed(event: vscode.FileRenameEvent): void {
     const move = this.last
-    if (!move) return
-    const reverses = event.files.every((file) =>
-      move.files.some(
-        (moved) =>
-          sameUri(file.oldUri, moved.to) && sameUri(file.newUri, moved.from)
+    const reverses =
+      move !== undefined &&
+      event.files.every((file) =>
+        move.files.some(
+          (moved) =>
+            sameUri(file.oldUri, moved.to) && sameUri(file.newUri, moved.from)
+        )
       )
+    this.log.debug(
+      'MOVE_SEEN',
+      `Renamed ${event.files.map((file) => `${vscode.workspace.asRelativePath(file.oldUri)} -> ${vscode.workspace.asRelativePath(file.newUri)}`).join(', ')}${reverses ? ' (undoes the last move)' : ''}`
     )
+    if (!move) return
     // Any other rename makes the remembered one stale.
     this.last = undefined
     if (!reverses) return
@@ -118,7 +124,13 @@ export class MoveUndo implements vscode.Disposable {
       )
       count++
     }
-    if (count === 0) return
+    if (count === 0) {
+      this.log.debug(
+        'PATHS_RESTORE_NONE',
+        `A move was undone: all ${move.changes.length} path(s) were already back`
+      )
+      return
+    }
     await vscode.workspace.applyEdit(edit)
     this.log.info(
       'PATHS_RESTORED',
