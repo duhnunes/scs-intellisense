@@ -9,6 +9,7 @@ import {
 import { registerBugReportCommand } from './bugReport'
 import { ConfigManager, serverSettings } from './configManager'
 import { registerFormatOnSave } from './formatOnSave'
+import { MoveAutoSave } from './moveAutoSave'
 import { MoveUndo } from './moveUndo'
 import { PathEditMarks } from './pathEditMarks'
 import { ExtensionLog, type LogEntry } from './log'
@@ -31,7 +32,9 @@ export function activate(context: vscode.ExtensionContext) {
   const pathEditMarks = new PathEditMarks(log)
   // Puts the paths back if VS Code undoes the move but not the edits.
   const moveUndo = new MoveUndo(log)
-  context.subscriptions.push(pathEditMarks, moveUndo)
+  // Saves the files a move edited, and closes their tabs, past a setting.
+  const moveAutoSave = new MoveAutoSave(log)
+  context.subscriptions.push(pathEditMarks, moveUndo, moveAutoSave)
 
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
@@ -52,6 +55,7 @@ export function activate(context: vscode.ExtensionContext) {
           const edit = await next(event)
           await moveUndo.remember(event, edit)
           pathEditMarks.remember(event, edit)
+          moveAutoSave.remember(event, edit)
           return edit
         },
       },

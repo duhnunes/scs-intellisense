@@ -64,6 +64,7 @@ function buildReport(
     `- Hover: ${onOff('hover.enabled', false)}`,
     `- Formatter: ${onOff('formatter.enabled', false)} (format on save: ${onOff('formatter.formatOnSave', true)}, brace style: ${settings.get('formatter.braceStyle', '1tbs')}, indent units: ${onOff('formatter.indentUnits', true)}, indentation: ${indentText})`,
     `- Diagnostics shown: ${settings.get<string[]>('diagnostics.enabledSeverities', []).join(', ')}`,
+    `- File moves: auto save ${onOff('fileMoves.autoSave', true)} (always: ${settings.get<string[]>('fileMoves.alwaysSave', ['.mat']).join(', ') || 'none'}, above ${settings.get<number>('fileMoves.saveAbove', 6)} files, notify: ${onOff('fileMoves.notify', true)})`,
     `- Active file: ${editor ? `${vscode.workspace.asRelativePath(editor.document.uri)} (${editor.document.languageId})` : 'none'}`,
     '',
     `Recent log (last ${entries.length} entries, all levels):`,

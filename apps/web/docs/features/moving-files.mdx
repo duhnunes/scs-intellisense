@@ -36,7 +36,10 @@ Moving a folder updates the paths to every file inside it.
 
 ## Review the changes
 
-VS Code opens the changed files without saving them. Each changed line gets a mark
+When a move changes paths in a few `.sii` or `.sui` files (up to 6, by default),
+VS Code opens them without saving them, so you can look before you save.
+`.mat` files are saved for you: see [Saved for you](#saved-for-you). Each changed
+line gets a mark
 at the start of the line and on the scrollbar, in the same color git uses for
 modified lines, so you can find them in a long file. Point at the line to see why
 it changed.
@@ -45,6 +48,33 @@ it changed.
 
 The marks go away when you save or close the file, or when the line no longer holds
 the new path.
+
+## Saved for you
+
+Renaming a folder can change dozens of files: a texture folder can be named in fifty
+`.mat` files. Opening each one for you to save would bury your work in tabs, so some
+are saved right away, the tabs the move opened are closed, and a notification tells
+you how many files were updated:
+
+- **`.mat` files, always.** They're usually written by SCS Blender Tools' converter,
+  and there's nothing to review in them. This also means you can rename a texture
+  folder without converting your models again.
+- **Every file, when there are more than 6** of the other types.
+
+Two things are never touched:
+
+- Tabs you already had open stay open.
+- Files with unsaved changes of your own are never saved for you: they stay open,
+  with the new path in them, for you to save.
+
+You can change all of this in the Settings, under **File Moves**:
+
+| Setting | Default | What it does |
+| :------ | :------ | :----------- |
+| **Auto Save** (`scs-intellisense.fileMoves.autoSave`) | on | Uncheck to always leave the files open for review |
+| **Always Save** (`scs-intellisense.fileMoves.alwaysSave`) | `.mat` | The file types saved after every move. Add `.tobj`, for example |
+| **Save Above** (`scs-intellisense.fileMoves.saveAbove`) | `6` | Above this many files of the other types, they're saved too. `0` always saves |
+| **Notify** (`scs-intellisense.fileMoves.notify`) | on | The notification. The extension's [log](../reference/commands.mdx#show-output) always records it |
 
 <Callout variant="tip" title="Undo">
 

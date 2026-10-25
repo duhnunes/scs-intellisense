@@ -41,6 +41,15 @@ Tabs or spaces, and how many, follow VS Code's own `editor.tabSize`,
 `editor.insertSpaces` and `editor.detectIndentation`. See
 [Tabs or spaces](../features/formatter.mdx#tabs-or-spaces).
 
+## File moves
+
+| Setting | Default | What it does |
+| :------ | :------ | :----------- |
+| `scs-intellisense.fileMoves.autoSave` | `true` | Save the files a [move](../features/moving-files.mdx#saved-for-you) updated, and close the tabs it opened, as the next two settings say |
+| `scs-intellisense.fileMoves.alwaysSave` | `[".mat"]` | File types saved after every move |
+| `scs-intellisense.fileMoves.saveAbove` | `6` | Above this many files of other types, they're saved too. `0` always saves |
+| `scs-intellisense.fileMoves.notify` | `true` | Show a notification when files are saved. The log always records it |
+
 ## Always on
 
 Diagnostics, quick fixes, `@include` path suggestions, navigation and path updates

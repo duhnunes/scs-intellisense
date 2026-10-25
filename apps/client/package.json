@@ -510,6 +510,45 @@
             "order": 4
           }
         }
+      },
+      {
+        "id": "fileMoves.scs-intellisense",
+        "title": "File Moves",
+        "order": 5,
+        "properties": {
+          "scs-intellisense.fileMoves.autoSave": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Save the files whose paths a rename or move updated, and close the tabs VS Code opened for them, as set by `#scs-intellisense.fileMoves.alwaysSave#` and `#scs-intellisense.fileMoves.saveAbove#`. Uncheck to always leave them open and unsaved, with the changed lines marked, for you to review. Paths are updated either way. Files you had unsaved changes in are never saved for you. Takes effect right away.",
+            "order": 1
+          },
+          "scs-intellisense.fileMoves.alwaysSave": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^\\.[A-Za-z0-9]+$",
+              "patternErrorMessage": "A file extension starting with a dot, such as .mat"
+            },
+            "default": [
+              ".mat"
+            ],
+            "markdownDescription": "File types saved and closed after every rename or move, however many: `.mat` files are usually written by SCS Blender Tools' converter, and a texture folder can be named in dozens of them. Only while `#scs-intellisense.fileMoves.autoSave#` is on. Takes effect right away.",
+            "order": 2
+          },
+          "scs-intellisense.fileMoves.saveAbove": {
+            "type": "number",
+            "default": 6,
+            "minimum": 0,
+            "markdownDescription": "When a rename or move updates paths in more than this many files (not counting the types in `#scs-intellisense.fileMoves.alwaysSave#`), they're saved too and their tabs closed. Up to this many, they stay open and unsaved, with the changed lines marked, for you to review. `0` always saves. Only while `#scs-intellisense.fileMoves.autoSave#` is on. Takes effect right away.",
+            "order": 3
+          },
+          "scs-intellisense.fileMoves.notify": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Show a notification when files are saved after a rename or move. It's always written to the extension's log (**SCS IntelliSense: Show Output**). Takes effect right away.",
+            "order": 4
+          }
+        }
       }
     ],
     "configurationDefaults": {
