@@ -1,0 +1,63 @@
+---
+title: Experimental features
+description: Turn on completion, hover and the formatter.
+link_position: 4
+---
+
+Three features are **off by default** while they're being tested on more mods:
+
+| Feature | What it does |
+| :------ | :----------- |
+| [Completion](../features/completion.mdx) | Suggests class names, attribute keys, values, units and files as you type |
+| [Hover](../features/completion.mdx#hover) | Shows what a class or an attribute is when you point at it |
+| [Formatter](../features/formatter.mdx) | Fixes indentation, braces and spacing |
+
+Everything else (highlighting, diagnostics, quick fixes, navigation, path
+updates) is always on.
+
+## Turn them on
+
+<Tabs defaultValue="ui">
+  <TabsList aria-label="How to change settings">
+    <TabsTrigger value="ui">Settings editor</TabsTrigger>
+    <TabsTrigger value="json">settings.json</TabsTrigger>
+  </TabsList>
+  <TabsContent value="ui">
+
+1. Open the Settings with `Ctrl+,`.
+2. Type `@ext:DuHNunes.scs-intellisense` in the search box to see only this
+   extension's settings.
+3. Check **Completion: Enabled**, **Hover: Enabled** and **Formatter: Enabled**,
+   the ones you want.
+
+</TabsContent>
+  <TabsContent value="json">
+
+Open the Command Palette (`Ctrl+Shift+P`), run **Preferences: Open User
+Settings (JSON)** and add:
+
+```json
+"scs-intellisense.completion.enabled": true,
+"scs-intellisense.hover.enabled": true,
+"scs-intellisense.formatter.enabled": true
+```
+
+</TabsContent>
+</Tabs>
+
+They take effect right away: there's no need to reload VS Code.
+
+<Callout variant="tip" title="Formatting on save">
+
+With the formatter on, `.sii` and `.sui` files are formatted every time you save
+them. You don't need to set anything else. If you'd rather format only when you
+ask, turn off **Formatter: Format On Save**. See [Formatter](../features/formatter.mdx).
+
+</Callout>
+
+## Found a problem?
+
+These features are experimental because they need testing on more real mods.
+If a suggestion is wrong or the formatter does something unexpected,
+please [report it](../help/reporting-issues.mdx): that's how they leave the
+experimental stage.

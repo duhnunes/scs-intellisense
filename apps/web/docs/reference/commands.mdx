@@ -1,0 +1,50 @@
+---
+title: Commands
+description: The commands SCS IntelliSense adds to the Command Palette.
+link_position: 2
+---
+
+Open the Command Palette with `Ctrl+Shift+P` and type **SCS IntelliSense** to see
+them all.
+
+## Show Output
+
+**SCS IntelliSense: Show Output** opens the extension's log in the **Output**
+panel. It shows information, warnings and errors.
+
+When something goes wrong, more detail helps: pick **Debug** in the log level
+filter of the Output panel (or run **Developer: Set Log Level**), then repeat what
+you were doing.
+
+**SCS IntelliSense: Clear Output** empties the log.
+
+## Copy Bug Report Info
+
+**SCS IntelliSense: Copy Bug Report Info** copies to the clipboard what's needed to
+look into a problem: your extension and VS Code versions, your SCS IntelliSense
+settings and the recent log. Paste it into your report. See
+[Reporting issues](../help/reporting-issues.mdx).
+
+## Refresh Schema Database
+
+**SCS IntelliSense: Refresh Schema Database** downloads the latest
+[schema database](./schema-database.mdx) now, instead of waiting for the next time
+VS Code starts.
+
+## Check Formatting of All Files
+
+**SCS IntelliSense: Check Formatting of All Files** lists every `.sii`/`.sui` file
+of the open folders that the formatter would change, without changing anything.
+The list goes to the Output. Needs the [formatter](../features/formatter.mdx) on.
+
+## Format All Files
+
+**SCS IntelliSense: Format All Files** formats every `.sii`/`.sui` file of the
+open folders, after asking you to confirm. Needs the formatter on.
+
+<Callout variant="danger" title="Can't be undone">
+
+Files that aren't open are changed on disk, and `Ctrl+Z` can't bring them back.
+Use git or make a backup first.
+
+</Callout>

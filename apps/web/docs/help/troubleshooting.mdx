@@ -1,0 +1,108 @@
+---
+title: Troubleshooting
+description: Answers to the most common problems.
+link_position: 1
+---
+
+If your problem isn't here, open the extension's log with **SCS IntelliSense: Show
+Output**: it often says what happened. Still stuck?
+[Report it](./reporting-issues.mdx).
+
+<Accordion>
+  <AccordionItem value="colors">
+    <AccordionTrigger>My file has no colors</AccordionTrigger>
+    <AccordionContent>
+
+- Look at the bottom right corner of VS Code: it should say **SII** or **SUI**. If
+  it says something else, click it and pick **SII** (or **SUI**).
+- Check that **SCS IntelliSense: Semantic Highlighting** is on in the Settings.
+- A very simple theme may color everything the same. Try one of VS Code's own
+  themes, such as **Dark Modern**, to compare.
+
+</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="suggestions">
+    <AccordionTrigger>I get no suggestions</AccordionTrigger>
+    <AccordionContent>
+
+- Completion is off by default. Turn it on in
+  [Experimental features](../getting-started/experimental-features.mdx).
+- Press `Ctrl+Space` to open the list by hand.
+- The [schema database](../reference/schema-database.mdx) needs to be downloaded
+  once. If you were offline, connect and run **SCS IntelliSense: Refresh Schema
+  Database**.
+- Inside a [`.sui` fragment](../getting-started/your-mod.mdx#sui-fragments), the
+  attributes come from the unit that includes it. If nothing in the open folders
+  includes it, there's nothing to suggest.
+
+</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="definition">
+    <AccordionTrigger>Ctrl+click on a unit name does nothing</AccordionTrigger>
+    <AccordionContent>
+
+- Open your mod as a folder (**File → Open Folder...**), not a single file: the
+  unit may be defined in another file.
+- On a large folder, the extension may still be reading the files. Wait a moment
+  and try again.
+- The unit may be one of the game's: those have no definition to open. See
+  [Files of the game](../getting-started/your-mod.mdx#files-of-the-game).
+
+</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="unknown">
+    <AccordionTrigger>An attribute I know is right is reported as unknown</AccordionTrigger>
+    <AccordionContent>
+
+- Check the class name of the unit: the attribute may belong to another class.
+- Run **SCS IntelliSense: Refresh Schema Database** to get the latest version.
+- If it's still reported, the database may be missing it. Please open an issue on
+  the [scs-schema repository](https://github.com/duhnunes/scs-schema) with the
+  class and the attribute.
+
+</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="format">
+    <AccordionTrigger>Formatting does nothing</AccordionTrigger>
+    <AccordionContent>
+
+- The formatter is off by default. Turn it on in
+  [Experimental features](../getting-started/experimental-features.mdx).
+- A file with structural errors (red underlines) isn't formatted. Fix them first.
+- The file may already be formatted: then there's nothing to change.
+
+</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="moves">
+    <AccordionTrigger>Paths weren't updated when I moved a file</AccordionTrigger>
+    <AccordionContent>
+
+- Move files inside VS Code, in its Explorer. Moves made in the Windows Explorer or
+  by another program aren't seen.
+- If VS Code asked whether to apply the changes and you said no, the paths stay as
+  they were. Undo the move with `Ctrl+Z` and move it again.
+- Compiled `.tobj` files are binary and can't be updated.
+
+</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="ask">
+    <AccordionTrigger>VS Code asks every time I move a file</AccordionTrigger>
+    <AccordionContent>
+
+That dialog is VS Code's own. Tick **Do not ask me again** to stop it. See
+[Moving and renaming files](../features/moving-files.mdx#how-to-use-it).
+
+</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="hint">
+    <AccordionTrigger>Why is uppercase in a unit name only a hint?</AccordionTrigger>
+    <AccordionContent>
+
+SCS's documentation says unit names are lowercase, but the game's own files use
+uppercase too, and the game loads them. So it's reported only as a hint. You can
+hide hints in the Settings: see
+[Levels](../features/diagnostics.mdx#levels).
+
+</AccordionContent>
+  </AccordionItem>
+</Accordion>

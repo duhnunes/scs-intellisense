@@ -1,0 +1,25 @@
+{
+  "name": "web",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "rdx dev",
+    "build": "rdx build",
+    "start": "rdx start"
+  },
+  "dependencies": {
+    "@lexibase/rdx": "1.2.1",
+    "next": "^16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/react": "19.3.0",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": "^22.18.0 || ^24.11.0"
+  }
+}

@@ -1,0 +1,58 @@
+---
+title: Moving and renaming files
+description: Rename or move a file or folder, and every path pointing to it is updated.
+link_position: 5
+---
+
+Rename or move a file or a folder in VS Code, and every path that points to it is
+updated in the same step. You don't have to search your mod for the old path.
+
+## How to use it
+
+Rename a file or folder in the **Explorer** (`F2`, or right-click → **Rename**),
+or drag it to another folder. That's all.
+
+The first time, VS Code asks whether to apply the extension's changes. This dialog
+is VS Code's own and it appears for every extension that changes files on a move.
+Tick **Do not ask me again** to skip it from then on.
+
+## What is updated
+
+- `@include` paths, in `.sii` and `.sui` files.
+- Every attribute that names a file: `model: "/vehicle/truck/my_truck/cabin.pmd"`,
+  `shadow_texture`, sounds (`"horn|/sound/truck/horn.soundref"`) and the rest.
+- The texture paths in `.mat` files, in both the game's format and the older one.
+- The texture names in text `.tobj` files, as SCS Blender Tools exports them.
+- The relative paths written inside a file you move, so they keep pointing to the
+  same files.
+
+Moving a folder updates the paths to every file inside it.
+
+## How paths are written
+
+- A path that starts with `/` stays a `/` path.
+- A relative path stays relative while it can. The game's files never go up a
+  folder with `../`, so a path that would need it is written from `/` instead.
+
+## Review the changes
+
+VS Code opens the changed files without saving them. Each changed line gets a mark
+at the start of the line and on the scrollbar, in the same color git uses for
+modified lines, so you can find them in a long file.
+
+The marks go away when you save or close the file, or when the line no longer holds
+the new path.
+
+<Callout variant="tip" title="Undo">
+
+Changed your mind? Press `Ctrl+Z` in the Explorer: the file or folder goes back to
+where it was, and so do the paths.
+
+</Callout>
+
+## What isn't updated
+
+- **Moves made outside VS Code**, in the Windows Explorer or by another program:
+  VS Code doesn't see them. Move your files from inside VS Code.
+- **Compiled `.tobj` files**: they're binary, so the extension can't change them.
+- **Paths that can't be written any more**: a file moved out of your mod's folder.

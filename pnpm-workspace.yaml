@@ -8,3 +8,10 @@ allowBuilds:
   inotify: true
   movefile: true
   unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - '@lexibase/rdx-core@1.1.0'
+  - '@lexibase/rdx-next@1.2.1'
+  - '@lexibase/rdx-types@1.1.0'
+  - '@lexibase/rdx-ui@1.1.0'
+  - '@lexibase/rdx@1.2.1'

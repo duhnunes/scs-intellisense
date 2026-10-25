@@ -1,0 +1,79 @@
+---
+title: Navigation
+description: Jump to a unit, find what uses it, rename it everywhere, and open the files your mod names.
+link_position: 4
+---
+
+Navigation works across every file of the folders open in VS Code. Open your mod
+as a folder (**File → Open Folder...**) to get the most out of it.
+
+## Outline and breadcrumbs
+
+The **Outline** view in the Explorer lists the units of the current file, with
+their attributes and `@include`s. The breadcrumbs above the editor show where the
+cursor is.
+
+To jump to a unit of the current file, press `Ctrl+Shift+O` and type its name.
+
+## Go to Definition
+
+`Ctrl+click` a unit name in a pointer, or put the cursor on it and press `F12`,
+to open the file and line where that unit is defined:
+
+```text
+animation: my_truck.anim
+           ^^^^^^^^^^^^^ Ctrl+click: opens the unit "my_truck.anim"
+```
+
+If the same name is defined in more than one file, VS Code lists them all and you
+pick one.
+
+A unit of the game, or of another mod you don't have open, has no definition to
+open.
+
+## Find References
+
+Put the cursor on a unit name, in its header or in a pointer, and press
+`Shift+F12` to list everything that points to it, in every file. Or right-click
+and pick **Find All References** to see them in a side panel.
+
+## Rename a unit
+
+Put the cursor on a unit name and press `F2`. Type the new name and press
+`Enter`: the unit and every pointer to it are renamed, in every file.
+
+- The new name must be valid: the same rules as the [diagnostics](./diagnostics.mdx#names).
+  An invalid name is refused with the reason.
+- Nameless units (`.x`) can be renamed too. They exist only in their own file.
+- A unit that isn't defined in the open folders, such as one of the game's units,
+  can't be renamed.
+
+<Callout variant="warning" title="Maps and other mods">
+
+Rename only sees text files (`.sii`, `.sui`). A map uses unit names from its
+binary files, so if your map uses the unit you rename, rename it in the map editor
+too. Other mods that use the name are not changed either.
+
+</Callout>
+
+## Open a file from its path
+
+Every path to a file of your mod is a link. `Ctrl+click` it to open the file:
+
+```text
+model: "/vehicle/truck/my_truck/cabin.pmd"
+@include "parts/engine_common.sui"
+```
+
+Paths after a name work too (`sounds[]: "horn|/sound/truck/horn.soundref"`). A path to
+one of the game's files isn't a link, since the extension doesn't read the
+game's archives.
+
+## Find where a file is used
+
+Put the cursor on a path in a `.sii` or `.sui` file and press `Shift+F12` to list
+every path that names the same file: in `.sii` and `.sui` files, and also in
+`.mat` and `.tobj` files.
+
+This tells you, before you delete or change a model or a texture, which files
+still use it.

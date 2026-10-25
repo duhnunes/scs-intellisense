@@ -1,0 +1,92 @@
+---
+title: Completion and hover
+description: Suggestions for classes, attributes, values, units and files, and descriptions on hover.
+link_position: 3
+---
+
+<Callout variant="warning" title="Experimental">
+
+Completion and hover are off by default. Turn them on in
+[Experimental features](../getting-started/experimental-features.mdx).
+`@include` paths are always suggested.
+
+</Callout>
+
+Suggestions appear as you type. Press `Ctrl+Space` to open them at any time.
+They come from the [schema database](../reference/schema-database.mdx), which lists
+every class of the game with the attributes the game itself reads.
+
+## Class names
+
+At the start of a unit, the list shows every class. Documented classes come first,
+then the ones the game uses most, so the class you need is usually near the top.
+
+## Attribute keys
+
+Inside a unit, the list shows the attributes of its class, with their type.
+Attributes the game no longer uses, and those it manages itself, aren't suggested.
+
+This works in a [`.sui` fragment](../getting-started/your-mod.mdx#sui-fragments)
+too: it gets the attributes of the unit that includes it.
+
+## Values
+
+After the `:` of an attribute, the list depends on what the attribute takes.
+
+### Fixed values
+
+For an attribute with a fixed set of values, the list shows them all, and the
+default one is marked:
+
+```text
+part_type: |
+           unknown      (default)
+           factory
+           aftermarket
+           licensed
+```
+
+The value is written without quotes. If you typed a quote first, the quotes are
+kept.
+
+### Units
+
+For an attribute that points to a unit (such as `animation` in a chassis, which
+takes a `vehicle_animation_data`), the list shows the units of the right class:
+the ones in the same file first, then the ones in the rest of your mod, and
+`null`.
+
+A unit of a subclass counts too: an attribute that takes a `sign_template_item`
+also lists your `sign_template_text` units.
+
+### Files
+
+For an attribute that takes a file, such as `model` (a `.pmd`) or
+`shadow_texture` (a `.tobj`), type `"/` and the list shows your mod's folders and
+only the files of the right type:
+
+```text
+model: "/vehicle/truck/my_truck/|
+                                cabin.pmd
+                                chassis.pmd
+                                interior/
+```
+
+The game's own files aren't listed: the extension doesn't read the game's
+archives.
+
+## `@include` paths
+
+Type `@include "` and the list shows the folders and `.sui` files next to the
+current file. Start with `/` to list from your mod's root instead. This works
+even with completion turned off, since it doesn't need the schema database.
+
+## Hover
+
+Point at a class name or an attribute key to see what it is: its type, its
+default value, the values it accepts and its description. Hover also warns about
+an attribute that has no effect any more (the game still accepts it but ignores
+it), or one the game manages itself and you shouldn't set.
+
+Most classes of the game have no description yet. The database is a community
+effort; for those, hover shows the type only.

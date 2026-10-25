@@ -1,0 +1,50 @@
+---
+title: Installation
+description: Install SCS IntelliSense and open your first mod.
+link_position: 2
+---
+
+## Requirements
+
+- [Visual Studio Code](https://code.visualstudio.com/) 1.118 or newer.
+- An internet connection the first time you use completion, hover or the
+  attribute checks, to download the [schema database](../reference/schema-database.mdx).
+  After that, it works offline.
+
+## Install the extension
+
+1. Open VS Code.
+2. Open the **Extensions** view with `Ctrl+Shift+X`.
+3. Search for **SCS IntelliSense**.
+4. Click **Install**.
+
+You can also install it from its
+[Marketplace page](https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense).
+
+Open any `.sii` or `.sui` file and it's colored right away: the extension is
+active.
+
+## Open your mod as a folder
+
+Use **File → Open Folder...** and pick your mod's folder, the one that holds
+`manifest.sii`. Opening single files works too, but then the extension only sees
+that file. With the whole folder open it can:
+
+- find a unit defined in another file when you Ctrl+click its name;
+- suggest units and files from all of your mod;
+- update paths when you move a file;
+- know which unit a `.sui` file is pasted into.
+
+Read [How your mod is read](./your-mod.mdx) to see which folder layouts the
+extension understands.
+
+## Turn on the experimental features
+
+Completion, hover and the formatter are off by default while they're still being
+tested. They're stable on the game's own files and worth turning on:
+see [Experimental features](./experimental-features.mdx).
+
+## Update
+
+VS Code updates extensions automatically. To update by hand, open the
+**Extensions** view, find SCS IntelliSense and click **Update** when it's shown.

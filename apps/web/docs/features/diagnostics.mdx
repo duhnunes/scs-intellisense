@@ -1,0 +1,86 @@
+---
+title: Diagnostics and quick fixes
+description: The problems SCS IntelliSense finds while you type, and how to fix them in one click.
+link_position: 2
+---
+
+Problems are underlined as you type, before you ever start the game. They're also
+listed in the **Problems** panel (`Ctrl+Shift+M`) for every open file.
+
+## Levels
+
+| Level | Meaning |
+| :---- | :------ |
+| **Error** (red) | The game is expected to fail loading this. |
+| **Warning** (yellow) | Probably a mistake, or against SCS's documentation. The game loads it anyway. |
+| **Hint** (dotted) | Against SCS's documentation, but the game's own files do it too. |
+
+The levels are chosen from the game's own files: if the game ships a file that
+does something, it's never reported as an error.
+
+To hide a level, open the Settings, search for **Diagnostics: Enabled
+Severities** and uncheck it. For example, uncheck `warning` and `hint` to see only
+errors.
+
+## What is checked
+
+### Structure (errors)
+
+- A missing `:`, `{` or `}`, or a `}` with nothing to close.
+- A missing or duplicated `SiiNunit { }` in a `.sii` file, or content after its
+  closing brace.
+- An `@include` that doesn't start its line: the game ignores an indented one.
+
+### Names
+
+| Problem | Level |
+| :------ | :---- |
+| An invalid class name (`ui::` with nothing after it, a name starting with a digit) | Error |
+| An invalid unit name: a part longer than 12 characters, a character other than letters, digits and `_`, an empty part (`a..b`), an unmatched quote | Error |
+| Two units with the same name in one file, nameless ones (`.x`) included | Error |
+| Uppercase letters in a unit name | Hint |
+
+### Attributes
+
+These two need the [schema database](../reference/schema-database.mdx), which knows
+every class of the game and its attributes:
+
+| Problem | Example | Level |
+| :------ | :------ | :---- |
+| An attribute the class doesn't have | `prcie: 18000` | Warning |
+| A value the attribute doesn't accept | `part_type: factroy` | Warning |
+
+The attribute lists come from the game itself, so an unknown attribute is almost
+always a typo. They also work inside a [`.sui` fragment](../getting-started/your-mod.mdx#sui-fragments),
+using the class of the unit that includes it.
+
+### The end of the file (warning)
+
+A file should end with a newline. Almost every file of the game does.
+
+## Quick fixes
+
+When a problem has one obvious fix, a light bulb appears next to it. Click it, or
+put the cursor on the problem and press `Ctrl+.`:
+
+| Problem | Fix |
+| :------ | :-- |
+| `prcie: 18000` | Change to `price` |
+| `part_type: factroy` | Change to `factory` |
+| `truck my.truck {` | Add the missing `:` |
+| `price 18000` or `price = 18000` | Change to `price: 18000` |
+| `my..truck` | Change to `my.truck` |
+| `"my.truck` | Add the missing quote, or remove this one |
+| An indented `@include` | Move it to the start of its line |
+| No newline at the end | Add it |
+
+`Shift+Alt+.` applies the fix right away when there's only one.
+
+Some problems have no quick fix on purpose, because only you know the right
+answer: which of two duplicate units to rename, or where a missing `}` goes.
+
+## Not checked
+
+The extension doesn't read the game's archives, so it can't tell whether a
+path or a pointer to one of the game's files is right. See
+[Files of the game](../getting-started/your-mod.mdx#files-of-the-game).

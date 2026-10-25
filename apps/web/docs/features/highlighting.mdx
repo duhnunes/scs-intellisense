@@ -1,0 +1,58 @@
+---
+title: Highlighting and icons
+description: Colors by meaning for .sii and .sui files, and icons for SCS file types.
+link_position: 1
+---
+
+## Highlighting
+
+Every part of a `.sii` or `.sui` file gets a color for what it is:
+
+- **class names**, namespaces included (`ui::text`);
+- **unit names** (`my_truck.engine`, `.nameless`);
+- **attribute keys** (`price`, `sounds[]`, `items[0]`);
+- **values**: numbers, strings, `true`/`false`, and names such as `factory` or a
+  unit a pointer names;
+- **comments** (`#`, `//` and `/* ... */`);
+- **`@include`** and its path.
+
+The colors come from your VS Code theme, so they match the rest of your editor.
+
+Highlighting is on for `.sii`/`.sui` files even if your theme or
+`editor.semanticHighlighting.enabled` turns semantic colors off elsewhere. To turn
+it off for these files, uncheck **SCS IntelliSense: Semantic Highlighting** in the
+Settings (`scs-intellisense.semanticHighlighting`).
+
+Bracket pair colorization ignores brackets inside comments and strings, so a
+`{` in a comment never throws the colors off.
+
+## File icons
+
+Files of the game's formats get their own icon in the Explorer and in the editor
+tabs:
+
+| Icon | Extension | What it is |
+| :--: | :-------- | :--------- |
+| ![.sii icon](/images/extensions/sii.svg) | `.sii` | Definitions |
+| ![.sui icon](/images/extensions/sui.svg) | `.sui` | Definitions included by `@include` |
+| ![.pmd icon](/images/extensions/pmd.svg) | `.pmd` | Model |
+| ![.pmg icon](/images/extensions/pmg.svg) | `.pmg` | Model geometry |
+| ![.pmc icon](/images/extensions/pmc.svg) | `.pmc` | Model collision |
+| ![.pma icon](/images/extensions/pma.svg) | `.pma` | Model animation |
+| ![.pim icon](/images/extensions/pim.svg) | `.pim` | Model source |
+| ![.pit icon](/images/extensions/pit.svg) | `.pit` | Model source: looks and variants |
+| ![.pic icon](/images/extensions/pic.svg) | `.pic` | Model source: collision |
+| ![.pia icon](/images/extensions/pia.svg) | `.pia` | Model source: animation |
+| ![.pip icon](/images/extensions/pip.svg) | `.pip` | Prefab source |
+| ![.ppd icon](/images/extensions/ppd.svg) | `.ppd` | Prefab |
+| ![.mat icon](/images/extensions/mat.svg) | `.mat` | Material |
+| ![.tobj icon](/images/extensions/tobj.svg) | `.tobj` | Texture |
+| ![.soundref icon](/images/extensions/sndr.svg) | `.soundref` | Sound reference |
+| ![.scs icon](/images/extensions/scs.svg) | `.scs` | Game or mod archive |
+| ![.zip icon](/images/extensions/zip.svg) | `.zip` | Archive |
+
+The source formats (`.pim`, `.pit`, `.pic`, `.pia`, `.pip`) are what SCS Blender
+Tools exports, before SCS's converter turns them into the game's formats.
+
+Only `.sii` and `.sui` get colors and checks. The other types get an icon so they
+are easy to tell apart.

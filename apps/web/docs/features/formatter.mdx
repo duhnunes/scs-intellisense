@@ -1,0 +1,149 @@
+---
+title: Formatter
+description: Consistent indentation, braces and spacing for .sii and .sui files, without changing content.
+link_position: 6
+---
+
+<Callout variant="warning" title="Experimental">
+
+The formatter is off by default. Turn it on in
+[Experimental features](../getting-started/experimental-features.mdx).
+
+</Callout>
+
+The formatter rewrites only the layout of a file: indentation, where braces go,
+spaces around `:`, and blank lines. It never changes a name, a value or a comment.
+
+Before:
+
+```text
+SiiNunit
+{
+accessory_engine_data:my_engine.engine{
+  name:"Big Engine"
+      price :  18000
+
+
+  torque: 2400 }
+}
+```
+
+After (default settings):
+
+```text
+SiiNunit {
+	accessory_engine_data : my_engine.engine {
+		name: "Big Engine"
+		price: 18000
+
+		torque: 2400
+	}
+}
+```
+
+## Safe by design
+
+- **Content is never changed.** Before applying a result, the formatter checks that
+  every name, key, value and comment is exactly as it was. If anything differs, the
+  file is left alone.
+- **A file with structural errors isn't formatted.** Fix the errors the
+  [diagnostics](./diagnostics.mdx) report first: with a missing `}`, the formatter
+  can't know where a unit ends.
+- **`@include` always starts its line**, since the game ignores an indented one.
+
+It's tested on all 73,224 `.sii`/`.sui` files of ATS 1.61: none loses content, and
+formatting a file twice gives the same result.
+
+## Format a file
+
+- **Format Document:** `Shift+Alt+F`, or right-click → **Format Document**.
+- **Format Selection:** `Ctrl+K Ctrl+F` formats the units your selection touches.
+  With just the cursor inside a unit, it formats that unit.
+- **On save:** on by default. See below.
+
+The extension is the formatter for `.sii` and `.sui` files out of the box, even if
+your default formatter is another one, such as Prettier.
+
+## Format on save
+
+With the formatter on, every `.sii`/`.sui` file is formatted when you save it.
+There's nothing else to set up: you don't need VS Code's `editor.formatOnSave`.
+`Ctrl+Z` undoes the formatting.
+
+To format only when you ask, uncheck **Formatter: Format On Save**
+(`scs-intellisense.formatter.formatOnSave`).
+
+## Options
+
+### Brace style
+
+**Formatter: Brace Style** (`scs-intellisense.formatter.braceStyle`):
+
+<Tabs defaultValue="1tbs">
+  <TabsList aria-label="Brace style">
+    <TabsTrigger value="1tbs">1tbs (default)</TabsTrigger>
+    <TabsTrigger value="allman">allman</TabsTrigger>
+  </TabsList>
+  <TabsContent value="1tbs">
+
+The `{` goes on the header line:
+
+```text
+accessory_engine_data : my_engine.engine {
+	price: 18000
+}
+```
+
+</TabsContent>
+  <TabsContent value="allman">
+
+The `{` goes on its own line, as in the game's own files:
+
+```text
+accessory_engine_data : my_engine.engine
+{
+	price: 18000
+}
+```
+
+</TabsContent>
+</Tabs>
+
+### Indent units
+
+**Formatter: Indent Units** (`scs-intellisense.formatter.indentUnits`, on by
+default) indents the units inside `SiiNunit { }`. Uncheck it to keep them at the
+start of the line. The game's files use both styles. It doesn't apply to `.sui`
+files, which have no `SiiNunit`.
+
+### Tabs or spaces
+
+Indentation follows your VS Code settings, so formatting matches what the editor
+does when you press `Enter`: `editor.tabSize`, `editor.insertSpaces`, and
+`editor.detectIndentation`, which picks up tabs from a file that already uses them.
+
+To always use tabs in SCS files only, add this to your `settings.json`:
+
+```json
+"[sii]": { "editor.insertSpaces": false },
+"[sui]": { "editor.insertSpaces": false }
+```
+
+## Format every file
+
+Two commands work on every `.sii`/`.sui` file of the open folders. Run them from
+the Command Palette (`Ctrl+Shift+P`):
+
+- **SCS IntelliSense: Check Formatting of All Files** lists the files that would
+  change, without changing anything. The list goes to the extension's
+  [Output](../reference/commands.mdx#show-output).
+- **SCS IntelliSense: Format All Files** formats them all, after asking you to
+  confirm.
+
+<Callout variant="danger" title="Format All Files can't be undone">
+
+Files that aren't open are changed directly on disk, and `Ctrl+Z` can't bring them
+back. Use git or make a backup first. Never run it on the game's extracted files
+that you keep as a reference.
+
+</Callout>

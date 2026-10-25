@@ -1,0 +1,42 @@
+---
+title: Schema database
+description: Where SCS IntelliSense learns the game's classes and attributes.
+link_position: 3
+---
+
+The schema database lists every class the game knows, with its attributes: their
+names, types, the values they accept and, where someone has written it, what they
+do. It's what completion, hover and the attribute checks read.
+
+It's a separate community project,
+[scs-schema](https://github.com/duhnunes/scs-schema), so it can be improved
+without a new version of the extension.
+
+## What's in it
+
+- **Every class of the game:** 1,327 in ATS 1.61, with the attribute names and
+  types the game itself reads. This part is complete, which is why an
+  [unknown attribute](../features/diagnostics.mdx#attributes) is almost always a
+  typo.
+- **Descriptions:** written by hand, and most classes don't have them yet. Hover
+  then shows the attribute's type only.
+
+## How it's downloaded
+
+- The list of classes is downloaded when VS Code starts, and each class the first
+  time you use it.
+- Everything is saved on your computer. After the first download, it works
+  offline.
+- Each time VS Code starts, the extension checks for a newer version in the
+  background. To check right now, run
+  [Refresh Schema Database](./commands.mdx#refresh-schema-database).
+
+If you're offline the very first time, completion, hover and the attribute checks
+have nothing to work with yet. Everything else works: the structure and name checks
+don't need the database.
+
+## Something's missing or wrong?
+
+If a class or an attribute is missing, a description is wrong, or you'd like to
+write one, open an issue or a pull request on the
+[scs-schema repository](https://github.com/duhnunes/scs-schema).

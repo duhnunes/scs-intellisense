@@ -1,0 +1,48 @@
+---
+title: Settings
+description: Every setting of SCS IntelliSense, with its default value.
+link_position: 1
+---
+
+Open the Settings with `Ctrl+,` and type `@ext:DuHNunes.scs-intellisense` to see
+only this extension's settings. Every setting takes effect right away, with no
+need to reload VS Code.
+
+## General
+
+| Setting | Default | What it does |
+| :------ | :------ | :----------- |
+| `scs-intellisense.semanticHighlighting` | `true` | [Colors](../features/highlighting.mdx) `.sii`/`.sui` files by meaning |
+
+## Diagnostics
+
+| Setting | Default | What it does |
+| :------ | :------ | :----------- |
+| `scs-intellisense.diagnostics.enabledSeverities` | all four | Which [levels](../features/diagnostics.mdx#levels) are shown: `error`, `warning`, `information`, `hint` |
+
+## Completion and hover
+
+| Setting | Default | What it does |
+| :------ | :------ | :----------- |
+| `scs-intellisense.completion.enabled` | `false` | [Completion](../features/completion.mdx) (experimental) |
+| `scs-intellisense.hover.enabled` | `false` | [Hover](../features/completion.mdx#hover) (experimental) |
+| `scs-intellisense.schema.fetchTimeoutMs` | `8000` | How many milliseconds a suggestion waits for the [schema database](./schema-database.mdx) to download a class before giving up. The download goes on, so the next try is instant |
+
+## Formatter
+
+| Setting | Default | What it does |
+| :------ | :------ | :----------- |
+| `scs-intellisense.formatter.enabled` | `false` | The [formatter](../features/formatter.mdx) (experimental) |
+| `scs-intellisense.formatter.formatOnSave` | `true` | Format `.sii`/`.sui` files on save, while the formatter is on |
+| `scs-intellisense.formatter.braceStyle` | `1tbs` | `1tbs`: `{` on the header line. `allman`: `{` on its own line |
+| `scs-intellisense.formatter.indentUnits` | `true` | Indent the units inside `SiiNunit { }` |
+
+Tabs or spaces, and how many, follow VS Code's own `editor.tabSize`,
+`editor.insertSpaces` and `editor.detectIndentation`. See
+[Tabs or spaces](../features/formatter.mdx#tabs-or-spaces).
+
+## Always on
+
+Diagnostics, quick fixes, `@include` path suggestions, navigation and path updates
+on file moves have no setting to turn them off: they only act when you ask, or
+show what's wrong.

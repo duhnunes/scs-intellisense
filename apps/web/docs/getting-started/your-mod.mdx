@@ -1,0 +1,138 @@
+---
+title: How your mod is read
+description: The folder layouts SCS IntelliSense understands, and what it can and can't see.
+link_position: 3
+---
+
+The game mounts every archive (its own, its DLCs' and every mod's) on one
+virtual folder, `/`. A path such as `"/vehicle/truck/cabin.pmd"` starts there.
+SCS IntelliSense works out where that `/` is on your disk from the folders around
+the file you're editing.
+
+## Supported layouts
+
+<Tabs defaultValue="simple">
+  <TabsList aria-label="Mod layout">
+    <TabsTrigger value="simple">Simple mod</TabsTrigger>
+    <TabsTrigger value="parts">Mod with parts</TabsTrigger>
+    <TabsTrigger value="nomanifest">No manifest</TabsTrigger>
+  </TabsList>
+  <TabsContent value="simple">
+
+The folder holding `manifest.sii` is the mod's `/`:
+
+```text
+my_mod/
+├── manifest.sii
+├── def/
+│   └── vehicle/...
+└── vehicle/
+    └── truck/
+        └── cabin.pmd     → "/vehicle/truck/cabin.pmd"
+```
+
+</TabsContent>
+  <TabsContent value="parts">
+
+Since game version 1.48 a mod can split its content into a `base/` folder,
+always loaded, and `dlc_*` folders, loaded only when the player owns that DLC.
+The game puts all of them on the same `/`, and so does the extension: a path
+written in `dlc_kenworth_w900/` can name a file in `base/`.
+
+```text
+my_mod/
+├── manifest.sii
+├── base/
+│   └── vehicle/...       → "/vehicle/..."
+└── dlc_kenworth_w900/
+    └── def/...
+```
+
+`manifest.sii` can also be inside `base/`.
+
+</TabsContent>
+  <TabsContent value="nomanifest">
+
+Without a `manifest.sii` (a work in progress, for example), the folder that
+holds `def/` is taken as the `/`:
+
+```text
+work/
+└── my_mod/
+    ├── def/...
+    └── vehicle/...       → "/vehicle/..."
+```
+
+</TabsContent>
+</Tabs>
+
+A relative path (`@include "parts/cabin.sui"`) starts in the folder of the file
+that writes it. If the file isn't there, the extension also looks in the same
+folder of your mod's other parts, as the game does.
+
+Several folders open at once (a VS Code workspace) work too: each file uses the
+mod it belongs to.
+
+## Files of the game
+
+Your mod can use the game's units and files: a pointer to one of the game's
+units, a path to one of its models. The extension doesn't read the game's
+archives, so:
+
+- those names and paths have **no definition** to jump to, and that's expected;
+- they're **never reported as errors**: a path the extension can't find may
+  well be in the game.
+
+This is why there's no "file not found" warning: most mods point to the game's
+files somewhere, and every one of them would be flagged.
+
+## The game's files, extracted
+
+If you extracted the game's archives to study them, you can open that folder too.
+Extract one folder per archive, side by side, and the extension reads them as the
+game does: every archive is part of the same `/`.
+
+```text
+ATS_extracted/
+├── base/
+├── def/
+├── dlc_kenworth_w900/
+└── ...
+```
+
+<Callout variant="warning" title="Don't format the game's files">
+
+Never run **Format All Files** on a folder you keep as a reference: it rewrites
+files on disk. See [Formatter](../features/formatter.mdx#format-every-file).
+
+</Callout>
+
+## `.sui` fragments
+
+A `.sui` file can hold a whole unit, or just a list of attributes that
+`@include` pastes into a unit written in another file. In `engine.sii`:
+
+```text
+accessory_engine_data : my_engine.engine {
+@include "engine_common.sui"
+	price: 18000
+}
+```
+
+And `engine_common.sui`, next to it:
+
+```text
+torque: 2400
+volume: 15
+```
+
+The extension finds who includes the fragment and treats its attributes as part of
+that unit: they get completion, hover and the same checks. A fragment that nothing
+in the open folders includes gets only the basic checks.
+
+## Large folders
+
+When a folder opens, the extension reads all its `.sii`, `.sui`, `.mat` and
+`.tobj` files in the background. A typical mod takes a second or two; the whole
+extracted game can take half a minute. You can keep working meanwhile: navigation
+and path updates catch up as soon as reading ends.
