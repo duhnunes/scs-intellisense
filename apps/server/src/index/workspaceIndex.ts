@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
 import { findPathRoots, relativeBases } from '../completion/modFiles'
 import { decodeSiiFile } from '../formatter/workspaceFormat'
@@ -11,6 +10,7 @@ import type {
   SiiRange,
 } from '../interfaces/structure'
 import { normalizeSiiText, readScsDocument } from '../sii'
+import { LineMap } from './lineMap'
 import { texturePathRefs } from './texturePaths'
 
 /**
@@ -80,8 +80,9 @@ export interface IndexedFile {
   filePath: string
   /** Lowercased file system path: the map key. */
   key: string
-  /** Normalized text (no BOM, LF), for offset → position. */
-  document: TextDocument
+  /** Offset → position in the normalized text (no BOM, LF). The text
+   *  itself isn't kept: see LineMap. */
+  document: LineMap
   units: IndexedUnit[]
   values: ValueCandidate[]
   includes: IncludeRef[]
@@ -108,39 +109,49 @@ export function unquote(name: string): string {
 
 const UNIT_NAME = /^[A-Za-z0-9_.]+$/
 
+const PARALLEL_READS = 16
+
 export class WorkspaceIndex {
   private readonly files = new Map<string, IndexedFile>()
+  /** File key → the files that @include it. classesOf() runs on every
+   *  edit of an open .sui: looking through every file took 44 ms in the
+   *  extracted ATS 1.61. */
+  private readonly includers = new Map<string, Set<IndexedFile>>()
   private folders: string[] = []
 
   get size(): number {
     return this.files.size
   }
 
-  /** Replaces the folders and reads every .sii/.sui under them, a batch
-   *  at a time so requests are still answered meanwhile. Files already
-   *  set from an open editor keep their text. */
+  /** Replaces the folders and reads every indexed file under them. Files
+   *  already set from an open editor keep their text. */
   async scan(folders: string[], isOpen: (uri: string) => boolean) {
     this.folders = folders
     rootsCache.clear()
+    sharedRoots.clear()
     const found: string[] = []
     for (const folder of folders) await collect(folder, found)
 
     const keep = new Set(found.map((file) => fileKey(file)))
     for (const [key, entry] of this.files)
-      if (!keep.has(key) && !isOpen(entry.uri)) this.files.delete(key)
+      if (!keep.has(key) && !isOpen(entry.uri)) this.drop(key)
 
-    for (let i = 0; i < found.length; i++) {
-      const file = found[i]!
-      const uri = URI.file(file).toString()
-      if (!isOpen(uri)) {
+    // Several reads at once: one at a time, the scan mostly waited on the
+    // disk (ATS 1.61 extracted, 229,537 files: 7 minutes). Each file is
+    // parsed when its read ends, so requests are still answered meanwhile.
+    let next = 0
+    const reader = async () => {
+      while (next < found.length) {
+        const file = found[next++]!
+        if (isOpen(URI.file(file).toString())) continue
         try {
           this.setFromBytes(file, await readFile(file))
         } catch {
           // Unreadable: left out.
         }
       }
-      if (i % 50 === 49) await new Promise((r) => setImmediate(r))
     }
+    await Promise.all(Array.from({ length: PARALLEL_READS }, reader))
     return found.length
   }
 
@@ -159,7 +170,7 @@ export class WorkspaceIndex {
   /** From an open editor: the text as it is now, saved or not. */
   setFromText(uri: string, text: string): void {
     const filePath = URI.parse(uri).fsPath
-    this.files.set(fileKey(filePath), buildEntry(uri, filePath, text))
+    this.put(buildEntry(uri, filePath, text))
   }
 
   /** From disk, after a change outside the editor (or a close). */
@@ -172,7 +183,7 @@ export class WorkspaceIndex {
   }
 
   remove(filePath: string): void {
-    this.files.delete(fileKey(filePath))
+    this.drop(fileKey(filePath))
   }
 
   get(uri: string): IndexedFile | undefined {
@@ -236,7 +247,7 @@ export class WorkspaceIndex {
   classesOf(file: IndexedFile, seen = new Set<string>()): string[] {
     seen.add(file.key)
     const classes = new Set<string>()
-    for (const other of this.files.values())
+    for (const other of this.includers.get(file.key) ?? [])
       for (const include of other.includes) {
         if (include.target !== file.key) continue
         if (include.className) classes.add(include.className)
@@ -253,10 +264,28 @@ export class WorkspaceIndex {
       this.remove(filePath)
       return
     }
-    this.files.set(
-      fileKey(filePath),
-      buildEntry(URI.file(filePath).toString(), filePath, decoded.text)
-    )
+    this.put(buildEntry(URI.file(filePath).toString(), filePath, decoded.text))
+  }
+
+  private put(entry: IndexedFile): void {
+    this.drop(entry.key)
+    this.files.set(entry.key, entry)
+    for (const include of entry.includes) {
+      let files = this.includers.get(include.target)
+      if (!files) this.includers.set(include.target, (files = new Set()))
+      files.add(entry)
+    }
+  }
+
+  private drop(key: string): void {
+    const entry = this.files.get(key)
+    if (!entry) return
+    this.files.delete(key)
+    for (const include of entry.includes) {
+      const files = this.includers.get(include.target)
+      files?.delete(entry)
+      if (files?.size === 0) this.includers.delete(include.target)
+    }
   }
 }
 
@@ -265,12 +294,12 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
     return buildPathsEntry(uri, filePath, text)
   const mode = filePath.toLowerCase().endsWith('.sui') ? 'sui' : 'sii'
   const parsed = readScsDocument(text, mode)
-  const document = TextDocument.create(uri, mode, 0, parsed.text)
+  const document = new LineMap(parsed.text)
   const units = parsed.units
     .filter((unit) => unit.unitName !== '')
     .map((unit) => ({
-      name: unit.unitName,
-      className: unit.className,
+      name: own(unit.unitName),
+      className: own(unit.className),
       nameRange: innerRange(parsed.text, unit.unitNameRange),
       range: unit.range,
     }))
@@ -279,8 +308,9 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
   const paths: PathRef[] = []
   const addValues = (
     attributes: SiiAttribute[],
-    className: string | undefined
+    unitClass: string | undefined
   ) => {
+    const className = unitClass === undefined ? undefined : own(unitClass)
     for (const attribute of attributes) {
       if (attribute.kind === 'include') {
         const target = resolveInclude(filePath, parsed, attribute)
@@ -298,9 +328,9 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
       )
         continue
       values.push({
-        name,
+        name: own(name),
         className,
-        key: attribute.key,
+        key: own(attribute.key),
         bracketed: attribute.isArray,
         range,
       })
@@ -309,7 +339,7 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
   const addInclude = (valueRange: SiiRange) => {
     const range = innerRange(parsed.text, valueRange)
     const text = parsed.text.slice(range.start, range.end)
-    if (text !== '') paths.push({ kind: 'include', text, range })
+    if (text !== '') paths.push({ kind: 'include', text: own(text), range })
   }
   // Only quoted values whose path starts with "/": that's how the game
   // writes all of them (135,133 in ATS 1.61).
@@ -319,7 +349,11 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
     const start = inner.start + value.lastIndexOf('|') + 1
     const text = parsed.text.slice(start, inner.end)
     if (text.startsWith('/') && text.length > 1 && !text.includes('\n'))
-      paths.push({ kind: 'file', text, range: { start, end: inner.end } })
+      paths.push({
+        kind: 'file',
+        text: own(text),
+        range: { start, end: inner.end },
+      })
   }
   for (const unit of parsed.units) addValues(unit.attributes, unit.className)
   addValues(parsed.attributes, undefined)
@@ -330,9 +364,9 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
   }
   if (paths.length > 0) rootsOfFile(filePath)
   return {
-    uri,
-    filePath: path.resolve(filePath),
-    key: fileKey(filePath),
+    uri: own(uri),
+    filePath: own(path.resolve(filePath)),
+    key: own(fileKey(filePath)),
     document,
     units,
     values,
@@ -372,6 +406,9 @@ function resolveRelative(
 // Files of one folder share their roots; cleared on every scan, in case a
 // manifest.sii or base/ folder appeared.
 const rootsCache = new Map<string, string[]>()
+// One array per distinct list: in the extracted game every folder of an
+// archive has the same 62 roots, and thousands of copies took 60 MB.
+const sharedRoots = new Map<string, string[]>()
 
 /** Where the "/" paths of `filePath` start (findPathRoots), remembered
  *  per folder: moving a file looks them up for every file with paths. */
@@ -383,10 +420,24 @@ function rootsOfFolder(folder: string): string[] {
   const key = folder.toLowerCase()
   let roots = rootsCache.get(key)
   if (!roots) {
-    roots = findPathRoots(path.join(folder, 'x.sii'))
+    const found = findPathRoots(path.join(folder, 'x.sii'))
+    const id = found.join('\0')
+    roots = sharedRoots.get(id) ?? found
+    sharedRoots.set(id, roots)
     rootsCache.set(key, roots)
   }
   return roots
+}
+
+/**
+ * A flat copy of a string the index keeps. V8 keeps a slice of 13
+ * characters or more as a view into the whole string, so every name the
+ * index kept held its whole file in memory (the extracted ATS 1.61 took
+ * 1.3 GB, its `def` archive 343 MB, 28 MB with copies). A string built by
+ * joining pieces (a URI: 2.3 KB for 90 characters) keeps the pieces.
+ */
+function own(text: string): string {
+  return text.length < 13 ? text : Buffer.from(text, 'utf8').toString('utf8')
 }
 
 function innerRange(text: string, range: SiiRange): SiiRange {
@@ -415,14 +466,17 @@ function buildPathsEntry(
   text: string
 ): IndexedFile {
   const normalized = normalizeSiiText(text)
-  const paths = texturePathRefs(filePath, normalized)
+  const paths = texturePathRefs(filePath, normalized).map((ref) => ({
+    ...ref,
+    text: own(ref.text),
+  }))
   // Looked up now, in the background, rather than when a file moves.
   if (paths.length > 0) rootsOfFile(filePath)
   return {
-    uri,
-    filePath: path.resolve(filePath),
-    key: fileKey(filePath),
-    document: TextDocument.create(uri, 'plaintext', 0, normalized),
+    uri: own(uri),
+    filePath: own(path.resolve(filePath)),
+    key: own(fileKey(filePath)),
+    document: new LineMap(normalized),
     units: [],
     values: [],
     includes: [],

@@ -1,9 +1,11 @@
+import { readFileSync } from 'node:fs'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { moveEdits } from '../src/index/fileMoves'
 import { WorkspaceIndex } from '../src/index/workspaceIndex'
+import { normalizeSiiText } from '../src/sii'
 
 // A mod split in parts: manifest.sii next to base/, which is "/".
 const FILES: Record<string, string> = {
@@ -50,7 +52,7 @@ describe('updating paths when files move', () => {
     )
       .map(
         (e) =>
-          `${e.file.filePath.slice(mod.length + 1).replace(/\\/g, '/')}: ${e.file.document.getText().slice(e.range.start, e.range.end)} -> ${e.newText}`
+          `${e.file.filePath.slice(mod.length + 1).replace(/\\/g, '/')}: ${normalizeSiiText(readFileSync(e.file.filePath, 'utf8')).slice(e.range.start, e.range.end)} -> ${e.newText}`
       )
       .sort()
 

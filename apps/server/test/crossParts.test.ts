@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -59,7 +60,10 @@ describe('relative paths across the parts of a mod', () => {
 
   it('links the @include to the file in the other part', () => {
     const file = index.get(URI.file(police()).toString())!
-    const ref = pathAt(file, file.document.getText().indexOf('drivers.sui'))!
+    const ref = pathAt(
+      file,
+      readFileSync(file.filePath, 'utf8').indexOf('drivers.sui')
+    )!
     expect(resolvePathRef(file, ref)).toBe(
       at('base/def/vehicle/ai/drivers.sui')
     )
@@ -128,12 +132,10 @@ describe('the game, extracted one folder per archive', () => {
     const index = new WorkspaceIndex()
     const sii = at('def/def/sign/board/info/mt_white_markers.sii')
     const uri = URI.file(sii).toString()
-    index.setFromText(
-      uri,
+    const text =
       'SiiNunit\n{\nsign_board : .b {\n  font_face: "/font/sign/us_sign_e.font"\n  material: "/material/sign/frame/white_box.mat"\n}\n}\n'
-    )
+    index.setFromText(uri, text)
     const file = index.get(uri)!
-    const text = file.document.getText()
     // URIs give the drive letter in lowercase.
     const resolved = (needle: string) =>
       resolvePathRef(

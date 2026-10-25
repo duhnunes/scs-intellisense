@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -71,12 +72,17 @@ describe('workspace index', () => {
   let root: string
   const index = new WorkspaceIndex()
   const uri = (file: string) => URI.file(join(root, file)).toString()
+  // The index keeps no text: a file's as on disk, or as the editor set it.
+  const editorText = new Map<string, string>()
+  // Keyed in lowercase: a path from a URI has the drive letter in lowercase.
+  const textOf = (filePath: string) =>
+    editorText.get(filePath.toLowerCase()) ?? readFileSync(filePath, 'utf8')
   /** Each location as "file: text at the range". */
   const show = (locations: Location[] | undefined) =>
     locations
       ?.map(
         (l) =>
-          `${l.uri.slice(l.uri.lastIndexOf('/') + 1)}: ${l.file.document.getText().slice(l.range.start, l.range.end)}`
+          `${l.uri.slice(l.uri.lastIndexOf('/') + 1)}: ${textOf(l.file.filePath).slice(l.range.start, l.range.end)}`
       )
       .sort()
 
@@ -138,7 +144,7 @@ describe('workspace index', () => {
 
   it('knows what is under the cursor', async () => {
     const file = index.get(uri('def/sign/templates.sii'))!
-    const text = file.document.getText()
+    const text = readFileSync(file.filePath, 'utf8')
     const at = (needle: string) =>
       nameAt(file, text.indexOf(needle) + 2, index, isPointer)
     expect(await at('sign.item.b')).toMatchObject({
@@ -187,13 +193,13 @@ describe('workspace index', () => {
 
   it('follows edits from an open editor', () => {
     const file = uri('def/sign/items.sii')
-    index.setFromText(
-      file,
-      'SiiNunit\n{\nsign_template_item : sign.item.c {\n}\n}\n'
-    )
+    const text = 'SiiNunit\n{\nsign_template_item : sign.item.c {\n}\n}\n'
+    index.setFromText(file, text)
+    editorText.set(join(root, 'def/sign/items.sii').toLowerCase(), text)
     expect(show(findDefinitions(index, 'sign.item.c', file))).toEqual([
       'items.sii: sign.item.c',
     ])
+    editorText.clear()
     index.refreshFromDisk(join(root, 'def/sign/items.sii'))
     expect(findDefinitions(index, 'sign.item.c', file)).toEqual([])
   })
@@ -213,5 +219,43 @@ describe('rename: the new name', () => {
     ['"a.b"', 'without quotes'],
   ])('refuses %s', (name, reason) => {
     expect(renameProblem(name)).toContain(reason)
+  })
+})
+
+describe('fragment classes follow edits', () => {
+  // Who includes a fragment is kept per file (classesOf() runs on every
+  // edit of an open .sui): it must follow the includer's edits.
+  const at = (file: string) => URI.file(join(tmpdir(), 'mod', file)).toString()
+  const unit = (className: string, include: string) =>
+    `SiiNunit\n{\n${className} : .u {\n@include "${include}"\n}\n}\n`
+
+  it('updates when the including file changes or goes', () => {
+    const index = new WorkspaceIndex()
+    index.setFromText(at('def/parts.sui'), 'price: 1\n')
+    const fragment = () => index.get(at('def/parts.sui'))!
+    index.setFromText(
+      at('def/a.sii'),
+      unit('accessory_engine_data', 'parts.sui')
+    )
+    expect(index.classesOf(fragment())).toEqual(['accessory_engine_data'])
+
+    index.setFromText(
+      at('def/a.sii'),
+      unit('accessory_cabin_data', 'parts.sui')
+    )
+    expect(index.classesOf(fragment())).toEqual(['accessory_cabin_data'])
+
+    index.setFromText(
+      at('def/a.sii'),
+      unit('accessory_cabin_data', 'other.sui')
+    )
+    expect(index.classesOf(fragment())).toEqual([])
+
+    index.setFromText(
+      at('def/a.sii'),
+      unit('accessory_cabin_data', 'parts.sui')
+    )
+    index.remove(URI.parse(at('def/a.sii')).fsPath)
+    expect(index.classesOf(fragment())).toEqual([])
   })
 })

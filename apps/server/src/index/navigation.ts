@@ -1,6 +1,7 @@
 import { validateUnitName } from '../diagnostic/rules'
 import type { SiiRange } from '../interfaces/structure'
 import {
+  unquote,
   type IndexedFile,
   type PointerCheck,
   type WorkspaceIndex,
@@ -23,9 +24,7 @@ export async function nameAt(
   for (const unit of file.units)
     if (offset >= unit.nameRange.start && offset <= unit.nameRange.end)
       return {
-        name: file.document
-          .getText()
-          .slice(unit.nameRange.start, unit.nameRange.end),
+        name: unquote(unit.name),
         range: unit.nameRange,
         isDefinition: true,
       }

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -43,7 +44,10 @@ describe('paths: go to the file, and who uses it', () => {
   /** The path at `needle` in `file`, and the file it resolves to. */
   const resolve = (file: string, needle: string) => {
     const entry = indexed(file)
-    const ref = pathAt(entry, entry.document.getText().indexOf(needle) + 1)
+    const ref = pathAt(
+      entry,
+      readFileSync(entry.filePath, 'utf8').indexOf(needle) + 1
+    )
     const target = ref && resolvePathRef(entry, ref)
     return target?.slice(mod.length + 1).replace(/\\/g, '/')
   }

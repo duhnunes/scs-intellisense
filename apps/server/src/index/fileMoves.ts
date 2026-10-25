@@ -39,14 +39,34 @@ export function moveEdits(
   moves: FileMove[],
   rootsOf: (filePath: string) => string[] = rootsOfFile
 ): PathEdit[] {
+  const resolved = moves.map((move) => ({
+    from: path.resolve(move.from),
+    to: path.resolve(move.to),
+  }))
   const moved = (target: string): string | undefined => {
-    for (const move of moves) {
-      const from = path.resolve(move.from)
-      if (same(target, from)) return path.resolve(move.to)
+    for (const { from, to } of resolved) {
+      if (same(target, from)) return to
       if (isInside(target, from))
-        return path.join(path.resolve(move.to), target.slice(from.length))
+        return path.join(to, target.slice(from.length))
     }
     return undefined
+  }
+
+  // Each moved item as a "/" path from each root that holds it. A "/" path
+  // is compared with these as text rather than joined with every root:
+  // the extracted game has 62 roots, and joining took 18 of the 20 s of a
+  // folder move there.
+  const rootedMoves = new Map<string, string[]>()
+  const movedFrom = (root: string): string[] => {
+    let found = rootedMoves.get(root)
+    if (!found) {
+      found = resolved.flatMap(({ from }) => {
+        const rooted = fromRoot(from, [root])
+        return rooted ? [rooted.toLowerCase()] : []
+      })
+      rootedMoves.set(root, found)
+    }
+    return found
   }
 
   // A path can only reach a moved item through its name: a "/" path names
@@ -72,7 +92,8 @@ export function moveEdits(
         file.filePath,
         newFile ?? file.filePath,
         roots,
-        moved
+        moved,
+        movedFrom
       )
       if (newText !== undefined && newText !== ref.text)
         edits.push({ file, range: ref.range, newText })
@@ -86,11 +107,17 @@ function rewrite(
   oldFile: string,
   newFile: string,
   roots: string[],
-  moved: (target: string) => string | undefined
+  moved: (target: string) => string | undefined,
+  movedFrom: (root: string) => string[]
 ): string | undefined {
   if (ref.text.startsWith('/')) {
     // In whichever part the file is: base/ or one of the dlc_* folders.
+    const rooted = path.posix.normalize(ref.text).toLowerCase()
     for (const root of roots) {
+      const reaches = movedFrom(root).some(
+        (from) => rooted === from || rooted.startsWith(from + '/')
+      )
+      if (!reaches) continue
       const target = path.join(root, ref.text)
       const newTarget = moved(target)
       if (newTarget) return fromRoot(newTarget, roots)
@@ -104,6 +131,10 @@ function rewrite(
   const candidates = relativeBases(oldFile, roots).map((base) =>
     path.resolve(base, ref.text)
   )
+  // Nothing it could name moved, nor the file itself: unchanged, without
+  // asking the disk (62 candidates per path in the extracted game).
+  if (newFile === oldFile && !candidates.some((candidate) => moved(candidate)))
+    return undefined
   const target =
     candidates.find((candidate) => moved(candidate) || existsSync(candidate)) ??
     candidates[0]!

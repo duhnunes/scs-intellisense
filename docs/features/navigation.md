@@ -12,12 +12,31 @@ Go to Definition, Find References and Rename Symbol (F2) for unit names, across 
 
 ## Keeping it current
 
-On startup the server reads every `.sii`/`.sui` under the workspace folders (hidden folders and `node_modules` skipped), a batch at a time, so other requests are still answered meanwhile. 13,114 files (`def/def/sign` of ATS 1.61) take about 6 seconds.
+On startup the server reads every `.sii`/`.sui`/`.mat`/`.tobj` under the workspace folders (hidden folders and `node_modules` skipped), 16 reads at a time (one at a time it mostly waited on the disk), so other requests are still answered meanwhile.
 
 - An open file is indexed from the editor's text on every change, saved or not.
 - Closing it reads it again from disk.
 - Files changed outside the editor (git, a converter) arrive through the client's file watcher (`synchronize.fileEvents` in `extension.ts`).
 - Added or removed workspace folders are read again.
+
+## Size
+
+The index is built to hold the whole extracted game (`ATS_161_full`: 229,537 files found, 152,087 indexed), measured 2026-10-25:
+
+| | Before | Now |
+|---|--:|--:|
+| Reading the folders | 432 s | 81–186 s (disk cache) |
+| Memory | 1.36 GB | 439 MB |
+| `classesOf()` (every edit of an open `.sui`) | 44–65 ms | ~0 ms |
+| Moving `def/def/vehicle/truck` (9,847 edits) | 19 s | 0.6 s |
+
+What made the difference, to keep in mind when adding to the index:
+
+- **No text kept.** An entry keeps a `LineMap` (`index/lineMap.ts`: line starts, same answers as `TextDocument`) for offset ↔ position, not the file's text.
+- **Strings copied (`own()`).** V8 keeps a slice of 13+ characters as a view into the whole string, so a unit name kept its whole file alive; a URI or `path.resolve` result is a string of joined pieces (2.3 KB for a 90-character URI). Anything an entry keeps goes through `own()`.
+- **Roots shared.** Every folder of an archive has the same 62 roots in the extracted game: one array per distinct list.
+- **Includers kept per file**, so `classesOf()` doesn't look through every file.
+- **Moves compare text.** A `/` path is matched against each moved item as a `/` path from each root, instead of being joined with every root; the moves give the same edits as before on five folder/file moves of the full game.
 
 ## Relative paths
 
