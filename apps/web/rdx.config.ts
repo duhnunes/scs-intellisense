@@ -1,7 +1,6 @@
 import { defineConfig } from '@lexibase/rdx'
 import { Logo } from './components/logo'
 
-
 export default defineConfig({
   description:
     'VS Code extension for modding American Truck Simulator and Euro Truck Simulator 2: highlighting, diagnostics, completion and navigation for .sii and .sui files.',
