@@ -56,3 +56,36 @@ Tools exports, before SCS's converter turns them into the game's formats.
 
 Only `.sii` and `.sui` get colors and checks. The other types get an icon so they
 are easy to tell apart.
+
+### With a file icon theme
+
+The icons come from the extension, but your **file icon theme** decides what's
+shown. VS Code shows an extension's icon only when the theme has no icon of its own
+for that file. VS Code's default theme, Seti, shows them. Other themes may show
+their own generic icon instead, or no icon at all (the **Symbols** theme does this
+for `.sui`).
+
+If a `.sii` or `.sui` file has a generic icon, or none:
+
+1. Check whether your theme has its own association setting, and map the files to
+   their language there. For example, with the **Symbols** theme:
+
+   ```json
+   "symbols.files.associations": {
+     "*.sii": "sii",
+     "*.sui": "sui"
+   }
+   ```
+
+2. If that's not enough, also tell VS Code which language the files are:
+
+   ```json
+   "files.associations": {
+     "*.sii": "sii",
+     "*.sui": "sui"
+   }
+   ```
+
+Each theme names this setting differently: look in its page on the Marketplace.
+To see the extension's icons without changing anything else, pick **Seti** in
+**File Icon Theme** (`Ctrl+Shift+P` → **Preferences: File Icon Theme**).
