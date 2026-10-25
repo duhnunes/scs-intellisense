@@ -127,7 +127,7 @@
         ],
         "icon": {
           "dark": "./public/extensions/pmd.png",
-          "light": "./public/extensions/pmg.png"
+          "light": "./public/extensions/pmd.png"
         }
       },
       {
@@ -158,8 +158,8 @@
           ".pmc"
         ],
         "icon": {
-          "dark": "./public/extensions/pma.png",
-          "light": "./public/extensions/pma.png"
+          "dark": "./public/extensions/pmc.png",
+          "light": "./public/extensions/pmc.png"
         }
       },
       {
@@ -259,9 +259,25 @@
         }
       },
       {
+        "id": "ppd",
+        "aliases": [
+          "ppd",
+          "PPD",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".ppd"
+        ],
+        "icon": {
+          "dark": "./public/extensions/ppd.png",
+          "light": "./public/extensions/ppd.png"
+        }
+      },
+      {
         "id": "tobj",
         "aliases": [
-          "tojb",
+          "tobj",
           "TOBJ"
         ],
         "extensions": [
@@ -438,7 +454,7 @@
           "scs-intellisense.completion.enabled": {
             "type": "boolean",
             "default": false,
-            "markdownDescription": "**EXPERIMENTAL** — Enable completion of `class_name`, `attribute_key`, `enum` values, pointers to units of the same file and file paths, backed by the community schema database. (`@include` paths are always suggested.) Off by default while this feature is still being validated. Takes effect right away.",
+            "markdownDescription": "**EXPERIMENTAL** — Enable completion of `class_name`, `attribute_key`, `enum` values, pointers to units (of the same file and the rest of the mod) and file paths, backed by the community schema database. (`@include` paths are always suggested.) Off by default while this feature is still being validated. Takes effect right away.",
             "order": 1
           },
           "scs-intellisense.hover.enabled": {

@@ -1,3 +1,6 @@
 {
+  "compilerOptions": {
+    "jsx": "react"
+  },
   "extends": "@scs-int/ts-config/base.json"
 }

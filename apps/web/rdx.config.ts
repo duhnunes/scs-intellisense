@@ -1,6 +1,6 @@
 import { defineConfig } from '@lexibase/rdx'
+import { Logo } from './components/logo'
 
-import { Logo } from './logo'
 
 export default defineConfig({
   description:
@@ -14,13 +14,13 @@ export default defineConfig({
     // Set metadataBase to your public site URL to resolve relative share images.
     keywords: [
       'SCS IntelliSense',
-      'VS Code',
       'American Truck Simulator',
       'Euro Truck Simulator 2',
       'ATS',
       'ETS2',
       'modding',
       'sii',
+      'VS Code',
     ],
     icons: {
       // Browser tab icons with optional sizes and MIME types.
