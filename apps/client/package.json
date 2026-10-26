@@ -349,20 +349,6 @@
           "dark": "./public/extensions/bnk.gds.png",
           "light": "./public/extensions/bnk.gds.png"
         }
-      },
-      {
-        "id": "zip",
-        "aliases": [
-          "zip",
-          "ZIP"
-        ],
-        "extensions": [
-          ".zip"
-        ],
-        "icon": {
-          "dark": "./public/extensions/zip.png",
-          "light": "./public/extensions/zip.png"
-        }
       }
     ],
     "grammars": [

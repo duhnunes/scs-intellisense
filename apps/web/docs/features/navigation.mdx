@@ -13,11 +13,11 @@ The **Outline** view in the Explorer lists the units of the current file, with
 their attributes and `@include`s. The breadcrumbs above the editor show where the
 cursor is.
 
-To jump to a unit of the current file, press `Ctrl+Shift+O` and type its name.
+To jump to a unit of the current file, press <KbdGroup aria-label="Ctrl plus Shift plus O"><Kbd>Ctrl</Kbd>+<Kbd>Shift</Kbd>+<Kbd>O</Kbd></KbdGroup> and type its name.
 
 ## Go to Definition
 
-`Ctrl+click` a unit name in a pointer, or put the cursor on it and press `F12`,
+<KbdGroup aria-label="Ctrl plus click"><Kbd>Ctrl</Kbd>+click</KbdGroup> a unit name in a pointer, or put the cursor on it and press <Kbd>F12</Kbd>,
 to open the file and line where that unit is defined:
 
 ```text
@@ -34,13 +34,13 @@ open.
 ## Find References
 
 Put the cursor on a unit name, in its header or in a pointer, and press
-`Shift+F12` to list everything that points to it, in every file. Or right-click
+<KbdGroup aria-label="Shift plus F12"><Kbd>Shift</Kbd>+<Kbd>F12</Kbd></KbdGroup> to list everything that points to it, in every file. Or right-click
 and pick **Find All References** to see them in a side panel.
 
 ## Rename a unit
 
-Put the cursor on a unit name and press `F2`. Type the new name and press
-`Enter`: the unit and every pointer to it are renamed, in every file.
+Put the cursor on a unit name and press <Kbd>F2</Kbd>. Type the new name and press
+<Kbd>Enter</Kbd>: the unit and every pointer to it are renamed, in every file.
 
 - The new name must be valid: the same rules as the [diagnostics](./diagnostics.mdx#names).
   An invalid name is refused with the reason.
@@ -58,7 +58,7 @@ too. Other mods that use the name are not changed either.
 
 ## Open a file from its path
 
-Every path to a file of your mod is a link. `Ctrl+click` it to open the file:
+Every path to a file of your mod is a link. <KbdGroup aria-label="Ctrl plus click"><Kbd>Ctrl</Kbd>+click</KbdGroup> it to open the file:
 
 ```text
 model: "/vehicle/truck/my_truck/cabin.pmd"
@@ -75,7 +75,7 @@ game's archives.
 
 ## Find where a file is used
 
-Put the cursor on a path in a `.sii` or `.sui` file and press `Shift+F12` to list
+Put the cursor on a path in a `.sii` or `.sui` file and press <KbdGroup aria-label="Shift plus F12"><Kbd>Shift</Kbd>+<Kbd>F12</Kbd></KbdGroup> to list
 every path that names the same file: in `.sii` and `.sui` files, and also in
 `.mat`, `.tobj` and `.soundref` files. For a sound bank, a path counts with any
 event after its `#` (`"/sound/music/scene.bank#scene/logo_ats"`).

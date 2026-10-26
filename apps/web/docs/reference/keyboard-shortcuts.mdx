@@ -6,52 +6,52 @@ link_position: 3
 
 These are VS Code's own default shortcuts: SCS IntelliSense answers them for
 `.sii` and `.sui` files. On Linux they're the same as on Windows, except where
-noted. To change any of them, open **Keyboard Shortcuts** with `Ctrl+K Ctrl+S`
-(`⌘K ⌘S` on macOS).
+noted. To change any of them, open **Keyboard Shortcuts** with <KbdGroup aria-label="Ctrl plus K, then Ctrl plus S"><Kbd>Ctrl</Kbd>+<Kbd>K</Kbd> <Kbd>Ctrl</Kbd>+<Kbd>S</Kbd></KbdGroup>
+(<KbdGroup aria-label="Command plus K, then Command plus S"><Kbd>⌘</Kbd><Kbd>K</Kbd> <Kbd>⌘</Kbd><Kbd>S</Kbd></KbdGroup> on macOS).
 
 ## Writing
 
 | Action | Windows / Linux | macOS | Page |
 | :----- | :-------------- | :---- | :--- |
-| Open suggestions | `Ctrl+Space` | `⌃Space` | [Completion](../features/completion.mdx) |
-| Show the description of what's under the cursor | `Ctrl+K Ctrl+I` | `⌘K ⌘I` | [Hover](../features/completion.mdx#hover) |
-| Format the file | `Shift+Alt+F` (Linux: `Ctrl+Shift+I`) | `⇧⌥F` | [Formatter](../features/formatter.mdx) |
-| Format the selection | `Ctrl+K Ctrl+F` | `⌘K ⌘F` | [Formatter](../features/formatter.mdx#format-a-file) |
+| Open suggestions | <KbdGroup aria-label="Ctrl plus Space"><Kbd>Ctrl</Kbd>+<Kbd>Space</Kbd></KbdGroup> | <KbdGroup aria-label="Control plus Space"><Kbd>⌃</Kbd><Kbd>Space</Kbd></KbdGroup> | [Completion](../features/completion.mdx) |
+| Show the description of what's under the cursor | <KbdGroup aria-label="Ctrl plus K, then Ctrl plus I"><Kbd>Ctrl</Kbd>+<Kbd>K</Kbd> <Kbd>Ctrl</Kbd>+<Kbd>I</Kbd></KbdGroup> | <KbdGroup aria-label="Command plus K, then Command plus I"><Kbd>⌘</Kbd><Kbd>K</Kbd> <Kbd>⌘</Kbd><Kbd>I</Kbd></KbdGroup> | [Hover](../features/completion.mdx#hover) |
+| Format the file | <KbdGroup aria-label="Shift plus Alt plus F"><Kbd>Shift</Kbd>+<Kbd>Alt</Kbd>+<Kbd>F</Kbd></KbdGroup> (Linux: <KbdGroup aria-label="Ctrl plus Shift plus I"><Kbd>Ctrl</Kbd>+<Kbd>Shift</Kbd>+<Kbd>I</Kbd></KbdGroup>) | <KbdGroup aria-label="Shift plus Option plus F"><Kbd>⇧</Kbd><Kbd>⌥</Kbd><Kbd>F</Kbd></KbdGroup> | [Formatter](../features/formatter.mdx) |
+| Format the selection | <KbdGroup aria-label="Ctrl plus K, then Ctrl plus F"><Kbd>Ctrl</Kbd>+<Kbd>K</Kbd> <Kbd>Ctrl</Kbd>+<Kbd>F</Kbd></KbdGroup> | <KbdGroup aria-label="Command plus K, then Command plus F"><Kbd>⌘</Kbd><Kbd>K</Kbd> <Kbd>⌘</Kbd><Kbd>F</Kbd></KbdGroup> | [Formatter](../features/formatter.mdx#format-a-file) |
 
 ## Fixing problems
 
 | Action | Windows / Linux | macOS | Page |
 | :----- | :-------------- | :---- | :--- |
-| Show the quick fixes | `Ctrl+.` | `⌘.` | [Quick fixes](../features/diagnostics.mdx#quick-fixes) |
-| Apply the only quick fix | `Shift+Alt+.` | `⌥⇧.` | [Quick fixes](../features/diagnostics.mdx#quick-fixes) |
-| Go to the next problem | `F8` | `F8` | [Diagnostics](../features/diagnostics.mdx) |
-| Go to the previous problem | `Shift+F8` | `⇧F8` | [Diagnostics](../features/diagnostics.mdx) |
-| Open the Problems panel | `Ctrl+Shift+M` | `⇧⌘M` | [Diagnostics](../features/diagnostics.mdx) |
+| Show the quick fixes | <KbdGroup aria-label="Ctrl plus ."><Kbd>Ctrl</Kbd>+<Kbd>.</Kbd></KbdGroup> | <KbdGroup aria-label="Command plus ."><Kbd>⌘</Kbd><Kbd>.</Kbd></KbdGroup> | [Quick fixes](../features/diagnostics.mdx#quick-fixes) |
+| Apply the only quick fix | <KbdGroup aria-label="Shift plus Alt plus ."><Kbd>Shift</Kbd>+<Kbd>Alt</Kbd>+<Kbd>.</Kbd></KbdGroup> | <KbdGroup aria-label="Option plus Shift plus ."><Kbd>⌥</Kbd><Kbd>⇧</Kbd><Kbd>.</Kbd></KbdGroup> | [Quick fixes](../features/diagnostics.mdx#quick-fixes) |
+| Go to the next problem | <Kbd>F8</Kbd> | <Kbd>F8</Kbd> | [Diagnostics](../features/diagnostics.mdx) |
+| Go to the previous problem | <KbdGroup aria-label="Shift plus F8"><Kbd>Shift</Kbd>+<Kbd>F8</Kbd></KbdGroup> | <KbdGroup aria-label="Shift plus F8"><Kbd>⇧</Kbd><Kbd>F8</Kbd></KbdGroup> | [Diagnostics](../features/diagnostics.mdx) |
+| Open the Problems panel | <KbdGroup aria-label="Ctrl plus Shift plus M"><Kbd>Ctrl</Kbd>+<Kbd>Shift</Kbd>+<Kbd>M</Kbd></KbdGroup> | <KbdGroup aria-label="Shift plus Command plus M"><Kbd>⇧</Kbd><Kbd>⌘</Kbd><Kbd>M</Kbd></KbdGroup> | [Diagnostics](../features/diagnostics.mdx) |
 
 ## Moving around
 
 | Action | Windows / Linux | macOS | Page |
 | :----- | :-------------- | :---- | :--- |
-| Go to a unit's definition, or open a path's file | `Ctrl+click` | `⌘+click` | [Navigation](../features/navigation.mdx) |
-| Go to Definition | `F12` | `F12` | [Navigation](../features/navigation.mdx#go-to-definition) |
-| Peek the definition without leaving the file | `Alt+F12` | `⌥F12` | [Navigation](../features/navigation.mdx#go-to-definition) |
-| List what points to a unit, or uses a file | `Shift+F12` | `⇧F12` | [Navigation](../features/navigation.mdx#find-references) |
-| The same list, in a side panel | `Shift+Alt+F12` | `⌥⇧F12` | [Navigation](../features/navigation.mdx#find-references) |
-| Jump to a unit of the current file | `Ctrl+Shift+O` | `⇧⌘O` | [Navigation](../features/navigation.mdx#outline-and-breadcrumbs) |
-| Go back to where you were | `Alt+←` (Linux: `Ctrl+Alt+-`) | `⌃-` | |
+| Go to a unit's definition, or open a path's file | <KbdGroup aria-label="Ctrl plus click"><Kbd>Ctrl</Kbd>+click</KbdGroup> | <KbdGroup aria-label="Command plus click"><Kbd>⌘</Kbd>+click</KbdGroup> | [Navigation](../features/navigation.mdx) |
+| Go to Definition | <Kbd>F12</Kbd> | <Kbd>F12</Kbd> | [Navigation](../features/navigation.mdx#go-to-definition) |
+| Peek the definition without leaving the file | <KbdGroup aria-label="Alt plus F12"><Kbd>Alt</Kbd>+<Kbd>F12</Kbd></KbdGroup> | <KbdGroup aria-label="Option plus F12"><Kbd>⌥</Kbd><Kbd>F12</Kbd></KbdGroup> | [Navigation](../features/navigation.mdx#go-to-definition) |
+| List what points to a unit, or uses a file | <KbdGroup aria-label="Shift plus F12"><Kbd>Shift</Kbd>+<Kbd>F12</Kbd></KbdGroup> | <KbdGroup aria-label="Shift plus F12"><Kbd>⇧</Kbd><Kbd>F12</Kbd></KbdGroup> | [Navigation](../features/navigation.mdx#find-references) |
+| The same list, in a side panel | <KbdGroup aria-label="Shift plus Alt plus F12"><Kbd>Shift</Kbd>+<Kbd>Alt</Kbd>+<Kbd>F12</Kbd></KbdGroup> | <KbdGroup aria-label="Option plus Shift plus F12"><Kbd>⌥</Kbd><Kbd>⇧</Kbd><Kbd>F12</Kbd></KbdGroup> | [Navigation](../features/navigation.mdx#find-references) |
+| Jump to a unit of the current file | <KbdGroup aria-label="Ctrl plus Shift plus O"><Kbd>Ctrl</Kbd>+<Kbd>Shift</Kbd>+<Kbd>O</Kbd></KbdGroup> | <KbdGroup aria-label="Shift plus Command plus O"><Kbd>⇧</Kbd><Kbd>⌘</Kbd><Kbd>O</Kbd></KbdGroup> | [Navigation](../features/navigation.mdx#outline-and-breadcrumbs) |
+| Go back to where you were | <KbdGroup aria-label="Alt plus ←"><Kbd>Alt</Kbd>+<Kbd>←</Kbd></KbdGroup> (Linux: <KbdGroup aria-label="Ctrl plus Alt plus -"><Kbd>Ctrl</Kbd>+<Kbd>Alt</Kbd>+<Kbd>-</Kbd></KbdGroup>) | <KbdGroup aria-label="Control plus -"><Kbd>⌃</Kbd><Kbd>-</Kbd></KbdGroup> | |
 
 ## Renaming
 
 | Action | Windows / Linux | macOS | Page |
 | :----- | :-------------- | :---- | :--- |
-| Rename a unit everywhere | `F2` | `F2` | [Navigation](../features/navigation.mdx#rename-a-unit) |
-| Rename a file or folder in the Explorer | `F2` | `Enter` | [Moving and renaming files](../features/moving-files.mdx) |
-| Undo a move, with its path updates | `Ctrl+Z` | `⌘Z` | [Moving and renaming files](../features/moving-files.mdx#review-the-changes) |
+| Rename a unit everywhere | <Kbd>F2</Kbd> | <Kbd>F2</Kbd> | [Navigation](../features/navigation.mdx#rename-a-unit) |
+| Rename a file or folder in the Explorer | <Kbd>F2</Kbd> | <Kbd>Enter</Kbd> | [Moving and renaming files](../features/moving-files.mdx) |
+| Undo a move, with its path updates | <KbdGroup aria-label="Ctrl plus Z"><Kbd>Ctrl</Kbd>+<Kbd>Z</Kbd></KbdGroup> | <KbdGroup aria-label="Command plus Z"><Kbd>⌘</Kbd><Kbd>Z</Kbd></KbdGroup> | [Moving and renaming files](../features/moving-files.mdx#review-the-changes) |
 
 ## Everything else
 
 | Action | Windows / Linux | macOS |
 | :----- | :-------------- | :---- |
-| Command Palette (every **SCS IntelliSense** command) | `Ctrl+Shift+P` | `⇧⌘P` |
-| Settings | `Ctrl+,` | `⌘,` |
-| Extensions view | `Ctrl+Shift+X` | `⇧⌘X` |
+| Command Palette (every **SCS IntelliSense** command) | <KbdGroup aria-label="Ctrl plus Shift plus P"><Kbd>Ctrl</Kbd>+<Kbd>Shift</Kbd>+<Kbd>P</Kbd></KbdGroup> | <KbdGroup aria-label="Shift plus Command plus P"><Kbd>⇧</Kbd><Kbd>⌘</Kbd><Kbd>P</Kbd></KbdGroup> |
+| Settings | <KbdGroup aria-label="Ctrl plus ,"><Kbd>Ctrl</Kbd>+<Kbd>,</Kbd></KbdGroup> | <KbdGroup aria-label="Command plus ,"><Kbd>⌘</Kbd><Kbd>,</Kbd></KbdGroup> |
+| Extensions view | <KbdGroup aria-label="Ctrl plus Shift plus X"><Kbd>Ctrl</Kbd>+<Kbd>Shift</Kbd>+<Kbd>X</Kbd></KbdGroup> | <KbdGroup aria-label="Shift plus Command plus X"><Kbd>⇧</Kbd><Kbd>⌘</Kbd><Kbd>X</Kbd></KbdGroup> |
