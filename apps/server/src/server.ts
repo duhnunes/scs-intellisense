@@ -211,9 +211,10 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 // before that is dropped (and LSP doesn't allow it anyway).
 connection.onInitialized(() => {
   workspaceIndex.onInitialized()
-  logger.info(
-    'SERVER_STARTED',
-    `Server started (${describeSettings(settings)})`
+  logger.info('SERVER_STARTED', 'Server started')
+  logger.debug(
+    'SETTINGS_RECEIVED',
+    `Server settings: ${describeSettings(settings)}`
   )
   if (!hasStoragePath) {
     logger.warn(
@@ -553,9 +554,11 @@ connection.onCompletion(async (params) => {
 connection.onNotification('scsIntellisense/updateSettings', (raw: unknown) => {
   const previous = settings
   settings = parseSettings(raw)
-  logger.info(
-    'SETTINGS_UPDATED',
-    `Settings changed (${describeSettings(settings)})`
+  // The client logs every setting (SETTINGS_UPDATED); this confirms what
+  // reached the server.
+  logger.debug(
+    'SETTINGS_RECEIVED',
+    `Server settings: ${describeSettings(settings)}`
   )
 
   schemaClient?.setFetchTimeout(settings.fetchTimeoutMs)

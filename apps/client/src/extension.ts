@@ -9,7 +9,7 @@ import {
 import { registerBugReportCommand } from './bugReport'
 import {
   ConfigManager,
-  describeClientSettings,
+  describeSettings,
   serverSettings,
 } from './configManager'
 import { registerFormatOnSave } from './formatOnSave'
@@ -118,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   log.info(
     'CLIENT_STARTED',
-    `SCS IntelliSense ${context.extension.packageJSON.version} started (VS Code ${vscode.version}; ${describeClientSettings()})`
+    `SCS IntelliSense ${context.extension.packageJSON.version} started (VS Code ${vscode.version}). Settings: ${describeSettings(context)}`
   )
 }
 

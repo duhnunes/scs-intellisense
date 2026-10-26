@@ -30,13 +30,31 @@ export function serverSettings() {
   }
 }
 
-/** The settings only the client reads, for the log. */
-export function describeClientSettings(): string {
+/**
+ * Every scs-intellisense.* setting and its current value, for the log:
+ * read from the extension's own manifest, so a setting added to
+ * package.json shows up here without anyone remembering to.
+ */
+export function describeSettings(context: vscode.ExtensionContext): string {
   const config = vscode.workspace.getConfiguration(SECTION)
-  const onOff = (key: string, fallback: boolean) =>
-    config.get<boolean>(key, fallback) ? 'on' : 'off'
-  const always = config.get<string[]>('fileMoves.alwaysSave', ['.mat'])
-  return `format on save: ${onOff('formatter.formatOnSave', true)}, file moves: auto save ${onOff('fileMoves.autoSave', true)} (always: ${always.join(', ') || 'none'}, above ${config.get<number>('fileMoves.saveAbove', 6)} files, notify: ${onOff('fileMoves.notify', true)})`
+  const sections: { properties?: Record<string, unknown> }[] =
+    context.extension.packageJSON.contributes?.configuration ?? []
+  return sections
+    .flatMap((section) => Object.keys(section.properties ?? {}))
+    .map((key) => {
+      const name = key.slice(SECTION.length + 1)
+      const value = config.get<unknown>(name)
+      const text =
+        typeof value === 'boolean'
+          ? value
+            ? 'on'
+            : 'off'
+          : Array.isArray(value)
+            ? value.join('/') || 'none'
+            : String(value)
+      return `${name}: ${text}`
+    })
+    .join(', ')
 }
 
 export class ConfigManager {
@@ -56,11 +74,9 @@ export class ConfigManager {
     this.context.subscriptions.push(
       vscode.workspace.onDidChangeConfiguration((e) => {
         if (!e.affectsConfiguration(SECTION)) return
-        // The server logs its own settings (SETTINGS_UPDATED); these are
-        // the client's.
         this.log.info(
-          'CLIENT_SETTINGS_UPDATED',
-          `Settings changed (${describeClientSettings()})`
+          'SETTINGS_UPDATED',
+          `Settings changed: ${describeSettings(this.context)}`
         )
         this.client
           .sendNotification('scsIntellisense/updateSettings', serverSettings())

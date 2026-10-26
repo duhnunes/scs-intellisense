@@ -76,6 +76,21 @@ You can change all of this in the Settings, under **File Moves**:
 | **Save Above** (`scs-intellisense.fileMoves.saveAbove`) | `6` | Above this many files of the other types, they're saved too. `0` always saves |
 | **Notify** (`scs-intellisense.fileMoves.notify`) | on | The notification. The extension's [log](../reference/commands.mdx#show-output) always records it |
 
+<Callout variant="tip" title="Keep the automat folder closed">
+
+When VS Code opens a file, the Explorer unfolds the folders down to it. SCS
+Blender Tools writes its `.mat` files in `automat/`, a folder with hundreds of
+subfolders, so a move can leave it unfolded. VS Code's own
+`explorer.autoRevealExclude` setting stops that. Add to your `settings.json`:
+
+```json
+"explorer.autoRevealExclude": {
+  "**/automat": true
+}
+```
+
+</Callout>
+
 <Callout variant="tip" title="Undo">
 
 Changed your mind? Press `Ctrl+Z` in the Explorer: the file or folder goes back to
