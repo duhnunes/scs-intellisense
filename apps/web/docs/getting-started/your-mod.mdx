@@ -130,6 +130,15 @@ The extension finds who includes the fragment and treats its attributes as part 
 that unit: they get completion, hover and the same checks. A fragment that nothing
 in the open folders includes gets only the basic checks.
 
+<Callout variant="tip" title="Creating a new fragment">
+
+1. Create the `.sui` file, empty.
+2. Write the `@include` in the unit that will use it: completion suggests the new
+   file.
+3. Fill in the `.sui`: completion and hover already know its class.
+
+</Callout>
+
 ## Large folders
 
 When a folder opens, the extension reads all its `.sii`, `.sui`, `.mat` and
