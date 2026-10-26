@@ -112,7 +112,19 @@ describe('pointer completion', () => {
     expect(sorted.map((i) => i.label)).toEqual(items.map((i) => i.label))
   })
 
+  it('suggests units for a volatile_link_ptr too', () => {
+    // As trailer.trailer_definition is in ATS 1.61.
+    expect(
+      complete('  items[]: |', {
+        type: 'volatile_link_ptr',
+        pointsTo: ['sign_template_item'],
+      }).labels
+    ).toEqual(['.text.0', '.image.0', 'null'])
+  })
+
   it('suggests nothing for other types', () => {
     expect(complete('  name: |', { type: 'string' }).labels).toEqual([])
+    // No game file uses resource_tie: what it holds isn't known.
+    expect(complete('  name: |', { type: 'resource_tie' }).labels).toEqual([])
   })
 })

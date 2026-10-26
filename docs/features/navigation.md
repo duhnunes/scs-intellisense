@@ -52,7 +52,7 @@ Quotes don't count: `"a.b"` and `a.b` are the same name here.
 
 ## What a pointer is
 
-A value is a pointer when its class's schema types the key `owner_ptr` or `link_ptr`. The index keeps every value that could be a unit name, and the schema decides at query time. Two cases need care:
+A value is a pointer when its class's schema types the key `owner_ptr`, `link_ptr` or `volatile_link_ptr` (`POINTER_TYPES` in `completion/pointer.ts`, for completion too). `volatile_link_ptr`: 1,514 values in ATS 1.61, each a unit of another file (`trailer.trailer_definition: trailer_def.scs...`), like a `link_ptr`; before, it had no completion, definition, references or rename. `resource_tie` isn't one: no game file uses it. The index keeps every value that could be a unit name, and the schema decides at query time. Two cases need care:
 
 - **Array counts.** `items: 5` on an array attribute is how many elements follow (`items[0]: ...`), not a pointer. Ignoring this gave 30,482 false pointers in ATS 1.61.
 - **`.sui` fragments.** Bare attributes in a `.sui` have no class of their own: they take the class of every unit that `@include`s the file. Without this, a rename would miss the pointers inside fragments.

@@ -5,6 +5,20 @@ import type { AttributeValuePosition } from './attributeValue'
 /** True when `className` is `target` or inherits from it. */
 export type IsKindOf = (className: string, target: string) => boolean
 
+/**
+ * Schema types whose value names a unit: completion, Go to Definition,
+ * Find References and Rename treat them alike. `volatile_link_ptr`: 1,514
+ * values in ATS 1.61, every one a unit of another file, as link_ptr
+ * mostly is (`trailer.trailer_definition: trailer_def.scs...`).
+ * `resource_tie` isn't one: no game file uses it, so what it holds isn't
+ * known.
+ */
+export const POINTER_TYPES = new Set([
+  'owner_ptr',
+  'link_ptr',
+  'volatile_link_ptr',
+])
+
 export interface PointerCompletionItem {
   label: string
   /** The unit's class. */
@@ -32,7 +46,7 @@ export function buildPointerCompletionItems(
   isKindOf: IsKindOf,
   elsewhere: OtherFileUnit[] = []
 ): PointerCompletionItem[] {
-  if (def.type !== 'owner_ptr' && def.type !== 'link_ptr') return []
+  if (!POINTER_TYPES.has(def.type)) return []
   const { unit: current, attribute, replaceRange, quoted } = position
   const targets = Array.isArray(def.pointsTo) ? def.pointsTo : []
   const needsSpace = !quoted && replaceRange.start === attribute.colonRange?.end

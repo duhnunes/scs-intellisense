@@ -14,6 +14,7 @@ import {
 } from 'vscode-languageserver/node'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
 import { URI } from 'vscode-uri'
+import { POINTER_TYPES } from '../completion/pointer'
 import { describeError, getLogger } from '../logger'
 import type { SchemaClient } from '../schema/client'
 import { moveEdits } from './fileMoves'
@@ -64,8 +65,7 @@ export function registerIndex(
   const isPointer: PointerCheck = async (className, key, bracketed) => {
     const schema = await getSchemaClient()?.getSchemaContent(className)
     const def = schema?.key?.[key]
-    if (!def || (def.type !== 'owner_ptr' && def.type !== 'link_ptr'))
-      return false
+    if (!def || !POINTER_TYPES.has(def.type)) return false
     // `items: 5` on an array is its count; the elements are `items[n]`.
     return bracketed || !def.isArray
   }
