@@ -1,5 +1,38 @@
 # Changelog
 
+[compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.7.0...0.8.0)
+### Features
+
+* **completion:** suggest .sui files and folders in [@include](https://github.com/include) paths ([3ea5800](https://github.com/duhnunes/scs-intellisense/commit/3ea580093d07ad3ca248a3727af8de3b6ed38b6f))
+* **completion:** suggest file paths and same-file units for pointers ([07c6914](https://github.com/duhnunes/scs-intellisense/commit/07c691495e8e3c4814d4ab2a4bd0fe04da4ecff6))
+* **completion:** suggest the valid values of enum attributes ([d943e88](https://github.com/duhnunes/scs-intellisense/commit/d943e88f679a5d4329c2209dddbf60c4411dcfa4))
+* **diagnostics:** warn about attribute keys the class doesn't have ([c422fb8](https://github.com/duhnunes/scs-intellisense/commit/c422fb83f026870496da0ae2e1d146ac70e472f6))
+* **diagnostics:** warn about enum values the attribute doesn't list ([685d41b](https://github.com/duhnunes/scs-intellisense/commit/685d41b2baa63788e436b73e3030a1fab2ee236f))
+* **index:** give .sui fragments the class of the unit including them ([7f97e68](https://github.com/duhnunes/scs-intellisense/commit/7f97e68ed8b84f0985b596c3d421a95fb71f1e7b))
+* **moves:** save the files a move edits, by type and count ([8d737b4](https://github.com/duhnunes/scs-intellisense/commit/8d737b464df3930d747d76e7549db1811222aae0))
+* **navigation:** follow moves in .mat and .tobj files, mark and undo them ([5b3166a](https://github.com/duhnunes/scs-intellisense/commit/5b3166a8ee8834bbdd398a7a2b0f500fe4a08a18))
+* **navigation:** follow moves in .mat and .tobj files, mark changed lines ([18ff3d6](https://github.com/duhnunes/scs-intellisense/commit/18ff3d656376a7c9f8bf26d1cde88ce1c4b9b6bb))
+* **navigation:** go to definition, find references and rename units ([e62ed28](https://github.com/duhnunes/scs-intellisense/commit/e62ed280d8e39c4e604708e282b1f086146b7593))
+* **navigation:** mae file paths Ctrl+click links ([6dbbb5f](https://github.com/duhnunes/scs-intellisense/commit/6dbbb5f24ffad0849b7a7b4e363df6df10546e72))
+* **navigation:** open te file a path names, and list who uses it ([89558ad](https://github.com/duhnunes/scs-intellisense/commit/89558adbefab136925c674a92b6611cfdf1b73d5))
+* **rdx:** add a unified framework entry package ([d7c8d95](https://github.com/duhnunes/scs-intellisense/commit/d7c8d958c91a39655b82da31efccc476053f5d29))
+* **schema:** read scs-schema format v3, with every class of the game ([e875d18](https://github.com/duhnunes/scs-intellisense/commit/e875d181c1fc7cc7af5817a3098b3fd11ddfec59))
+
+### Bug Fixes
+
+* **docs:** update RDX and consolidate pnpm release approvals ([63e5b5b](https://github.com/duhnunes/scs-intellisense/commit/63e5b5b34c815e34c49993583047535bd204557c))
+* **index:** resolve relative pats in te mod's oter parrts too ([36fa836](https://github.com/duhnunes/scs-intellisense/commit/36fa836f51fc06d58cf058758660f831dc1f5180))
+* **log:** list every settingss at startup and on each change ([70fba87](https://github.com/duhnunes/scs-intellisense/commit/70fba87814209b058ffd99ff3c91e9273b528623))
+* **moves:** wait for the folders to be read before updating paths ([0bf6c60](https://github.com/duhnunes/scs-intellisense/commit/0bf6c60ed87a20bfa7a9c68030935b08b635c082))
+* **navigation:** make the whole unit name the Ctrl+click link ([cc06a49](https://github.com/duhnunes/scs-intellisense/commit/cc06a493f87bf37e9e1e59b8f25bc12c57114f42))
+* **paths:** resolve paths across te archives of an extracted game ([4153706](https://github.com/duhnunes/scs-intellisense/commit/4153706f1281d969fbd11a0371ca86ba6a6c2197))
+* **reader:** read 'key : value' and values on the line after the colon ([4c2ee38](https://github.com/duhnunes/scs-intellisense/commit/4c2ee38f2078aa03e8ceaa95bae7caf296c58f4c))
+* **schema:** stop reporting an update when the manifest didn't change ([a597a49](https://github.com/duhnunes/scs-intellisense/commit/a597a4958b39ceaf0fd855f2b0ec75a431ebccec))
+
+### Performance Improvements
+
+* **index:** hold the whole extracted game without slowing down ([4b34981](https://github.com/duhnunes/scs-intellisense/commit/4b34981c2b6935ce60dbac317bc998804c7fc281))
+
 [compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.6.1...0.7.0)
 ### Features
 

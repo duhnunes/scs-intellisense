@@ -1,6 +1,6 @@
 {
   "name": "scs-intellisense",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "displayName": "SCS IntelliSense for ATS & ETS2",
   "description": "Extension to add intellisense for SCS Software files.",
   "author": "DuH Nunes",
