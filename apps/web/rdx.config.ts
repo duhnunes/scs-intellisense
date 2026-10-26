@@ -10,7 +10,8 @@ export default defineConfig({
     applicationName: 'SCS IntelliSense',
     // Footer starting year. Change it to an earlier founding year if needed.
     since: 2026,
-    // Set metadataBase to your public site URL to resolve relative share images.
+    // The public site URL: relative share images resolve against it.
+    metadataBase: 'https://scs-intellisense.vercel.app',
     keywords: [
       'SCS IntelliSense',
       'American Truck Simulator',
@@ -38,6 +39,23 @@ export default defineConfig({
     },
     // The web app manifest (name and icons when installed); RDX does not create it.
     manifest: '/site.webmanifest',
+    // Link previews (Discord, forums): the logo, square, so a small card.
+    openGraph: {
+      type: 'website',
+      siteName: 'SCS IntelliSense',
+      images: [
+        {
+          url: '/images/icons/web-app-manifest-512x512.png',
+          width: 512,
+          height: 512,
+          alt: 'SCS IntelliSense logo',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary',
+      images: ['/images/icons/web-app-manifest-512x512.png'],
+    },
   },
   // Floating heading navigation; shown only on pages with enough sections.
   TOC: true,
