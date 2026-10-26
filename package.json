@@ -2,6 +2,7 @@
   "name": "SCS IntelliSense",
   "version": "0.7.0",
   "private": true,
+  "packageManager": "pnpm@11.5.1",
   "workspaces": [
     "apps/*",
     "config/*"
