@@ -132,6 +132,7 @@ export type SiiIssueCode =
   | 'missing-attribute-key'
   | 'missing-attribute-colon'
   | 'missing-array-close-bracket'
+  | 'unclosed-value-quote'
   // Rules (rules.ts)
   | 'class-name-empty-part'
   | 'class-name-invalid-character'

@@ -239,3 +239,60 @@ describe('reader: attribute keys and values', () => {
     ])
   })
 })
+
+describe('reader: a value quote that never closes', () => {
+  /** Issue codes, and each attribute as "key=value". */
+  const read = (body: string) => {
+    const document = readSiiDocument(sii(`a : .b {\n${body}\n}`))
+    return {
+      codes: document.issues.map((issue) => issue.code),
+      values: document.units[0]?.attributes.map(
+        (a) =>
+          `${a.key}=${document.text.slice(a.valueRange.start, a.valueRange.end)}`
+      ),
+    }
+  }
+
+  it('reports the quote, and ends the value with its line', () => {
+    expect(read('\tname: "Big Engine\n\tprice: 18000')).toEqual({
+      codes: ['unclosed-value-quote'],
+      values: ['name="Big Engine', 'price=18000'],
+    })
+  })
+
+  it('does so when it is the last attribute of the unit', () => {
+    expect(read('\tprice: 18000\n\tname: "Big Engine')).toEqual({
+      codes: ['unclosed-value-quote'],
+      values: ['price=18000', 'name="Big Engine'],
+    })
+  })
+
+  it('does so when a later quote would close it', () => {
+    expect(read('\tname: "Big Engine\n\tprice: 18000\n\tinfo[]: "x"')).toEqual({
+      codes: ['unclosed-value-quote'],
+      values: ['name="Big Engine', 'price=18000', 'info="x"'],
+    })
+  })
+
+  // As in base/ui/template/button.ats.sii and
+  // def/def/world/mover_action.base_vehicle.sii (ATS 1.61).
+  it('keeps the strings the game writes over several lines', () => {
+    expect(
+      read(
+        '\tn_pml: "<img src=/material/ui/white.mat><ret>\n<offset vshift=10>@@text@@\n</align>"\n\tbones: "bones:root;\nbones: base; bones:ik_arm"'
+      ).codes
+    ).toEqual([])
+  })
+})
+
+describe('reader: where an unclosed quote is reported', () => {
+  it('marks the whole text to the end of its line, like TypeScript', () => {
+    const document = readSiiDocument(
+      sii('a : .b {\n\tname: "Big Engine  \n\tprice: 1\n}')
+    )
+    const [issue] = document.issues
+    expect(document.text.slice(issue!.range.start, issue!.range.end)).toBe(
+      '"Big Engine'
+    )
+  })
+})

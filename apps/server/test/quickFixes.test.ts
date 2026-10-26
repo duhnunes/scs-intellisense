@@ -183,3 +183,19 @@ describe('quick fixes', () => {
     expect(fixed).toBe('speed: 10\n')
   })
 })
+
+describe('quick fixes: a value quote that never closes', () => {
+  const input = sii('a : .b {\n\tname: "Big Engine  \n\tprice: 18000\n}')
+
+  it('closes it at the end of the line, or removes it', () => {
+    const fixes = quickFixes(input, { at: '"Big' })
+    expect(fixes.titles).toEqual([
+      'Close the quote at the end of the line',
+      'Remove the quote',
+    ])
+    const closed = fixes.apply('Close the quote at the end of the line')
+    expect(closed).toContain('name: "Big Engine"  \n')
+    expect(codesOf(closed)).toEqual([])
+    expect(fixes.apply('Remove the quote')).toContain('name: Big Engine  \n')
+  })
+})

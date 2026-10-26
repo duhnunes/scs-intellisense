@@ -30,6 +30,9 @@ errors.
 - A missing or duplicated `SiiNunit { }` in a `.sii` file, or content after its
   closing brace.
 - An `@include` that doesn't start its line: the game ignores an indented one.
+- A quote that never closes (`name: "Big Engine`). The text is underlined to the end
+  of its line, and the rest of the file is still read as written. Text that really spans several
+  lines, as in the game's UI files, is fine.
 
 ### Names
 
@@ -82,6 +85,7 @@ put the cursor on the problem and press `Ctrl+.`:
 | `price 18000` or `price = 18000` | Change to `price: 18000` |
 | `my..truck` | Change to `my.truck` |
 | `"my.truck` | Add the missing quote, or remove this one |
+| `name: "Big Engine` | Close the quote at the end of the line, or remove it |
 | An indented `@include` | Move it to the start of its line |
 | No newline at the end | Add it |
 

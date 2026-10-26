@@ -33,6 +33,7 @@ Choose by evidence. If a game file does what your rule forbids, it can't be an `
 - `Duplicate SiiNunit block — only one is allowed per file`, `Unexpected content after the SiiNunit closing brace`
 - `Expected className`, `Expected ':' between className and unitName`, `Invalid unitName format`, `Expected '{' after unitName`, `Expected '}' to close unit`, `Unexpected '}'`
 - `Expected attribute key`, `Expected ':' after attribute key`, `Expected ']' after array attribute key`
+- `unclosed-value-quote`: a value's quote that never closes, reported on the text from the quote to the end of its line (as TypeScript marks an unterminated string), the value ending with its line so the rest of the file is read as written (before, the text ran to the end of the file and the only error was a missing `}` there). A string may span lines (721 in ATS 1.61, UI markup), so it counts as unclosed only when it reaches the end of the file or swallows a line that reads as SII: one starting with `}`, or `key:` without `;` (`unclosedQuoteLineEnd()`; the one `key:`-like line inside a game string is `bones:root; bones: base; ...`). 0 on 77,652 game and mod files
 
 ### From `rules.ts`
 
@@ -120,6 +121,7 @@ The light bulb next to a diagnostic. Always on, like diagnostics: a fix only cha
 | `include-not-at-line-start` | Remove the whitespace before it, or move it to its own line when other content comes first |
 | `unit-name-empty-token` | `a..b` → `a.b` (a whole run of dots at once); trailing dots are removed; leading ones keep one dot (a nameless unit) |
 | `unit-name-unmatched-quote` | Add the missing quote, or remove this one (neither preferred) |
+| `unclosed-value-quote` | Close the quote at the end of the line (before trailing spaces), or remove it (neither preferred) |
 | `missing-unit-colon` | `class unit` → `class : unit`, or a stray character in its place (`;`) becomes `:` |
 | `missing-attribute-colon` | `key value` → `key: value`, `key = value` → `key: value` |
 | `unknown-attribute` | "Change to `price`": the class's closest key by edit distance (a swap of two letters is one edit), when it's within 1–3 edits depending on length and no other key is as close. Keys a modder writes win over legacy and internal-only ones |

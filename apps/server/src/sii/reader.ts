@@ -641,6 +641,27 @@ class SiiReader {
       }
 
       if (current === '"' || current === "'") {
+        const lineEnd = this.unclosedQuoteLineEnd(this.positionValue)
+        if (lineEnd !== undefined) {
+          // The whole unclosed text, to the end of its line, as
+          // TypeScript marks an unterminated string.
+          let textEnd = lineEnd
+          while (
+            textEnd > this.positionValue + 1 &&
+            isWhitespace(this.masked[textEnd - 1] ?? '')
+          )
+            textEnd--
+          this.issue(
+            'unclosed-value-quote',
+            'This quote is never closed, so the text runs on into the next lines',
+            this.positionValue,
+            textEnd
+          )
+          // The value ends with its line, so the rest of the file is read
+          // as it's written instead of as part of this text.
+          this.positionValue = lineEnd
+          break
+        }
         quote = current
         this.positionValue++
         continue
@@ -662,6 +683,42 @@ class SiiReader {
     let end = this.positionValue
     while (end > start && isWhitespace(this.masked[end - 1] ?? '')) end--
     return range(start, end)
+  }
+
+  /**
+   * Where the line of the quote at `quoteAt` ends, when that quote is
+   * never closed; undefined when it is. A string may span lines: 721 do in
+   * ATS 1.61, UI markup (`"<img ...><ret>` then `<offset ...>` lines). One
+   * that never closes runs to the end of the file, or swallows lines that
+   * read as SII: a `}`, or a `key: value` (no line inside those 721
+   * strings starts with `}`; the one that looks like `key:` is a list,
+   * `bones:root; bones: base; ...`, hence no `;`). Without this, the error
+   * was a missing `}` at the end of the file.
+   */
+  private unclosedQuoteLineEnd(quoteAt: number): number | undefined {
+    const text = this.masked
+    const quote = text[quoteAt]
+    let close = quoteAt + 1
+    let escaped = false
+    for (; close < text.length; close++) {
+      if (escaped) escaped = false
+      else if (text[close] === '\\') escaped = true
+      else if (text[close] === quote) break
+    }
+    const lineEnd = text.indexOf('\n', quoteAt)
+    if (lineEnd < 0 || lineEnd > close) return undefined // closed on its line
+    if (close >= text.length) return lineEnd
+    const swallowed = text.slice(lineEnd + 1, close).split('\n')
+    return swallowed.some((line) => {
+      const trimmed = line.trim()
+      return (
+        trimmed.startsWith('}') ||
+        (/^[A-Za-z_][A-Za-z0-9_]*(\[\d*\])?\s*:/.test(trimmed) &&
+          !trimmed.includes(';'))
+      )
+    })
+      ? lineEnd
+      : undefined
   }
 
   /**

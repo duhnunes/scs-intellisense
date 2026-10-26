@@ -55,6 +55,8 @@ export function quickFixesFor(
       return fixEmptyToken(issue.range, document)
     case 'unit-name-unmatched-quote':
       return fixUnmatchedQuote(issue.range, document)
+    case 'unclosed-value-quote':
+      return fixUnclosedValueQuote(issue.range, text)
     case 'missing-unit-colon':
       return fixMissingUnitColon(issue.range.start, text)
     case 'missing-attribute-colon':
@@ -149,6 +151,26 @@ function fixUnmatchedQuote(
     {
       title: `Add the missing ${opening ? 'closing' : 'opening'} quote`,
       edits: [insert(opening ? end : start, '"')],
+    },
+    {
+      title: 'Remove the quote',
+      edits: [replace(range.start, range.start + 1, '')],
+    },
+  ]
+}
+
+/**
+ * A value's quote that never closes: close it at the end of its line, or
+ * remove it. Neither is preferred: the text may have been meant to end
+ * earlier, or not be quoted at all. `range` is the unclosed text, from the
+ * quote to the end of its line (trailing spaces left out).
+ */
+function fixUnclosedValueQuote(range: SiiRange, text: string): SiiQuickFix[] {
+  const quote = text[range.start] ?? '"'
+  return [
+    {
+      title: 'Close the quote at the end of the line',
+      edits: [insert(range.end, quote)],
     },
     {
       title: 'Remove the quote',
