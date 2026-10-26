@@ -33,8 +33,8 @@ accessory_cabin_data : cab.truck {
     'effect : "eut2.dif.rfx" {\n\ttexture : "texture_base" {\n\t\tsource : "/material/sign/welker.tobj"\n\t}\n}\n',
   // A text .tobj (as SCS Blender Tools exports it) and a compiled one.
   'base/material/sign/welker.tobj':
-    'map\t2d\twelker.dds\naddr\tclamp_to_edge\tclamp_to_edge\n',
-  'base/material/sign/welker.dds': '',
+    'map\t2d\twelker.tga\naddr\tclamp_to_edge\tclamp_to_edge\n',
+  'base/material/sign/welker.tga': '',
   'base/material/sign/compiled.tobj':
     '\u0001\n\u0000\u0000/material/sign/welker.dds',
 }
@@ -134,9 +134,9 @@ describe('updating paths when files move', () => {
     ])
     expect(
       edits([
-        ['base/material/sign/welker.dds', 'base/material/sign/welker_a.dds'],
+        ['base/material/sign/welker.tga', 'base/material/sign/welker_a.tga'],
       ])
-    ).toEqual(['base/material/sign/welker.tobj: welker.dds -> welker_a.dds'])
+    ).toEqual(['base/material/sign/welker.tobj: welker.tga -> welker_a.tga'])
   })
 
   it("fixes a moved .tobj's own relative texture, and leaves binary .tobj alone", () => {
@@ -147,7 +147,7 @@ describe('updating paths when files move', () => {
     ).toEqual([
       'base/material/sign/board.mat: /material/sign/welker.tobj -> /material/other/welker.tobj',
       'base/material/sign/welker.mat: welker.tobj -> /material/other/welker.tobj',
-      'base/material/sign/welker.tobj: welker.dds -> /material/sign/welker.dds',
+      'base/material/sign/welker.tobj: welker.tga -> /material/sign/welker.tga',
     ])
   })
 })

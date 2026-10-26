@@ -78,6 +78,131 @@ export function validateEnumValues(
   return issues
 }
 
+// How the game writes numbers, from every attribute of ATS 1.61's 73,224
+// files (2,163,580 values): decimals with a sign, exponent or `f` suffix
+// (`+6`, `2e-6`, `25.0f`), floats as their bits (`&3f800000`, 258,750),
+// integers in hex (`0x10DE`), and `nil` (78,947, all on unsigned types).
+const DECIMAL = String.raw`[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?f?`
+const FLOAT_BITS = String.raw`&[0-9a-fA-F]{8}`
+const FLOAT = new RegExp(`^(?:${DECIMAL}|${FLOAT_BITS})$`)
+const INTEGER = /^(?:[+-]?\d+|0x[0-9a-fA-F]+)$/
+const INTEGER_TYPES = new Set([
+  'int',
+  's16',
+  's32',
+  's64',
+  'uint',
+  'u16',
+  'u32',
+  'u64',
+])
+const UNSIGNED_TYPES = new Set(['uint', 'u16', 'u32', 'u64'])
+/** Vector types and how many numbers each holds. */
+const VECTORS: Record<string, { size: number; integer: boolean }> = {
+  float2: { size: 2, integer: false },
+  float3: { size: 3, integer: false },
+  float4: { size: 4, integer: false },
+  int2: { size: 2, integer: true },
+  uint2: { size: 2, integer: true },
+}
+
+/**
+ * A value written in a shape its type can't hold: `price: abc`, a float3
+ * with two numbers, `use_perlin: yes`. Each shape the game's own files use
+ * is accepted, so none of them is reported (ATS 1.61, 2026-10-26):
+ * strings, tokens and pointers take nearly anything and aren't checked,
+ * nor are quat and placement (`(w; x, y, z)`). A bool is also `0`/`1`
+ * (`accessory_engine_data.engine_brake_downshift`) or quoted. `items: 5`
+ * on an array attribute is its count, not an element.
+ */
+export function validateValueTypes(
+  document: SiiDocument,
+  schemaFor: SchemaLookup
+): SiiIssue[] {
+  const issues: SiiIssue[] = []
+  for (const unit of document.units) {
+    const schema = schemaFor(unit.className)
+    if (!schema?.key || typeof schema.key !== 'object') continue
+
+    for (const attribute of unit.attributes) {
+      if (attribute.kind !== 'attribute') continue
+      const def = Object.hasOwn(schema.key, attribute.key)
+        ? schema.key[attribute.key]
+        : undefined
+      if (!def || (def.isArray && !attribute.isArray)) continue
+      const value = document.text.slice(
+        attribute.valueRange.start,
+        attribute.valueRange.end
+      )
+      if (value === '') continue // still being typed
+      const problem = valueProblem(def.type, value)
+      if (!problem) continue
+      issues.push({
+        code: problem.code,
+        message: `${attribute.key}: ${problem.message}`,
+        range: attribute.valueRange,
+        severity: 'warning',
+      })
+    }
+  }
+  return issues
+}
+
+function valueProblem(
+  type: string,
+  value: string
+): { code: SiiIssue['code']; message: string } | undefined {
+  if (type === 'float') {
+    if (FLOAT.test(value) || value === 'nil') return undefined
+    return { code: 'invalid-number', message: `"${value}" isn't a number` }
+  }
+  if (INTEGER_TYPES.has(type)) {
+    if (value === 'nil') return undefined
+    if (INTEGER.test(value)) {
+      if (UNSIGNED_TYPES.has(type) && value.startsWith('-'))
+        return {
+          code: 'invalid-number',
+          message: `"${value}" is negative, and this takes only 0 or more`,
+        }
+      return undefined
+    }
+    return {
+      code: 'invalid-number',
+      message: FLOAT.test(value)
+        ? `"${value}" isn't a whole number`
+        : `"${value}" isn't a number`,
+    }
+  }
+  const vector = VECTORS[type]
+  if (vector) {
+    const example = `(${Array(vector.size).fill('0').join(', ')})`
+    const wrong = {
+      code: 'invalid-vector' as const,
+      message: `expects ${vector.size} ${vector.integer ? 'whole numbers' : 'numbers'} in parentheses, like ${example}`,
+    }
+    if (!value.startsWith('(') || !value.endsWith(')')) return wrong
+    const parts = value
+      .slice(1, -1)
+      .split(',')
+      .map((part) => part.trim())
+    const valid = vector.integer
+      ? (part: string) => INTEGER.test(part)
+      : (part: string) => FLOAT.test(part)
+    return parts.length === vector.size && parts.every(valid)
+      ? undefined
+      : wrong
+  }
+  if (type === 'bool') {
+    const bare = value.replace(/^"(.*)"$/, '$1')
+    if (['true', 'false', '0', '1'].includes(bare)) return undefined
+    return {
+      code: 'invalid-bool',
+      message: `"${value}" isn't true or false`,
+    }
+  }
+  return undefined
+}
+
 /** Some enums have dozens of values (editor_settings.sub_mode: 51);
  *  completion has the full list. */
 function listValues(values: string[]): string {

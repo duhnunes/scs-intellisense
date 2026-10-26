@@ -29,8 +29,8 @@ accessory_cabin_data : cab.truck_b {
 `,
   'base/def/vehicle/parts/cab.sui': 'name: "x"\n',
   'base/vehicle/truck/cabin.pmd': '',
-  'base/vehicle/truck/cabin.tobj': 'map\t2d\tcabin.dds\n',
-  'base/vehicle/truck/cabin.dds': '',
+  'base/vehicle/truck/cabin.tobj': 'map\t2d\tcabin.tga\n',
+  'base/vehicle/truck/cabin.tga': '',
   'base/vehicle/truck/cabin.mat':
     'material : "eut2.dif" {\n\ttexture : "cabin.tobj"\n}\n',
   'base/sound/horn.soundref': '',
@@ -102,8 +102,8 @@ describe('paths: go to the file, and who uses it', () => {
     expect(users('base/vehicle/truck/cabin.tobj')).toEqual([
       'base/vehicle/truck/cabin.mat: cabin.tobj',
     ])
-    expect(users('base/vehicle/truck/cabin.dds')).toEqual([
-      'base/vehicle/truck/cabin.tobj: cabin.dds',
+    expect(users('base/vehicle/truck/cabin.tga')).toEqual([
+      'base/vehicle/truck/cabin.tobj: cabin.tga',
     ])
   })
 })

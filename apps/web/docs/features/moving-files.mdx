@@ -111,4 +111,7 @@ seconds in a large mod.
 - **Moves made outside VS Code**, in the Windows Explorer or by another program:
   VS Code doesn't see them. Move your files from inside VS Code.
 - **Compiled `.tobj` files**: they're binary, so the extension can't change them.
+  A `.tobj` with a `.dds` of the same name beside it is taken for a compiled one
+  and not read, even if it's text. The ones SCS Blender Tools exports name a `.tga`
+  or `.png` instead, so they're read.
 - **Paths that can't be written any more**: a file moved out of your mod's folder.

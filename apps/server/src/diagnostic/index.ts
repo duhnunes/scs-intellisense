@@ -12,6 +12,7 @@ import { validateSiiDocument } from './rules'
 import {
   validateAttributeKeys,
   validateEnumValues,
+  validateValueTypes,
   type SchemaLookup,
 } from './schemaRules'
 
@@ -73,6 +74,7 @@ export function checkDocument(
       ? [
           ...validateAttributeKeys(classed, schemaFor),
           ...validateEnumValues(classed, schemaFor),
+          ...validateValueTypes(classed, schemaFor),
         ]
       : []),
   ].filter((issue) => enabledSeverities.includes(issue.severity ?? 'error'))

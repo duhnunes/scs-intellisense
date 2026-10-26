@@ -259,3 +259,25 @@ describe('fragment classes follow edits', () => {
     expect(index.classesOf(fragment())).toEqual([])
   })
 })
+
+describe('compiled .tobj files', () => {
+  // Never opened: a .tobj next to a .dds of the same name is the
+  // converter's binary output (a third of the extracted game's files).
+  it('skips a .tobj with a .dds of the same name', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'scs-tobj-test-'))
+    try {
+      await writeFile(join(root, 'paint.tobj'), 'map 2d paint.dds\n')
+      await writeFile(join(root, 'paint.dds'), '')
+      await writeFile(join(root, 'house.tobj'), 'map 2d house.tga\n')
+      const index = new WorkspaceIndex()
+      await index.scan([root], () => false)
+      const at = (file: string) => URI.file(join(root, file)).toString()
+      expect(index.get(at('paint.tobj'))).toBeUndefined()
+      expect(index.get(at('house.tobj'))?.paths.map((ref) => ref.text)).toEqual(
+        ['house.tga']
+      )
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+})

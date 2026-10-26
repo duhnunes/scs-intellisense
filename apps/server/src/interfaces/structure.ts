@@ -148,6 +148,9 @@ export type SiiIssueCode =
   // Schema rules (schemaRules.ts)
   | 'unknown-attribute'
   | 'invalid-enum-value'
+  | 'invalid-number'
+  | 'invalid-vector'
+  | 'invalid-bool'
 
 export interface SiiIssue {
   code: SiiIssueCode

@@ -42,17 +42,26 @@ errors.
 
 ### Attributes
 
-These two need the [schema database](../reference/schema-database.mdx), which knows
-every class of the game and its attributes:
+These need the [schema database](../reference/schema-database.mdx), which knows
+every class of the game, its attributes and their types:
 
 | Problem | Example | Level |
 | :------ | :------ | :---- |
 | An attribute the class doesn't have | `prcie: 18000` | Warning |
 | A value the attribute doesn't accept | `part_type: factroy` | Warning |
+| Something other than a number where a number goes | `price: abc`, `unlock: 1.5` | Warning |
+| A negative number where only 0 or more is allowed | `unlock: -5` | Warning |
+| A vector with the wrong count of numbers | `color: (1.0, 0.5)` for three | Warning |
+| Something other than true or false | `use_perlin: yes` | Warning |
 
 The attribute lists come from the game itself, so an unknown attribute is almost
-always a typo. They also work inside a [`.sui` fragment](../getting-started/your-mod.mdx#sui-fragments),
-using the class of the unit that includes it.
+always a typo. Numbers are accepted in every form the game's own files use: `1.5`,
+`+6`, `2e-6`, `25.0f`, `&3f800000`, `0x10DE` and `nil`; a bool can also be `0` or
+`1`.
+
+All of these checks also work inside a
+[`.sui` fragment](../getting-started/your-mod.mdx#sui-fragments), using the class of
+the unit that includes it.
 
 ### The end of the file (warning)
 

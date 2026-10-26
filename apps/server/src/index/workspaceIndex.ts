@@ -491,10 +491,29 @@ async function collect(folder: string, found: string[]): Promise<void> {
   } catch {
     return
   }
+  const names = new Set(entries.map((entry) => entry.name.toLowerCase()))
   for (const entry of entries) {
     if (entry.name.startsWith('.') || entry.name === 'node_modules') continue
     const full = path.join(folder, entry.name)
     if (entry.isDirectory()) await collect(full, found)
-    else if (entry.isFile() && INDEXED_FILE.test(entry.name)) found.push(full)
+    else if (
+      entry.isFile() &&
+      INDEXED_FILE.test(entry.name) &&
+      !isCompiledTobj(entry.name, names)
+    )
+      found.push(full)
   }
+}
+
+/**
+ * A .tobj next to a .dds of the same name is the converter's output: binary,
+ * with no path the index can read, so it isn't even opened. A text .tobj
+ * (SCS Blender Tools) names its .tga/.png source instead. On ATS
+ * Expansion, the owner's source mod and the extracted ATS 1.61 base: all
+ * 32,589 such files were binary, and no text one had a .dds beside it.
+ * Opening them took a third of the extracted game's 229,537 files.
+ */
+function isCompiledTobj(name: string, folderNames: Set<string>): boolean {
+  const lower = name.toLowerCase()
+  return lower.endsWith('.tobj') && folderNames.has(lower.slice(0, -5) + '.dds')
 }
