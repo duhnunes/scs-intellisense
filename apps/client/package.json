@@ -335,6 +335,22 @@
         }
       },
       {
+        "id": "bnk-guids",
+        "aliases": [
+          "bank.guids",
+          "BANK.GUIDS",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".bank.guids"
+        ],
+        "icon": {
+          "dark": "./public/extensions/bnk.gds.png",
+          "light": "./public/extensions/bnk.gds.png"
+        }
+      },
+      {
         "id": "zip",
         "aliases": [
           "zip",
@@ -346,21 +362,6 @@
         "icon": {
           "dark": "./public/extensions/zip.png",
           "light": "./public/extensions/zip.png"
-        }
-      },
-      {
-        "id": "scs",
-        "aliases": [
-          "scs",
-          "SCS",
-          "SCS Software"
-        ],
-        "extensions": [
-          ".scs"
-        ],
-        "icon": {
-          "dark": "./public/extensions/scs.png",
-          "light": "./public/extensions/scs.png"
         }
       }
     ],
