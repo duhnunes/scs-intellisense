@@ -65,6 +65,7 @@ import {
   buildPointerCompletionItems,
   type OtherFileUnit,
 } from './completion/pointer'
+import { findSoundEventAt, listSoundEvents } from './completion/soundEvents'
 import {
   findIncludePathAt,
   listIncludeCandidates,
@@ -273,7 +274,9 @@ connection.onRequest(
     )
 )
 
-const INCLUDE_TRIGGER_CHARACTERS = ['"', '/']
+// '#' opens a bank's events (`"/sound/x.bank#`); outside a quoted path
+// it suggests nothing, like the others.
+const INCLUDE_TRIGGER_CHARACTERS = ['"', '/', '#']
 
 /** Named units of the other indexed files, for pointer completion. A
  *  nameless unit (".x") only exists in its own file. */
@@ -453,6 +456,22 @@ connection.onCompletion(async (params) => {
     const classed = asFragmentDocument(parsed, fragmentClassOf(doc.uri))
     const valuePosition = findAttributeValuePosition(classed, offset)
     if (valuePosition) {
+      // After a bank's '#': its events, whatever the attribute's type
+      // (a sound id can stand where a .soundref path goes).
+      const soundEvent = findSoundEventAt(valuePosition, parsed.text, offset)
+      if (soundEvent) {
+        const range = {
+          start: normalizedDoc.positionAt(soundEvent.range.start),
+          end: normalizedDoc.positionAt(soundEvent.range.end),
+        }
+        return listSoundEvents(URI.parse(doc.uri).fsPath, soundEvent.bank).map(
+          (event): CompletionItem => ({
+            label: event,
+            kind: CompletionItemKind.Event,
+            textEdit: { range, newText: event },
+          })
+        )
+      }
       const schema = await schemaOf(valuePosition.unit.className)
       const def = schema?.key?.[valuePosition.attribute.key]
       if (

@@ -35,7 +35,7 @@ Always on:
 
 Experimental (off by default):
 
-- 💡 **Completion** for `class_name`, attribute keys, `enum` values (`part_type: ` → `factory`, `aftermarket`...), units for pointers, from the same file and the rest of the mod (filtered by the class the attribute expects), and the mod's own files for attributes that take one (`model: "/vehicle/..."` lists only `.pmd`).
+- 💡 **Completion** for `class_name`, attribute keys, `enum` values (`part_type: ` → `factory`, `aftermarket`...), units for pointers, from the same file and the rest of the mod (filtered by the class the attribute expects), and the mod's own files for attributes that take one (`model: "/vehicle/..."` lists only `.pmd`), and a sound bank's events after its `#` (from the `.bank.guids` FMOD Studio writes).
 - 🖱️ **Hover** with descriptions of classes and attributes.
 - ✨ **Formatter**: Format Document and Format Selection, plus **Check Formatting of All Files** and **Format All Files** for the whole workspace.
 
