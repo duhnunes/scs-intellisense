@@ -319,6 +319,22 @@
         }
       },
       {
+        "id": "bnk",
+        "aliases": [
+          "bank",
+          "BANK",
+          "SCS Software",
+          "SCS"
+        ],
+        "extensions": [
+          ".bank"
+        ],
+        "icon": {
+          "dark": "./public/extensions/bnk.png",
+          "light": "./public/extensions/bnk.png"
+        }
+      },
+      {
         "id": "zip",
         "aliases": [
           "zip",

@@ -5,6 +5,7 @@ import {
   LanguageClientOptions,
   ServerOptions,
   TransportKind,
+  type DocumentLink,
 } from 'vscode-languageclient/node'
 import { registerBugReportCommand } from './bugReport'
 import {
@@ -140,6 +141,27 @@ function syncTextureFiles(client: LanguageClient): vscode.Disposable {
     document.uri.scheme === 'file' &&
     /[.](mat|tobj|soundref)$/i.test(document.uri.fsPath)
   return vscode.Disposable.from(
+    // VS Code doesn't ask the server for their links either: Ctrl+click
+    // on a path in them asks for the paths the server's index holds.
+    vscode.languages.registerDocumentLinkProvider(
+      { scheme: 'file', pattern: '**/*.{mat,tobj,soundref}' },
+      {
+        provideDocumentLinks: async (document) => {
+          if (!client.isRunning()) return []
+          const links = await client.sendRequest<DocumentLink[]>(
+            'scsIntellisense/pathLinks',
+            { uri: document.uri.toString() }
+          )
+          return links.map(
+            (link) =>
+              new vscode.DocumentLink(
+                client.protocol2CodeConverter.asRange(link.range),
+                link.target ? vscode.Uri.parse(link.target) : undefined
+              )
+          )
+        },
+      }
+    ),
     vscode.workspace.onDidChangeTextDocument(({ document }) => {
       if (isTextureFile(document) && client.isRunning())
         void client.sendNotification('scsIntellisense/textureFileChanged', {

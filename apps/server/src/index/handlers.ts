@@ -26,7 +26,11 @@ import {
   renameProblem,
   type Location,
 } from './navigation'
-import { WorkspaceIndex, type PointerCheck } from './workspaceIndex'
+import {
+  WorkspaceIndex,
+  type IndexedFile,
+  type PointerCheck,
+} from './workspaceIndex'
 
 const logger = getLogger()
 const index = new WorkspaceIndex()
@@ -217,23 +221,38 @@ export function registerIndex(
   // A link, not a definition: VS Code underlines it on Ctrl+hover without
   // trying to preview the target, which for a binary .pmd showed nothing
   // (owner's test). A path to one of the game's files gets no link.
+  const linksOf = (file: IndexedFile): DocumentLink[] => {
+    const links: DocumentLink[] = []
+    for (const ref of file.paths) {
+      const target = resolvePathRef(file, ref)
+      if (!target) continue
+      links.push({
+        range: {
+          start: file.document.positionAt(ref.range.start),
+          end: file.document.positionAt(ref.range.end),
+        },
+        target: URI.file(target).toString(),
+      })
+    }
+    return links
+  }
+
+  // .mat, .tobj and .soundref aren't this extension's languages, so VS
+  // Code never asks the server for their links: the client does, with this
+  // request, for the paths the index already holds (owner noticed no
+  // Ctrl+click in a .soundref).
+  connection.onRequest(
+    'scsIntellisense/pathLinks',
+    (params: { uri: string }): DocumentLink[] => {
+      const file = index.get(params.uri)
+      return file ? linksOf(file) : []
+    }
+  )
+
   connection.onDocumentLinks((params): DocumentLink[] => {
     try {
       const file = fileAt(params.textDocument.uri)
-      if (!file) return []
-      const links: DocumentLink[] = []
-      for (const ref of file.paths) {
-        const target = resolvePathRef(file, ref)
-        if (!target) continue
-        links.push({
-          range: {
-            start: file.document.positionAt(ref.range.start),
-            end: file.document.positionAt(ref.range.end),
-          },
-          target: URI.file(target).toString(),
-        })
-      }
-      return links
+      return file ? linksOf(file) : []
     } catch (error) {
       logger.error(
         'LINKS_FAILED',
