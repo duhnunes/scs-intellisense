@@ -290,7 +290,7 @@ export class WorkspaceIndex {
 }
 
 function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
-  if (/\.(mat|tobj)$/i.test(filePath))
+  if (/\.(mat|tobj|soundref)$/i.test(filePath))
     return buildPathsEntry(uri, filePath, text)
   const mode = filePath.toLowerCase().endsWith('.sui') ? 'sui' : 'sii'
   const parsed = readScsDocument(text, mode)
@@ -347,12 +347,16 @@ function buildEntry(uri: string, filePath: string, text: string): IndexedFile {
     if (inner.start === valueRange.start) return // not quoted
     const value = parsed.text.slice(inner.start, inner.end)
     const start = inner.start + value.lastIndexOf('|') + 1
-    const text = parsed.text.slice(start, inner.end)
+    // A sound bank names its event after '#' (`"/sound/music/scene.bank
+    // #scene/logo_ats"`, 494 in ATS 1.61): the file ends there.
+    const hash = parsed.text.indexOf('#', start)
+    const end = hash >= 0 && hash < inner.end ? hash : inner.end
+    const text = parsed.text.slice(start, end)
     if (text.startsWith('/') && text.length > 1 && !text.includes('\n'))
       paths.push({
         kind: 'file',
         text: own(text),
-        range: { start, end: inner.end },
+        range: { start, end },
       })
   }
   for (const unit of parsed.units) addValues(unit.attributes, unit.className)
@@ -456,10 +460,12 @@ function isDefined<T>(value: T | undefined): value is T {
   return value !== undefined
 }
 
-/** .sii/.sui for everything; .mat and text .tobj for their paths only. */
-export const INDEXED_FILE = /\.(sii|sui|mat|tobj)$/i
+/** .sii/.sui for everything; .mat, text .tobj and .soundref for their paths
+ *  only. */
+export const INDEXED_FILE = /\.(sii|sui|mat|tobj|soundref)$/i
 
-/** A .mat or text .tobj: only the paths it holds, for file moves. */
+/** A .mat, text .tobj or .soundref: only the paths it holds, for file
+ *  moves and references. */
 function buildPathsEntry(
   uri: string,
   filePath: string,

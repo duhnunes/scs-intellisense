@@ -47,10 +47,10 @@ export function activate(context: vscode.ExtensionContext) {
     ],
     // Files changed outside the editor (git checkout, a converter, another
     // program) reach the server's workspace index, which keeps every
-    // .sii/.sui of the open folders, and the paths in .mat/.tobj files.
+    // .sii/.sui of the open folders, and the paths in .mat/.tobj/.soundref files.
     synchronize: {
       fileEvents: vscode.workspace.createFileSystemWatcher(
-        '**/*.{sii,sui,mat,tobj}'
+        '**/*.{sii,sui,mat,tobj,soundref}'
       ),
     },
     middleware: {
@@ -130,7 +130,7 @@ export function deactivate(): Thenable<void> | undefined {
 }
 
 /**
- * .mat and .tobj aren't this extension's languages, so VS Code doesn't
+ * .mat, .tobj and .soundref aren't this extension's languages, so VS Code doesn't
  * send their text to the server; it would read them from disk and miss
  * unsaved changes (the paths a move just rewrote, before saving). Their
  * text goes over when it changes, and back to disk when they close.
@@ -138,7 +138,7 @@ export function deactivate(): Thenable<void> | undefined {
 function syncTextureFiles(client: LanguageClient): vscode.Disposable {
   const isTextureFile = (document: vscode.TextDocument) =>
     document.uri.scheme === 'file' &&
-    /[.](mat|tobj)$/i.test(document.uri.fsPath)
+    /[.](mat|tobj|soundref)$/i.test(document.uri.fsPath)
   return vscode.Disposable.from(
     vscode.workspace.onDidChangeTextDocument(({ document }) => {
       if (isTextureFile(document) && client.isRunning())

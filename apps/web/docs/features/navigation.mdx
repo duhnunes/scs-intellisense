@@ -67,7 +67,9 @@ model: "/vehicle/truck/my_truck/cabin.pmd"
 
 ![Ctrl+hover underlines the material path, with "Follow link (ctrl + click)"](/images/screenshots/ctrlClick.png)
 
-Paths after a name work too (`sounds[]: "horn|/sound/truck/horn.soundref"`). A path to
+Paths after a name work too (`sounds[]: "horn|/sound/truck/horn.soundref"`), and so
+do sound banks with an event (`"/sound/music/scene.bank#scene/logo_ats"` opens
+`scene.bank`). A path to
 one of the game's files isn't a link, since the extension doesn't read the
 game's archives.
 
@@ -75,7 +77,8 @@ game's archives.
 
 Put the cursor on a path in a `.sii` or `.sui` file and press `Shift+F12` to list
 every path that names the same file: in `.sii` and `.sui` files, and also in
-`.mat` and `.tobj` files.
+`.mat`, `.tobj` and `.soundref` files. For a sound bank, a path counts with any
+event after its `#` (`"/sound/music/scene.bank#scene/logo_ats"`).
 
 This tells you, before you delete or change a model or a texture, which files
 still use it.

@@ -16,18 +16,37 @@ import type { PathRef } from './workspaceIndex'
  * .tobj in text, as SCS Blender Tools exports them (`map 2d house_a.tga`):
  * the words after `map <type>`. A compiled .tobj is binary and never gets
  * here (decodeSiiFile refuses it).
+ *
+ * .soundref, one line naming a sound bank and the event in it:
+ * `source="/sound/car/tires/oldtimer.bank#oldtimer/asphalt"` (all 860 in
+ * ATS 1.61 are so). The path is the bank's, up to the '#'.
  */
 
 const MAT_PATH = /^(\s*(?:source|texture(?:\[\d*\])?)\s*:\s*")([^"]*)"/
 const TEXTURE_FILE = /\.(tobj|dds|tga|png|jpe?g|bmp)$/i
 const TOBJ_MAP = /^(\s*map\s+\S+\s+)(.*)$/
+const SOUNDREF_SOURCE = /^(\s*source\s*=\s*")([^"#]*)/
 
 /** `text` is normalized (LF line breaks): ranges are offsets into it. */
 export function texturePathRefs(filePath: string, text: string): PathRef[] {
   const lower = filePath.toLowerCase()
   if (lower.endsWith('.mat')) return scanLines(text, matLine)
   if (lower.endsWith('.tobj')) return scanLines(text, tobjLine)
+  if (lower.endsWith('.soundref')) return scanLines(text, soundrefLine)
   return []
+}
+
+function soundrefLine(line: string, offset: number): PathRef[] {
+  const match = SOUNDREF_SOURCE.exec(line)
+  if (!match || match[2] === '') return []
+  const start = offset + match[1]!.length
+  return [
+    {
+      kind: 'file',
+      text: match[2]!,
+      range: { start, end: start + match[2]!.length },
+    },
+  ]
 }
 
 function scanLines(
