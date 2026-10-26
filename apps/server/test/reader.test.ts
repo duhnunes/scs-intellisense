@@ -324,3 +324,28 @@ describe('reader: where a missing { is reported', () => {
     ).toEqual([])
   })
 })
+
+describe('reader: a missing : after an attribute key', () => {
+  const issues = (body: string) => {
+    const document = readSiiDocument(sii(`a : .b {\n${body}\n}`))
+    return document.issues.map(
+      (issue) =>
+        `${issue.code} after ${JSON.stringify(document.text.slice(issue.range.start - 8, issue.range.start))}`
+    )
+  }
+
+  it('is reported right after the key, not on the value', () => {
+    expect(issues('\tmaterial "/material/sign/frame/white_box.mat"')).toEqual([
+      'missing-attribute-colon after "material"',
+    ])
+  })
+
+  it('still reports a quote of its value that never closes', () => {
+    expect(
+      issues('\tmaterial "/material/sign/frame/white_box.mat\n\tborder: 1')
+    ).toEqual([
+      'missing-attribute-colon after "material"',
+      'unclosed-value-quote after "aterial "',
+    ])
+  })
+})

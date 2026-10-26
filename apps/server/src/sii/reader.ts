@@ -527,12 +527,17 @@ class SiiReader {
 
     const colonStart = this.positionValue
     if (!this.consume(':')) {
+      // Right after the key, not on the value (owner noticed the error on
+      // the value's quote).
       this.issue(
         'missing-attribute-colon',
         "Expected ':' after attribute key",
-        colonStart,
-        colonStart + 1
+        keyRange.end,
+        keyRange.end + 1
       )
+      // The value is still read, so a quote that never closes in it is
+      // reported too; the line isn't an attribute either way.
+      this.readValueRange()
       return undefined
     }
 

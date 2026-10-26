@@ -215,14 +215,14 @@ function fixMissingUnitColon(start: number, text: string): SiiQuickFix[] {
  * format other config files use). `start` is where the reader expected
  * the ':', after any spaces following the key.
  */
-function fixMissingAttributeColon(start: number, text: string): SiiQuickFix[] {
+function fixMissingAttributeColon(keyEnd: number, text: string): SiiQuickFix[] {
+  // The error is right after the key; what follows the spaces decides.
+  let start = keyEnd
+  while (isHorizontalSpace(text[start])) start++
   const current = text[start]
   // The key is alone on its line (or closes the unit): there's no value to
   // separate from it, so it may not be an attribute at all.
   if (current === undefined || current === '\n' || current === '}') return []
-
-  let keyEnd = start
-  while (isHorizontalSpace(text[keyEnd - 1])) keyEnd--
 
   if (current === '=') {
     // `key = value` → `key: value`, the spacing the format uses.

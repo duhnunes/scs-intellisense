@@ -154,7 +154,11 @@ describe('quick fixes', () => {
     expect(quickFixes(input, { at: 'x..y' }).titles).toEqual([
       'Replace ".." with "."',
     ])
-    expect(quickFixes(input, { at: 'speed' }).titles).toEqual([])
+    // The missing ':' is reported right after the key, between it and the
+    // value: the cursor on either gets the fix.
+    expect(quickFixes(input, { at: 'speed' }).titles).toEqual([
+      "Add ':' after the attribute key",
+    ])
     expect(quickFixes(input, { at: '10' }).titles).toEqual([
       "Add ':' after the attribute key",
     ])
