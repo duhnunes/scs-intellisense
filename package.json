@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "pnpm --filter web dev",
+    "prepare": "husky",
     "docs:build": "pnpm --filter web build",
     "copy-server": "copyfiles -u 3 apps/server/dist/**/* apps/client/dist/",
     "build": "pnpm i && pnpm format && pnpm -r --filter \"!web\" run build && pnpm run copy-server",
@@ -21,12 +22,13 @@
     "vsce:publish": "pnpm --filter ./apps/client/ vsce:publish"
   },
   "devDependencies": {
-    "@scs-int/ts-config": "workspace:*",
     "@release-it/bumper": "^7.0.6",
+    "@scs-int/ts-config": "workspace:*",
     "copyfiles": "^2.4.1",
     "dotenv": "^17.4.2",
     "dotenv-cli": "^11.0.0",
     "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3"
   },
@@ -95,5 +97,8 @@
         }
       }
     }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "prettier --write"
   }
 }

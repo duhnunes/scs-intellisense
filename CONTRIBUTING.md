@@ -45,7 +45,7 @@ The [developer docs](./docs/README.md) explain the code. Good places to start:
    pnpm --filter scs-int-server run check-types
    pnpm --filter ./apps/client run check-types
    ```
-4. **Write the commit message** in [Conventional Commits](https://www.conventionalcommits.org/) form (`feat:`, `fix:`, `docs:`...), with a body that explains *why*. The changelog is generated from these messages.
+4. **Write the commit message** in [Conventional Commits](https://www.conventionalcommits.org/) form (`feat:`, `fix:`, `docs:`...), with a body that explains *why*. The changelog is generated from these messages, so a commit hook (commitlint, set up by `pnpm install`) refuses a message whose type isn't one of them, and another formats the staged `.ts` files with Prettier.
 
 Code, comments and commit messages are in English.
 
