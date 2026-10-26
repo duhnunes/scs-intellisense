@@ -296,3 +296,31 @@ describe('reader: where an unclosed quote is reported', () => {
     )
   })
 })
+
+describe('reader: where a missing { is reported', () => {
+  const at = (input: string) => {
+    const document = readSiiDocument(input)
+    const issue = document.issues.find(
+      (candidate) => candidate.code === 'missing-unit-open-brace'
+    )!
+    const line = document.text.slice(0, issue.range.start).split('\n').length
+    return {
+      line,
+      after: document.text.slice(issue.range.start - 8, issue.range.start),
+    }
+  }
+
+  it('stays on the line of the unit being typed, after its name', () => {
+    expect(
+      at(
+        'SiiNunit\n{\nprefab_model : house.20\n\nprefab_model : house.21 {\n}\n}\n'
+      )
+    ).toEqual({ line: 3, after: 'house.20' })
+  })
+
+  it('still accepts the { on the next line', () => {
+    expect(
+      readSiiDocument('SiiNunit\n{\nprefab_model : house.20\n{\n}\n}\n').issues
+    ).toEqual([])
+  })
+})

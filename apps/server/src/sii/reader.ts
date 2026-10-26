@@ -414,14 +414,19 @@ class SiiReader {
 
     const unitName = this.text.slice(unitNameRange.start, unitNameRange.end)
 
+    // Right after the name, as the missing ':' is reported: the '{' may be
+    // on a later line, but when there's none, reporting where the search
+    // stopped put the error on the next unit's class name (owner noticed).
+    let afterName = unitNameRange.end
+    while (isHorizontalWhitespace(this.masked[afterName] ?? '')) afterName++
     this.skipTrivia()
     const bodyOpen = this.positionValue
     if (!this.consume('{')) {
       this.issue(
         'missing-unit-open-brace',
         "Expected '{' after unitName",
-        bodyOpen,
-        bodyOpen + 1
+        afterName,
+        afterName + 1
       )
       return {
         kind: 'unit',
