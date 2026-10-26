@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest'
+import type { CodeActionParams } from 'vscode-languageserver/node'
+import { TextDocument } from 'vscode-languageserver-textdocument'
+import { getDiagnostics } from '../src/diagnostic'
+import { buildCodeActions } from '../src/diagnostic/codeActions'
 import { validateValueTypes } from '../src/diagnostic/schemaRules'
 import type {
   SchemaAttributeDef,
   SchemaFileContent,
 } from '../src/interfaces/schemas'
+import type { SiiSeverity } from '../src/interfaces/structure'
 import { readSiiDocument } from '../src/sii'
 import { sii } from './helpers'
 
@@ -139,5 +144,40 @@ describe('value types', () => {
     expect(
       problems('name: 42\nrotation: (1; 0, 0, 0)\npoints: 3\nweight: ')
     ).toEqual([])
+  })
+})
+
+describe('value types: quick fix for a quoted number', () => {
+  const ALL: SiiSeverity[] = ['error', 'warning', 'information', 'hint']
+  const fixesFor = (body: string) => {
+    const input = sii(`test_data : .a {\n${body}\n}`)
+    const doc = TextDocument.create('file:///x.sii', 'sii', 1, input)
+    const params: CodeActionParams = {
+      textDocument: { uri: doc.uri },
+      range: { start: doc.positionAt(0), end: doc.positionAt(input.length) },
+      context: { diagnostics: getDiagnostics(doc, ALL, schemaFor) },
+    }
+    return buildCodeActions(doc, params, ALL, schemaFor).map((action) => ({
+      title: action.title,
+      preferred: action.isPreferred,
+      fixed: TextDocument.applyEdits(doc, action.edit!.changes![doc.uri]!),
+    }))
+  }
+
+  it('removes the quotes around a number', () => {
+    expect(fixesFor('price: "18000"')).toEqual([
+      {
+        title: 'Remove the quotes',
+        preferred: true,
+        fixed: sii('test_data : .a {\nprice: 18000\n}'),
+      },
+    ])
+    expect(fixesFor('weight: "25.0f"')[0]?.fixed).toContain('weight: 25.0f')
+  })
+
+  it('offers nothing when the number would still be wrong', () => {
+    expect(fixesFor('unlock: "-5"')).toEqual([])
+    expect(fixesFor('price: "abc"')).toEqual([])
+    expect(fixesFor('price: abc')).toEqual([])
   })
 })

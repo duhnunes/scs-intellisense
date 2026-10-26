@@ -25,7 +25,7 @@ Always on:
 
 - 🎨 **Semantic highlighting**: class names (including namespaces such as `ui::`), unit names, attribute keys, values, comments and `@include`.
 - 🔍 **Diagnostics**: structural errors (missing `:`, `{` or `}`), invalid class and unit names, duplicate unit names in a file, misplaced `@include`, missing final newline, and, from the schema database, attribute keys the class doesn't have, `enum` values it doesn't list (typos), and values of the wrong type (`price: abc`, a `float3` with two numbers, `use_perlin: yes`).
-- 🔧 **Quick fixes** (light bulb, `Ctrl+.`) for problems with one obvious fix: a missing `:` or final newline, `a..b` in a unit name, an unmatched quote, an indented `@include`, a misspelled attribute key or `enum` value.
+- 🔧 **Quick fixes** (light bulb, `Ctrl+.`) for problems with one obvious fix: a missing `:` or final newline, `a..b` in a unit name, an unmatched quote, an indented `@include`, a misspelled attribute key or `enum` value, a quoted number.
 - 📎 **`@include` paths**: type `@include "` to pick a `.sui` file or folder.
 - 🧭 **Outline, breadcrumbs and Go to Symbol** for units, attributes and includes.
 - 🧩 **`.sui` fragments** (bare attributes pasted into a unit by `@include`) get completion, hover and the same checks as the unit that includes them.

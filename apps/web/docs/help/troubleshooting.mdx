@@ -61,6 +61,29 @@ what each kind of theme does, and when a setting brings the icons back.
 
 </AccordionContent>
   </AccordionItem>
+  <AccordionItem value="path-link">
+    <AccordionTrigger>Ctrl+click on a path does nothing</AccordionTrigger>
+    <AccordionContent>
+
+- The file must exist in your mod. A path to one of the game's files, or to a file
+  that was moved or deleted, isn't a link.
+- Check the path for a typo: hover it with `Ctrl` held, and only the paths that
+  lead to a file are underlined.
+
+</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="sound-events">
+    <AccordionTrigger>No suggestions after a sound bank's #</AccordionTrigger>
+    <AccordionContent>
+
+- The events come from the `.bank.guids` file next to the bank. FMOD Studio writes
+  it when you export the GUIDs: put it beside the `.bank`, with the same name.
+- A bank of the game has no list: it's inside the game's archives.
+- Completion must be on. See
+  [Experimental features](../getting-started/experimental-features.mdx).
+
+</AccordionContent>
+  </AccordionItem>
   <AccordionItem value="unknown">
     <AccordionTrigger>An attribute I know is right is reported as unknown</AccordionTrigger>
     <AccordionContent>

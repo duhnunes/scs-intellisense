@@ -148,7 +148,7 @@ export function validateValueTypes(
   return issues
 }
 
-function valueProblem(
+export function valueProblem(
   type: string,
   value: string
 ): { code: SiiIssue['code']; message: string } | undefined {

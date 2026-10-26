@@ -7,6 +7,7 @@ import type {
 import {
   suggestAttributeKey,
   suggestEnumValue,
+  valueProblem,
   type SchemaLookup,
 } from './schemaRules'
 
@@ -65,6 +66,8 @@ export function quickFixesFor(
       return fixUnknownAttribute(issue.range, document, schemaFor)
     case 'invalid-enum-value':
       return fixInvalidEnumValue(issue.range, document, schemaFor)
+    case 'invalid-number':
+      return fixQuotedNumber(issue.range, document, schemaFor)
     default:
       return []
   }
@@ -297,6 +300,43 @@ function fixInvalidEnumValue(
     {
       title: `Change to "${suggestion}"`,
       edits: [replace(range.start, range.end, suggestion)],
+      isPreferred: true,
+    },
+  ]
+}
+
+/**
+ * `price: "18000"` → `price: 18000`: no number attribute of ATS 1.61 is
+ * ever quoted (2,163,580 values). Offered only when what's inside the
+ * quotes is a valid value of the attribute's type, so `unlock: "-5"` on an
+ * unsigned type gets no fix that would still be wrong.
+ */
+function fixQuotedNumber(
+  range: SiiRange,
+  document: SiiDocument,
+  schemaFor: SchemaLookup | undefined
+): SiiQuickFix[] {
+  const value = document.text.slice(range.start, range.end)
+  if (value.length < 3 || !value.startsWith('"') || !value.endsWith('"'))
+    return []
+  const unit = document.units.find(
+    (candidate) =>
+      candidate.bodyRange.start <= range.start &&
+      range.end <= candidate.bodyRange.end
+  )
+  const attribute = unit?.attributes.find(
+    (candidate) =>
+      candidate.valueRange.start === range.start &&
+      candidate.valueRange.end === range.end
+  )
+  const type =
+    attribute && schemaFor?.(unit!.className)?.key?.[attribute.key]?.type
+  const inner = value.slice(1, -1)
+  if (!type || valueProblem(type, inner)) return []
+  return [
+    {
+      title: 'Remove the quotes',
+      edits: [replace(range.start, range.end, inner)],
       isPreferred: true,
     },
   ]

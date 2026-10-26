@@ -23,14 +23,17 @@ respective owners.
   comments each get their own color, so a file is easier to read.
   See [Highlighting and icons](../features/highlighting.mdx).
 - **Finds mistakes while you type.** A missing `:` or `}`, an invalid unit name,
-  two units with the same name, or a misspelled attribute such as `prcie`
-  instead of `price`. Most problems come with a one-click fix.
+  two units with the same name, a misspelled attribute such as `prcie` instead of
+  `price`, or a value its type can't hold, such as `price: abc`. Most problems
+  come with a one-click fix.
   See [Diagnostics and quick fixes](../features/diagnostics.mdx).
 - **Suggests what comes next.** Class names, attribute keys, the values an
-  attribute accepts, units to point to, and the files of your mod.
+  attribute accepts, units to point to, the files of your mod, and the events of
+  your sound banks.
   See [Completion and hover](../features/completion.mdx).
 - **Lets you jump around your mod.** Ctrl+click a unit name to open where it's
   defined, list everything that uses it, or rename it everywhere at once.
+  Ctrl+click a path to open that file.
   See [Navigation](../features/navigation.mdx).
 - **Keeps paths working.** Rename or move a file in VS Code and every path that
   points to it is updated for you.

@@ -126,6 +126,7 @@ The light bulb next to a diagnostic. Always on, like diagnostics: a fix only cha
 | `missing-attribute-colon` | `key value` → `key: value`, `key = value` → `key: value` |
 | `unknown-attribute` | "Change to `price`": the class's closest key by edit distance (a swap of two letters is one edit), when it's within 1–3 edits depending on length and no other key is as close. Keys a modder writes win over legacy and internal-only ones |
 | `invalid-enum-value` | "Change to `factory`": the closest value by the same measure; quotes are kept |
+| `invalid-number` | "Remove the quotes" around a number (`price: "18000"`), only when what's inside is valid for the type (`fixQuotedNumber()`; none of the 2,163,580 number values of ATS 1.61 is quoted) |
 
 Deliberately without a fix: uppercase in a unit name (the game loads it, and other files may use the name as written), duplicates (which one to rename is the user's call), and a missing `{` or `}` (where it goes is a guess).
 
