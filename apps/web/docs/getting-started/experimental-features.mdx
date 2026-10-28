@@ -17,43 +17,36 @@ updates) is always on.
 
 ## Turn them on
 
-<Tabs defaultValue="ui">
-  <TabsList aria-label="How to change settings">
-    <TabsTrigger value="ui">Settings editor</TabsTrigger>
-    <TabsTrigger value="json">settings.json</TabsTrigger>
-  </TabsList>
-  <TabsContent value="ui">
+:::tabs
 
-1. Open the Settings with <KbdGroup aria-label="Ctrl plus ,"><Kbd>Ctrl</Kbd>+<Kbd>,</Kbd></KbdGroup>.
+### Settings editor
+
+1. Open the Settings with :kbd[Ctrl] + :kbd[,].
 2. Type `@ext:DuHNunes.scs-intellisense` in the search box to see only this
    extension's settings.
 3. Check **Completion: Enabled**, **Hover: Enabled** and **Formatter: Enabled**,
    the ones you want.
 
-</TabsContent>
-  <TabsContent value="json">
+### settings.json
 
-Open the Command Palette (<KbdGroup aria-label="Ctrl plus Shift plus P"><Kbd>Ctrl</Kbd>+<Kbd>Shift</Kbd>+<Kbd>P</Kbd></KbdGroup>), run **Preferences: Open User
+Open the Command Palette (:kbd[Ctrl] + :kbd[Shift] + :kbd[P]), run **Preferences: Open User
 Settings (JSON)** and add:
 
-```json
+```json title="settings.json"
 "scs-intellisense.completion.enabled": true,
 "scs-intellisense.hover.enabled": true,
 "scs-intellisense.formatter.enabled": true
 ```
 
-</TabsContent>
-</Tabs>
+:::
 
 They take effect right away: there's no need to reload VS Code.
 
-<Callout variant="tip" title="Formatting on save">
-
-With the formatter on, `.sii` and `.sui` files are formatted every time you save
-them. You don't need to set anything else. If you'd rather format only when you
-ask, turn off **Formatter: Format On Save**. See [Formatter](../features/formatter.mdx).
-
-</Callout>
+> [!TIP] Formatting on save
+>
+> With the formatter on, `.sii` and `.sui` files are formatted every time you save
+> them. You don't need to set anything else. If you'd rather format only when you
+> ask, turn off **Formatter: Format On Save**. See [Formatter](../features/formatter.mdx).
 
 ## Found a problem?
 

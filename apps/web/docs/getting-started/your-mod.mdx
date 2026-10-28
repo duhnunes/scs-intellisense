@@ -11,60 +11,58 @@ the file you're editing.
 
 ## Supported layouts
 
-<Tabs defaultValue="simple">
-  <TabsList aria-label="Mod layout">
-    <TabsTrigger value="simple">Simple mod</TabsTrigger>
-    <TabsTrigger value="parts">Mod with parts</TabsTrigger>
-    <TabsTrigger value="nomanifest">No manifest</TabsTrigger>
-  </TabsList>
-  <TabsContent value="simple">
+:::tabs
+
+### Simple mod
 
 The folder holding `manifest.sii` is the mod's `/`:
 
-```text
+```folder
 my_mod/
-├── manifest.sii
-├── def/
-│   └── vehicle/...
-└── vehicle/
-    └── truck/
-        └── cabin.pmd     → "/vehicle/truck/cabin.pmd"
+  manifest.sii
+  def/
+    vehicle/
+  vehicle/
+    truck/
+      cabin.pmd
 ```
 
-</TabsContent>
-  <TabsContent value="parts">
+`my_mod/vehicle/truck/cabin.pmd` is written `"/vehicle/truck/cabin.pmd"`.
+
+### Mod with parts
 
 Since game version 1.48 a mod can split its content into a `base/` folder,
 always loaded, and `dlc_*` folders, loaded only when the player owns that DLC.
 The game puts all of them on the same `/`, and so does the extension: a path
 written in `dlc_kenworth_w900/` can name a file in `base/`.
 
-```text
+```folder
 my_mod/
-├── manifest.sii
-├── base/
-│   └── vehicle/...       → "/vehicle/..."
-└── dlc_kenworth_w900/
-    └── def/...
+  manifest.sii
+  base/
+    vehicle/
+  dlc_kenworth_w900/
+    def/
 ```
 
-`manifest.sii` can also be inside `base/`.
+`my_mod/base/vehicle/` is written `"/vehicle/..."`. `manifest.sii` can also be
+inside `base/`.
 
-</TabsContent>
-  <TabsContent value="nomanifest">
+### No manifest
 
 Without a `manifest.sii` (a work in progress, for example), the folder that
 holds `def/` is taken as the `/`:
 
-```text
+```folder
 work/
-└── my_mod/
-    ├── def/...
-    └── vehicle/...       → "/vehicle/..."
+  my_mod/
+    def/
+    vehicle/
 ```
 
-</TabsContent>
-</Tabs>
+`work/my_mod/vehicle/` is written `"/vehicle/..."`.
+
+:::
 
 A relative path (`@include "parts/cabin.sui"`) starts in the folder of the file
 that writes it. If the file isn't there, the extension also looks in the same
@@ -92,36 +90,34 @@ If you extracted the game's archives to study them, you can open that folder too
 Extract one folder per archive, side by side, and the extension reads them as the
 game does: every archive is part of the same `/`.
 
-```text
+```folder
 ATS_extracted/
-├── base/
-├── def/
-├── dlc_kenworth_w900/
-└── ...
+  base/
+  def/
+  dlc_kenworth_w900/
+  dlc_oversize/
 ```
 
-<Callout variant="warning" title="Don't format the game's files">
-
-Never run **Format All Files** on a folder you keep as a reference: it rewrites
-files on disk. See [Formatter](../features/formatter.mdx#format-every-file).
-
-</Callout>
+> [!WARNING] Don't format the game's files
+>
+> Never run **Format All Files** on a folder you keep as a reference: it rewrites
+> files on disk. See [Formatter](../features/formatter.mdx#format-every-file).
 
 ## `.sui` fragments
 
 A `.sui` file can hold a whole unit, or just a list of attributes that
-`@include` pastes into a unit written in another file. In `engine.sii`:
+`@include` pastes into a unit written in another file:
 
-```text
+```text title="engine.sii"
 accessory_engine_data : my_engine.engine {
 @include "engine_common.sui"
 	price: 18000
 }
 ```
 
-And `engine_common.sui`, next to it:
+And the fragment, next to it:
 
-```text
+```text title="engine_common.sui"
 torque: 2400
 volume: 15
 ```
@@ -130,14 +126,12 @@ The extension finds who includes the fragment and treats its attributes as part 
 that unit: they get completion, hover and the same checks. A fragment that nothing
 in the open folders includes gets only the basic checks.
 
-<Callout variant="tip" title="Creating a new fragment">
-
-1. Create the `.sui` file, empty.
-2. Write the `@include` in the unit that will use it: completion suggests the new
-   file.
-3. Fill in the `.sui`: completion and hover already know its class.
-
-</Callout>
+> [!TIP] Creating a new fragment
+>
+> 1. Create the `.sui` file, empty.
+> 2. Write the `@include` in the unit that will use it: completion suggests the new
+>    file.
+> 3. Fill in the `.sui`: completion and hover already know its class.
 
 ## Large folders
 
@@ -145,15 +139,13 @@ When a folder opens, the extension reads all its `.sii`, `.sui`, `.mat` and
 `.tobj` files in the background. A typical mod takes a few seconds. You can keep
 working meanwhile: navigation and path updates catch up as soon as reading ends.
 
-<Callout variant="warning" title="The whole extracted game is big">
-
-Every archive of ATS 1.61 extracted is about 230,000 files. Opening all of it, the
-extension takes one to three minutes to read them (depending on your disk) and
-about 450 MB of memory. VS Code itself also slows down with that many files: the
-Explorer, the search and git.
-
-To study the game's files, open only the archive or the folder you need, such as
-`def`, or `def/vehicle`: it opens in seconds. Go to Definition and Find References
-then see only the files of what you opened.
-
-</Callout>
+> [!WARNING] The whole extracted game is big
+>
+> Every archive of ATS 1.61 extracted is about 230,000 files. Opening all of it, the
+> extension takes one to three minutes to read them (depending on your disk) and
+> about 450 MB of memory. VS Code itself also slows down with that many files: the
+> Explorer, the search and git.
+>
+> To study the game's files, open only the archive or the folder you need, such as
+> `def`, or `def/vehicle`: it opens in seconds. Go to Definition and Find References
+> then see only the files of what you opened.

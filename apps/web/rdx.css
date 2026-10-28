@@ -1,0 +1,9 @@
+/* The logo's orange. On the light theme it's a darker shade of it, so links
+   stay readable on white (WCAG AA asks 4.5:1; the logo's #FE712E is 2.8:1). */
+:root {
+  --rdx-highlighting: #c04b10;
+}
+
+.dark {
+  --rdx-highlighting: #fe712e;
+}

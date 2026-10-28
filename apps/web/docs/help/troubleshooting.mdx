@@ -8,10 +8,9 @@ If your problem isn't here, open the extension's log with **SCS IntelliSense: Sh
 Output**: it often says what happened. Still stuck?
 [Report it](./reporting-issues.mdx).
 
-<Accordion>
-  <AccordionItem value="colors">
-    <AccordionTrigger>My file has no colors</AccordionTrigger>
-    <AccordionContent>
+:::accordion
+
+### My file has no colors
 
 - Look at the bottom right corner of VS Code: it should say **SII** or **SUI**. If
   it says something else, click it and pick **SII** (or **SUI**).
@@ -19,26 +18,18 @@ Output**: it often says what happened. Still stuck?
 - A very simple theme may color everything the same. Try one of VS Code's own
   themes, such as **Dark Modern**, to compare.
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="icons">
-    <AccordionTrigger>My SCS files don't have their icons</AccordionTrigger>
-    <AccordionContent>
+### My SCS files don't have their icons
 
 Your file icon theme decides which icon a file gets, and many themes show their own
 icon, or none, instead of the extension's. See
 [With a file icon theme](../features/highlighting.mdx#with-a-file-icon-theme) for
 what each kind of theme does, and when a setting brings the icons back.
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="suggestions">
-    <AccordionTrigger>I get no suggestions</AccordionTrigger>
-    <AccordionContent>
+### I get no suggestions
 
 - Completion is off by default. Turn it on in
   [Experimental features](../getting-started/experimental-features.mdx).
-- Press <KbdGroup aria-label="Ctrl plus Space"><Kbd>Ctrl</Kbd>+<Kbd>Space</Kbd></KbdGroup> to open the list by hand.
+- Press :kbd[Ctrl] + :kbd[Space] to open the list by hand.
 - The [schema database](../reference/schema-database.mdx) needs to be downloaded
   once. If you were offline, connect and run **SCS IntelliSense: Refresh Schema
   Database**.
@@ -46,11 +37,7 @@ what each kind of theme does, and when a setting brings the icons back.
   attributes come from the unit that includes it. If nothing in the open folders
   includes it, there's nothing to suggest.
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="definition">
-    <AccordionTrigger>Ctrl+click on a unit name does nothing</AccordionTrigger>
-    <AccordionContent>
+### Ctrl+click on a unit name does nothing
 
 - Open your mod as a folder (**File → Open Folder...**), not a single file: the
   unit may be defined in another file.
@@ -59,22 +46,14 @@ what each kind of theme does, and when a setting brings the icons back.
 - The unit may be one of the game's: those have no definition to open. See
   [Files of the game](../getting-started/your-mod.mdx#files-of-the-game).
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="path-link">
-    <AccordionTrigger>Ctrl+click on a path does nothing</AccordionTrigger>
-    <AccordionContent>
+### Ctrl+click on a path does nothing
 
 - The file must exist in your mod. A path to one of the game's files, or to a file
   that was moved or deleted, isn't a link.
-- Check the path for a typo: hover it with <Kbd>Ctrl</Kbd> held, and only the paths that
+- Check the path for a typo: hover it with :kbd[Ctrl] held, and only the paths that
   lead to a file are underlined.
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="sound-events">
-    <AccordionTrigger>No suggestions after a sound bank's #</AccordionTrigger>
-    <AccordionContent>
+### No suggestions after a sound bank's \#
 
 - The events come from the `.bank.guids` file next to the bank. FMOD Studio writes
   it when you export the GUIDs: put it beside the `.bank`, with the same name.
@@ -82,11 +61,7 @@ what each kind of theme does, and when a setting brings the icons back.
 - Completion must be on. See
   [Experimental features](../getting-started/experimental-features.mdx).
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="unknown">
-    <AccordionTrigger>An attribute I know is right is reported as unknown</AccordionTrigger>
-    <AccordionContent>
+### An attribute I know is right is reported as unknown
 
 - Check the class name of the unit: the attribute may belong to another class.
 - Run **SCS IntelliSense: Refresh Schema Database** to get the latest version.
@@ -94,60 +69,38 @@ what each kind of theme does, and when a setting brings the icons back.
   the [scs-schema repository](https://github.com/duhnunes/scs-schema) with the
   class and the attribute.
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="format">
-    <AccordionTrigger>Formatting does nothing</AccordionTrigger>
-    <AccordionContent>
+### Formatting does nothing
 
 - The formatter is off by default. Turn it on in
   [Experimental features](../getting-started/experimental-features.mdx).
 - A file with structural errors (red underlines) isn't formatted. Fix them first.
 - The file may already be formatted: then there's nothing to change.
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="moves">
-    <AccordionTrigger>Paths weren't updated when I moved a file</AccordionTrigger>
-    <AccordionContent>
+### Paths weren't updated when I moved a file
 
 - Move files inside VS Code, in its Explorer. Moves made in the Windows Explorer or
   by another program aren't seen.
 - If VS Code asked whether to apply the changes and you said no, the paths stay as
-  they were. Undo the move with <KbdGroup aria-label="Ctrl plus Z"><Kbd>Ctrl</Kbd>+<Kbd>Z</Kbd></KbdGroup> and move it again.
+  they were. Undo the move with :kbd[Ctrl] + :kbd[Z] and move it again.
 - Compiled `.tobj` files are binary and can't be updated.
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="ask">
-    <AccordionTrigger>VS Code asks every time I move a file</AccordionTrigger>
-    <AccordionContent>
+### VS Code asks every time I move a file
 
 That dialog is VS Code's own. Tick **Do not ask me again** to stop it. See
 [Moving and renaming files](../features/moving-files.mdx#how-to-use-it).
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="hint">
-    <AccordionTrigger>Why is uppercase in a unit name only a hint?</AccordionTrigger>
-    <AccordionContent>
+### Why is uppercase in a unit name only a hint?
 
 SCS's documentation says unit names are lowercase, but the game's own files use
 uppercase too, and the game loads them. So it's reported only as a hint. You can
 hide hints in the Settings: see
 [Levels](../features/diagnostics.mdx#levels).
 
-</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="slow">
-    <AccordionTrigger>VS Code is slow with the extracted game open</AccordionTrigger>
-    <AccordionContent>
+### VS Code is slow with the extracted game open
 
 All of the game's archives extracted are about 230,000 files. Right after opening
 them, the extension needs one to three minutes to read them, and VS Code itself
 slows down with that many files. Open only the archive or folder you're studying,
 such as `def`. See [Large folders](../getting-started/your-mod.mdx#large-folders).
 
-</AccordionContent>
-  </AccordionItem>
-</Accordion>
+:::

@@ -4,10 +4,10 @@
 ### Features
 
 * **completion:** suggest a sound bank's events after its # ([93377b2](https://github.com/duhnunes/scs-intellisense/commit/93377b24e3b621f2704e4030bef05b55dc4f7bb9))
-* **diagnostics:** fi a quoted number by removing its quotes ([20ed891](https://github.com/duhnunes/scs-intellisense/commit/20ed8916f716575cbcf606db2cdcbb6237152a2b))
+* **diagnostics:** fix a quoted number by removing its quotes ([20ed891](https://github.com/duhnunes/scs-intellisense/commit/20ed8916f716575cbcf606db2cdcbb6237152a2b))
 * **diagnostics:** warn about values their type can't hold ([1206f95](https://github.com/duhnunes/scs-intellisense/commit/1206f9503158c321fefb31a84263802ed7b1cab5))
 * **icons:** add .bank.guids, drop .scs ([9033f08](https://github.com/duhnunes/scs-intellisense/commit/9033f08bf98dbaf90d3235c42d2d5d0bbbeb8564))
-* **navigation:** follow sound bank in .soundref files and [#events](https://github.com/duhnunes/scs-intellisense/issues/events) ([ec3fc20](https://github.com/duhnunes/scs-intellisense/commit/ec3fc20201e4cbc1a43b33b1f057b8631419625a))
+* **navigation:** follow sound bank in .soundref files and `#events` ([ec3fc20](https://github.com/duhnunes/scs-intellisense/commit/ec3fc20201e4cbc1a43b33b1f057b8631419625a))
 * **navigation:** open files named in .mat, .tobj and .soundref files ([b96a41b](https://github.com/duhnunes/scs-intellisense/commit/b96a41be94e2b09fbd6f2b7d8d8e7b11e7cab7ed))
 * **navigation:** treat volatile_link_ptr as a pointer ([62cc220](https://github.com/duhnunes/scs-intellisense/commit/62cc22099e0e2deac4e83bed41fbfb52aac9f27a))
 
@@ -15,6 +15,11 @@
 
 * **reader:** report a missing : right after the attribute key ([702c104](https://github.com/duhnunes/scs-intellisense/commit/702c1046f25bad1bb0852f727a27d85e62a069b1))
 * **reader:** report a missing { right after the unit name ([b0b705c](https://github.com/duhnunes/scs-intellisense/commit/b0b705c877cde0b76c4af9ecd28049f3ccac7b0f))
+* **reader:** report a value quote that never closes, on its text
+
+### Performance Improvements
+
+* **index:** don't open compiled .tobj files (a .dds of the same name beside them)
 
 [compare changes](https://github.com/duhnunes/scs-intellisense/compare/0.7.0...0.8.0)
 ### Features

@@ -4,19 +4,15 @@ description: Consistent indentation, braces and spacing for .sii and .sui files,
 link_position: 6
 ---
 
-<Callout variant="warning" title="Experimental">
-
-The formatter is off by default. Turn it on in
-[Experimental features](../getting-started/experimental-features.mdx).
-
-</Callout>
+> [!WARNING] Experimental
+>
+> The formatter is off by default. Turn it on in
+> [Experimental features](../getting-started/experimental-features.mdx).
 
 The formatter rewrites only the layout of a file: indentation, where braces go,
 spaces around `:`, and blank lines. It never changes a name, a value or a comment.
 
-Before:
-
-```text
+```text title="Before"
 SiiNunit
 {
 accessory_engine_data:my_engine.engine{
@@ -28,9 +24,7 @@ accessory_engine_data:my_engine.engine{
 }
 ```
 
-After (default settings):
-
-```text
+```text title="After (default settings)"
 SiiNunit {
 	accessory_engine_data : my_engine.engine {
 		name: "Big Engine"
@@ -57,8 +51,8 @@ formatting a file twice gives the same result.
 
 ## Format a file
 
-- **Format Document:** <KbdGroup aria-label="Shift plus Alt plus F"><Kbd>Shift</Kbd>+<Kbd>Alt</Kbd>+<Kbd>F</Kbd></KbdGroup>, or right-click → **Format Document**.
-- **Format Selection:** <KbdGroup aria-label="Ctrl plus K, then Ctrl plus F"><Kbd>Ctrl</Kbd>+<Kbd>K</Kbd> <Kbd>Ctrl</Kbd>+<Kbd>F</Kbd></KbdGroup> formats the units your selection touches.
+- **Format Document:** :kbd[Shift] + :kbd[Alt] + :kbd[F], or right-click → **Format Document**.
+- **Format Selection:** :kbd[Ctrl] + :kbd[K] then :kbd[Ctrl] + :kbd[F] formats the units your selection touches.
   With just the cursor inside a unit, it formats that unit.
 - **On save:** on by default. See below.
 
@@ -69,7 +63,7 @@ your default formatter is another one, such as Prettier.
 
 With the formatter on, every `.sii`/`.sui` file is formatted when you save it.
 There's nothing else to set up: you don't need VS Code's `editor.formatOnSave`.
-<KbdGroup aria-label="Ctrl plus Z"><Kbd>Ctrl</Kbd>+<Kbd>Z</Kbd></KbdGroup> undoes the formatting.
+:kbd[Ctrl] + :kbd[Z] undoes the formatting.
 
 To format only when you ask, uncheck **Formatter: Format On Save**
 (`scs-intellisense.formatter.formatOnSave`).
@@ -80,12 +74,9 @@ To format only when you ask, uncheck **Formatter: Format On Save**
 
 **Formatter: Brace Style** (`scs-intellisense.formatter.braceStyle`):
 
-<Tabs defaultValue="1tbs">
-  <TabsList aria-label="Brace style">
-    <TabsTrigger value="1tbs">1tbs (default)</TabsTrigger>
-    <TabsTrigger value="allman">allman</TabsTrigger>
-  </TabsList>
-  <TabsContent value="1tbs">
+:::tabs
+
+### 1tbs (default)
 
 The `{` goes on the header line:
 
@@ -95,8 +86,7 @@ accessory_engine_data : my_engine.engine {
 }
 ```
 
-</TabsContent>
-  <TabsContent value="allman">
+### allman
 
 The `{` goes on its own line, as in the game's own files:
 
@@ -107,8 +97,7 @@ accessory_engine_data : my_engine.engine
 }
 ```
 
-</TabsContent>
-</Tabs>
+:::
 
 ### Indent units
 
@@ -120,12 +109,12 @@ files, which have no `SiiNunit`.
 ### Tabs or spaces
 
 Indentation follows your VS Code settings, so formatting matches what the editor
-does when you press <Kbd>Enter</Kbd>: `editor.tabSize`, `editor.insertSpaces`, and
+does when you press :kbd[Enter]: `editor.tabSize`, `editor.insertSpaces`, and
 `editor.detectIndentation`, which picks up tabs from a file that already uses them.
 
 To always use tabs in SCS files only, add this to your `settings.json`:
 
-```json
+```json title="settings.json"
 "[sii]": { "editor.insertSpaces": false },
 "[sui]": { "editor.insertSpaces": false }
 ```
@@ -133,7 +122,7 @@ To always use tabs in SCS files only, add this to your `settings.json`:
 ## Format every file
 
 Two commands work on every `.sii`/`.sui` file of the open folders. Run them from
-the Command Palette (<KbdGroup aria-label="Ctrl plus Shift plus P"><Kbd>Ctrl</Kbd>+<Kbd>Shift</Kbd>+<Kbd>P</Kbd></KbdGroup>):
+the Command Palette (:kbd[Ctrl] + :kbd[Shift] + :kbd[P]):
 
 - **SCS IntelliSense: Check Formatting of All Files** lists the files that would
   change, without changing anything. The list goes to the extension's
@@ -141,10 +130,8 @@ the Command Palette (<KbdGroup aria-label="Ctrl plus Shift plus P"><Kbd>Ctrl</Kb
 - **SCS IntelliSense: Format All Files** formats them all, after asking you to
   confirm.
 
-<Callout variant="danger" title="Format All Files can't be undone">
-
-Files that aren't open are changed directly on disk, and <KbdGroup aria-label="Ctrl plus Z"><Kbd>Ctrl</Kbd>+<Kbd>Z</Kbd></KbdGroup> can't bring them
-back. Use git or make a backup first. Never run it on the game's extracted files
-that you keep as a reference.
-
-</Callout>
+> [!DANGER] Format All Files can't be undone
+>
+> Files that aren't open are changed directly on disk, and :kbd[Ctrl] + :kbd[Z] can't bring them
+> back. Use git or make a backup first. Never run it on the game's extracted files
+> that you keep as a reference.

@@ -9,7 +9,7 @@ updated in the same step. You don't have to search your mod for the old path.
 
 ## How to use it
 
-Rename a file or folder in the **Explorer** (<Kbd>F2</Kbd>, or right-click → **Rename**),
+Rename a file or folder in the **Explorer** (:kbd[F2], or right-click → **Rename**),
 or drag it to another folder. That's all.
 
 The first time, VS Code asks whether to apply the extension's changes. This dialog
@@ -35,6 +35,17 @@ Moving a folder updates the paths to every file inside it.
 - A path that starts with `/` stays a `/` path.
 - A relative path stays relative while it can. The game's files never go up a
   folder with `../`, so a path that would need it is written from `/` instead.
+
+For example, after renaming the folder `vehicle/truck/my_truck/` to `w900/`, a
+file that names a model inside it changes like this:
+
+```diff title="my_hub.sii"
+ accessory_rim_data : my_hub.shub {
+ 	name: "My hub"
+-	model: "/vehicle/truck/my_truck/hub.pmd"
++	model: "/vehicle/truck/w900/hub.pmd"
+ }
+```
 
 ## Review the changes
 
@@ -78,35 +89,29 @@ You can change all of this in the Settings, under **File Moves**:
 | **Save Above** (`scs-intellisense.fileMoves.saveAbove`) | `6` | Above this many files of the other types, they're saved too. `0` always saves |
 | **Notify** (`scs-intellisense.fileMoves.notify`) | on | The notification. The extension's [log](../reference/commands.mdx#show-output) always records it |
 
-<Callout variant="tip" title="Keep the automat folder closed">
+> [!TIP] Keep the automat folder closed
+>
+> When VS Code opens a file, the Explorer unfolds the folders down to it. SCS
+> Blender Tools writes its `.mat` files in `automat/`, a folder with hundreds of
+> subfolders, so a move can leave it unfolded. VS Code's own
+> `explorer.autoRevealExclude` setting stops that. Add to your `settings.json`:
+>
+> ```json title="settings.json"
+> "explorer.autoRevealExclude": {
+>   "**/automat": true
+> }
+> ```
 
-When VS Code opens a file, the Explorer unfolds the folders down to it. SCS
-Blender Tools writes its `.mat` files in `automat/`, a folder with hundreds of
-subfolders, so a move can leave it unfolded. VS Code's own
-`explorer.autoRevealExclude` setting stops that. Add to your `settings.json`:
+> [!TIP] Undo
+>
+> Changed your mind? Press :kbd[Ctrl] + :kbd[Z] in the Explorer: the file or folder goes back to
+> where it was, and so do the paths.
 
-```json
-"explorer.autoRevealExclude": {
-  "**/automat": true
-}
-```
-
-</Callout>
-
-<Callout variant="tip" title="Undo">
-
-Changed your mind? Press <KbdGroup aria-label="Ctrl plus Z"><Kbd>Ctrl</Kbd>+<Kbd>Z</Kbd></KbdGroup> in the Explorer: the file or folder goes back to
-where it was, and so do the paths.
-
-</Callout>
-
-<Callout title="Right after opening a folder">
-
-The extension reads your mod's files when the folder opens. A move made before that
-ends waits for it, so every path is found: VS Code shows it's waiting, for a few
-seconds in a large mod.
-
-</Callout>
+> [!NOTE] Right after opening a folder
+>
+> The extension reads your mod's files when the folder opens. A move made before that
+> ends waits for it, so every path is found: VS Code shows it's waiting, for a few
+> seconds in a large mod.
 
 ## What isn't updated
 

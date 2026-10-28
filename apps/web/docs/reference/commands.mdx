@@ -4,7 +4,7 @@ description: The commands SCS IntelliSense adds to the Command Palette.
 link_position: 2
 ---
 
-Open the Command Palette with <KbdGroup aria-label="Ctrl plus Shift plus P"><Kbd>Ctrl</Kbd>+<Kbd>Shift</Kbd>+<Kbd>P</Kbd></KbdGroup> and type **SCS IntelliSense** to see
+Open the Command Palette with :kbd[Ctrl] + :kbd[Shift] + :kbd[P] and type **SCS IntelliSense** to see
 them all.
 
 ## Show Output
@@ -42,9 +42,7 @@ The list goes to the Output. Needs the [formatter](../features/formatter.mdx) on
 **SCS IntelliSense: Format All Files** formats every `.sii`/`.sui` file of the
 open folders, after asking you to confirm. Needs the formatter on.
 
-<Callout variant="danger" title="Can't be undone">
-
-Files that aren't open are changed on disk, and <KbdGroup aria-label="Ctrl plus Z"><Kbd>Ctrl</Kbd>+<Kbd>Z</Kbd></KbdGroup> can't bring them back.
-Use git or make a backup first.
-
-</Callout>
+> [!DANGER] Can't be undone
+>
+> Files that aren't open are changed on disk, and :kbd[Ctrl] + :kbd[Z] can't bring them back.
+> Use git or make a backup first.
