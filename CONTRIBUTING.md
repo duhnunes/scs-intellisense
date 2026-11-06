@@ -10,6 +10,8 @@ Open an [issue](https://github.com/duhnunes/scs-intellisense/issues). The most u
 - the lines involved;
 - the message the extension shows.
 
+To translate the user docs into your language, see [Translating the docs](./apps/web/locale/README.md).
+
 Class and attribute data (completion, hover) lives in another repository: [scs-schema](https://github.com/duhnunes/scs-schema), with its own [contributing guide](https://github.com/duhnunes/scs-schema/blob/master/CONTRIBUTING.md).
 
 ## Setting up
