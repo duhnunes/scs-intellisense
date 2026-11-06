@@ -1,0 +1,153 @@
+---
+title: Como o seu mod é lido
+description: As estruturas de pasta que o SCS IntelliSense entende, e o que ele consegue e não consegue enxergar.
+order: 3
+---
+
+O jogo monta todos os arquivos compactados (os dele, os das DLCs e os de cada mod)
+numa única pasta virtual, `/`. Um caminho como `"/vehicle/truck/cabin.pmd"` começa
+ali. O SCS IntelliSense descobre onde fica esse `/` no seu disco olhando as pastas em
+volta do arquivo que você está editando.
+
+## Estruturas suportadas
+
+:::tabs
+
+### Mod simples
+
+A pasta que tem o `manifest.sii` é o `/` do mod:
+
+```folder
+my_mod/
+  manifest.sii
+  def/
+    vehicle/
+  vehicle/
+    truck/
+      cabin.pmd
+```
+
+`my_mod/vehicle/truck/cabin.pmd` é escrito `"/vehicle/truck/cabin.pmd"`.
+
+### Mod em partes
+
+Desde a versão 1.48 do jogo, um mod pode dividir o conteúdo numa pasta `base/`,
+sempre carregada, e em pastas `dlc_*`, carregadas só quando o jogador tem aquela DLC.
+O jogo coloca todas no mesmo `/`, e a extensão também: um caminho escrito em
+`dlc_kenworth_w900/` pode apontar para um arquivo em `base/`.
+
+```folder
+my_mod/
+  manifest.sii
+  base/
+    vehicle/
+  dlc_kenworth_w900/
+    def/
+```
+
+`my_mod/base/vehicle/` é escrito `"/vehicle/..."`. O `manifest.sii` também pode
+ficar dentro de `base/`.
+
+### Sem manifest
+
+Sem um `manifest.sii` (num mod ainda em construção, por exemplo), a pasta que tem o
+`def/` é tomada como o `/`:
+
+```folder
+work/
+  my_mod/
+    def/
+    vehicle/
+```
+
+`work/my_mod/vehicle/` é escrito `"/vehicle/..."`.
+
+:::
+
+Um caminho relativo (`@include "parts/cabin.sui"`) começa na pasta do arquivo que o
+escreve. Se o arquivo não estiver ali, a extensão também procura na mesma pasta das
+outras partes do seu mod, como o jogo faz.
+
+Várias pastas abertas ao mesmo tempo (um workspace do VS Code) também funcionam:
+cada arquivo usa o mod ao qual pertence.
+
+## Arquivos do jogo
+
+O seu mod pode usar as units e os arquivos do jogo: um ponteiro para uma unit do
+jogo, um caminho para um modelo dele. A extensão não lê os arquivos compactados do
+jogo, então:
+
+- esses nomes e caminhos **não têm definição** para onde pular, e isso é esperado;
+- eles **nunca são apontados como erro**: um caminho que a extensão não encontra
+  pode muito bem estar no jogo.
+
+É por isso que não existe um aviso de "arquivo não encontrado": quase todo mod aponta
+para arquivos do jogo em algum lugar, e todos esses caminhos seriam marcados.
+
+## Os arquivos do jogo, extraídos
+
+Se você extraiu os arquivos compactados do jogo para estudá-los, também pode abrir
+essa pasta. Extraia uma pasta por arquivo compactado, lado a lado, e a extensão os lê
+como o jogo: todos fazem parte do mesmo `/`.
+
+```folder
+ATS_extracted/
+  base/
+  def/
+  dlc_kenworth_w900/
+  dlc_oversize/
+```
+
+> [!WARNING] Não formate os arquivos do jogo
+>
+> Nunca rode **Format All Files** numa pasta que você guarda como referência: ele
+> reescreve os arquivos no disco. Veja
+> [Formatador](../02-features/formatter.mdx#formatar-todos-os-arquivos).
+
+## Fragmentos `.sui`
+
+Um arquivo `.sui` pode ter uma unit inteira, ou só uma lista de atributos que o
+`@include` cola dentro de uma unit escrita em outro arquivo:
+
+```sii title="engine.sii"
+accessory_engine_data : my_engine.engine {
+@include "engine_common.sui"
+	price: 18000
+}
+```
+
+E o fragmento, ao lado dele:
+
+```sui title="engine_common.sui"
+torque: 2400
+volume: 15
+```
+
+A extensão descobre quem inclui o fragmento e trata os atributos dele como parte
+daquela unit: eles ganham autocompletar, hover e as mesmas verificações. Um fragmento
+que nada nas pastas abertas inclui ganha só as verificações básicas.
+
+> [!TIP] Criando um fragmento novo
+>
+> 1. Crie o arquivo `.sui`, vazio.
+> 2. Escreva o `@include` na unit que vai usá-lo: o autocompletar sugere o arquivo
+>    novo.
+> 3. Preencha o `.sui`: o autocompletar e o hover já sabem a classe dele.
+
+## Pastas grandes
+
+Quando uma pasta é aberta, a extensão lê todos os arquivos `.sii`, `.sui`, `.mat` e
+`.tobj` dela em segundo plano. Um mod comum leva alguns segundos. Você pode continuar
+trabalhando enquanto isso: a navegação e a atualização de caminhos se acertam assim
+que a leitura termina.
+
+> [!WARNING] O jogo inteiro extraído é grande
+>
+> Todos os arquivos compactados do ATS 1.61 extraídos somam cerca de 230.000
+> arquivos. Abrindo tudo, a extensão leva de um a três minutos para lê-los
+> (dependendo do seu disco) e uns 450 MB de memória. O próprio VS Code também fica
+> lento com tantos arquivos: o Explorer, a busca e o git.
+>
+> Para estudar os arquivos do jogo, abra só o arquivo compactado ou a pasta de que
+> você precisa, como `def` ou `def/vehicle`: abre em segundos. O Go to Definition e o
+> Find References passam a enxergar só os arquivos do que você abriu.

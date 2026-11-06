@@ -1,0 +1,57 @@
+---
+title: Configurações
+description: Todas as configurações do SCS IntelliSense, com o valor padrão.
+order: 1
+---
+
+Abra as configurações com :kbd[Ctrl + ,] e digite `@ext:DuHNunes.scs-intellisense`
+para ver só as configurações desta extensão. Toda configuração vale na hora, sem
+precisar recarregar o VS Code.
+
+## Geral
+
+| Configuração | Padrão | O que faz |
+| :----------- | :----- | :-------- |
+| `scs-intellisense.semanticHighlighting` | `true` | [Colore](../02-features/highlighting.mdx) os arquivos `.sii`/`.sui` por significado |
+
+## Diagnósticos
+
+| Configuração | Padrão | O que faz |
+| :----------- | :----- | :-------- |
+| `scs-intellisense.diagnostics.enabledSeverities` | os quatro | Quais [níveis](../02-features/diagnostics.mdx#níveis) aparecem: `error`, `warning`, `information`, `hint` |
+
+## Autocompletar e hover
+
+| Configuração | Padrão | O que faz |
+| :----------- | :----- | :-------- |
+| `scs-intellisense.completion.enabled` | `false` | [Autocompletar](../02-features/completion.mdx) (experimental) |
+| `scs-intellisense.hover.enabled` | `false` | [Hover](../02-features/completion.mdx#hover) (experimental) |
+| `scs-intellisense.schema.fetchTimeoutMs` | `8000` | Quantos milissegundos uma sugestão espera o [banco de dados de schema](./schema-database.mdx) baixar uma classe antes de desistir. O download continua, então a próxima tentativa é instantânea |
+
+## Formatador
+
+| Configuração | Padrão | O que faz |
+| :----------- | :----- | :-------- |
+| `scs-intellisense.formatter.enabled` | `false` | O [formatador](../02-features/formatter.mdx) (experimental) |
+| `scs-intellisense.formatter.formatOnSave` | `true` | Formata os arquivos `.sii`/`.sui` ao salvar, enquanto o formatador está ligado |
+| `scs-intellisense.formatter.braceStyle` | `1tbs` | `1tbs`: `{` na linha do cabeçalho. `allman`: `{` numa linha só dela |
+| `scs-intellisense.formatter.indentUnits` | `true` | Indenta as units dentro de `SiiNunit { }` |
+
+Tabs ou espaços, e quantos, seguem o `editor.tabSize`, o `editor.insertSpaces` e o
+`editor.detectIndentation` do próprio VS Code. Veja
+[Tabs ou espaços](../02-features/formatter.mdx#tabs-ou-espaços).
+
+## Mudança de lugar de arquivos
+
+| Configuração | Padrão | O que faz |
+| :----------- | :----- | :-------- |
+| `scs-intellisense.fileMoves.autoSave` | `true` | Salva os arquivos que uma [mudança de lugar](../02-features/moving-files.mdx#salvos-para-você) atualizou, e fecha as abas que ela abriu, como dizem as duas próximas configurações |
+| `scs-intellisense.fileMoves.alwaysSave` | `[".mat"]` | Tipos de arquivo salvos depois de toda mudança |
+| `scs-intellisense.fileMoves.saveAbove` | `6` | Acima dessa quantidade de arquivos de outros tipos, eles também são salvos. `0` sempre salva |
+| `scs-intellisense.fileMoves.notify` | `true` | Mostra uma notificação quando arquivos são salvos. O log sempre registra |
+
+## Sempre ligados
+
+Os diagnósticos, as correções rápidas, as sugestões de caminho do `@include`, a
+navegação e a atualização de caminhos ao mover arquivos não têm configuração para
+desligar: eles só agem quando você pede, ou mostram o que está errado.

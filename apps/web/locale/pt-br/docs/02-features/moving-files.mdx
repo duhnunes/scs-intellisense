@@ -1,0 +1,128 @@
+---
+title: Mover e renomear arquivos
+description: Renomeie ou mova um arquivo ou uma pasta, e todo caminho que aponta para ele é atualizado.
+order: 5
+---
+
+Renomeie ou mova um arquivo ou uma pasta no VS Code, e todo caminho que aponta para
+ele é atualizado no mesmo passo. Você não precisa procurar o caminho antigo pelo mod.
+
+## Como usar
+
+Renomeie um arquivo ou uma pasta no **Explorer** (:kbd[F2], ou botão direito →
+**Rename**), ou arraste para outra pasta. Só isso.
+
+Na primeira vez, o VS Code pergunta se deve aplicar as mudanças da extensão. Essa
+janela é do próprio VS Code e aparece para toda extensão que altera arquivos numa
+mudança de lugar. Marque **Do not ask me again** para não ver mais.
+
+## O que é atualizado
+
+- Os caminhos de `@include`, nos arquivos `.sii` e `.sui`.
+- Todo atributo que cita um arquivo: `model: "/vehicle/truck/my_truck/cabin.pmd"`,
+  `shadow_texture`, os sons (`"horn|/sound/truck/horn.soundref"`) e o resto.
+- Os caminhos de textura nos arquivos `.mat`, tanto no formato do jogo quanto no
+  mais antigo.
+- Os nomes de textura nos arquivos `.tobj` de texto, como o SCS Blender Tools os
+  exporta.
+- O banco de som nos arquivos `.soundref` (`source="/sound/truck/horns.bank#air"`).
+  O evento depois do `#` continua igual, aqui e nos arquivos `.sii`.
+- Os caminhos relativos escritos dentro de um arquivo que você move, para que
+  continuem apontando para os mesmos arquivos.
+
+Mover uma pasta atualiza os caminhos para todos os arquivos dentro dela.
+
+## Como os caminhos são escritos
+
+- Um caminho que começa com `/` continua começando com `/`.
+- Um caminho relativo continua relativo enquanto der. Os arquivos do jogo nunca sobem
+  uma pasta com `../`, então um caminho que precisaria disso passa a ser escrito a
+  partir do `/`.
+
+Por exemplo, depois de renomear a pasta `vehicle/truck/my_truck/` para `w900/`, um
+arquivo que cita um modelo dentro dela muda assim:
+
+```diff title="my_hub.sii"
+ accessory_rim_data : my_hub.shub {
+ 	name: "My hub"
+-	model: "/vehicle/truck/my_truck/hub.pmd"
++	model: "/vehicle/truck/w900/hub.pmd"
+ }
+```
+
+## Revisar as mudanças
+
+Quando uma mudança de lugar altera caminhos em poucos arquivos `.sii` ou `.sui` (até
+6, por padrão), o VS Code os abre sem salvar, para você conferir antes de salvar. Os
+arquivos `.mat` são salvos para você: veja [Salvos para você](#salvos-para-você).
+Cada linha alterada ganha uma marca no começo da linha e na barra de rolagem, na
+mesma cor que o git usa para linhas modificadas, para você encontrá-las num arquivo
+longo. Passe o mouse sobre a linha para ver por que ela mudou.
+
+![Depois de white_box.mat ser renomeado para white_box_TEST.mat, o caminho até ele é atualizado e a linha fica marcada](/images/screenshots/renameFile.png)
+
+As marcas somem quando você salva ou fecha o arquivo, ou quando a linha não tem mais
+o caminho novo.
+
+## Salvos para você
+
+Renomear uma pasta pode alterar dezenas de arquivos: uma pasta de texturas pode ser
+citada em cinquenta arquivos `.mat`. Abrir cada um para você salvar enterraria o seu
+trabalho em abas, então alguns são salvos na hora, as abas que a mudança abriu são
+fechadas, e uma notificação diz quantos arquivos foram atualizados:
+
+- **Arquivos `.mat`, sempre.** Eles costumam ser escritos pelo conversor do SCS
+  Blender Tools, e não há nada para revisar neles. Isso também significa que você
+  pode renomear uma pasta de texturas sem converter os modelos de novo.
+- **Todos os arquivos, quando passam de 6** dos outros tipos.
+
+Duas coisas nunca são mexidas:
+
+- As abas que você já tinha abertas continuam abertas.
+- Arquivos com mudanças suas não salvas nunca são salvos para você: eles continuam
+  abertos, com o caminho novo, para você salvar.
+
+Dá para mudar tudo isso nas configurações, em **File Moves**:
+
+| Configuração | Padrão | O que faz |
+| :----------- | :----- | :-------- |
+| **Auto Save** (`scs-intellisense.fileMoves.autoSave`) | ligado | Desmarque para sempre deixar os arquivos abertos para revisão |
+| **Always Save** (`scs-intellisense.fileMoves.alwaysSave`) | `.mat` | Os tipos de arquivo salvos depois de toda mudança. Adicione `.tobj`, por exemplo |
+| **Save Above** (`scs-intellisense.fileMoves.saveAbove`) | `6` | Acima dessa quantidade de arquivos dos outros tipos, eles também são salvos. `0` sempre salva |
+| **Notify** (`scs-intellisense.fileMoves.notify`) | ligado | A notificação. O [log](../03-reference/commands.mdx#show-output) da extensão sempre registra |
+
+> [!TIP] Mantenha a pasta automat fechada
+>
+> Quando o VS Code abre um arquivo, o Explorer expande as pastas até ele. O SCS
+> Blender Tools grava os arquivos `.mat` em `automat/`, uma pasta com centenas de
+> subpastas, então uma mudança de lugar pode deixá-la expandida. A configuração
+> `explorer.autoRevealExclude`, do próprio VS Code, evita isso. Adicione ao seu
+> `settings.json`:
+>
+> ```json title="settings.json"
+> "explorer.autoRevealExclude": {
+>   "**/automat": true
+> }
+> ```
+
+> [!TIP] Desfazer
+>
+> Mudou de ideia? Aperte :kbd[Ctrl + Z] no Explorer: o arquivo ou a pasta volta para
+> onde estava, e os caminhos também.
+
+> [!NOTE] Logo depois de abrir uma pasta
+>
+> A extensão lê os arquivos do seu mod quando a pasta abre. Uma mudança de lugar feita
+> antes de a leitura terminar espera por ela, para que todo caminho seja encontrado:
+> o VS Code mostra que está esperando, por alguns segundos num mod grande.
+
+## O que não é atualizado
+
+- **Mudanças feitas fora do VS Code**, no Explorador do Windows ou por outro programa:
+  o VS Code não as vê. Mova os seus arquivos de dentro do VS Code.
+- **Arquivos `.tobj` compilados**: são binários, então a extensão não consegue
+  alterá-los. Um `.tobj` com um `.dds` de mesmo nome ao lado é tomado por compilado e
+  não é lido, mesmo que seja texto. Os que o SCS Blender Tools exporta citam um
+  `.tga` ou `.png`, então são lidos.
+- **Caminhos que não podem mais ser escritos**: um arquivo movido para fora da pasta
+  do seu mod.

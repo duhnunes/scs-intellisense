@@ -1,0 +1,41 @@
+---
+title: Banco de dados de schema
+description: De onde o SCS IntelliSense aprende as classes e os atributos do jogo.
+order: 4
+---
+
+O banco de dados de schema lista todas as classes que o jogo conhece, com os
+atributos delas: os nomes, os tipos, os valores que aceitam e, onde alguém escreveu,
+o que fazem. É ele que o autocompletar, o hover e as verificações de atributos leem.
+
+É um projeto da comunidade à parte, o
+[scs-schema](https://github.com/duhnunes/scs-schema), para poder ser melhorado sem
+uma versão nova da extensão.
+
+## O que tem nele
+
+- **Todas as classes do jogo:** 1.327 no ATS 1.61, com os nomes e os tipos de
+  atributo que o próprio jogo lê. Essa parte está completa, e é por isso que um
+  [atributo desconhecido](../02-features/diagnostics.mdx#atributos) quase sempre é
+  erro de digitação.
+- **Descrições:** escritas à mão, e a maioria das classes ainda não tem. Aí o hover
+  mostra só o tipo do atributo.
+
+## Como ele é baixado
+
+- A lista de classes é baixada quando o VS Code inicia, e cada classe na primeira vez
+  que você a usa.
+- Tudo fica salvo no seu computador. Depois do primeiro download, funciona offline.
+- Toda vez que o VS Code inicia, a extensão procura uma versão mais nova em segundo
+  plano. Para procurar agora, rode
+  [Refresh Schema Database](./commands.mdx#refresh-schema-database).
+
+Se você estiver offline logo na primeira vez, o autocompletar, o hover e as
+verificações de atributos ainda não têm com o que trabalhar. Todo o resto funciona:
+as verificações de estrutura e de nomes não precisam do banco de dados.
+
+## Falta algo ou tem algo errado?
+
+Se falta uma classe ou um atributo, se uma descrição está errada ou se você quer
+escrever uma, abra uma issue ou um pull request no
+[repositório do scs-schema](https://github.com/duhnunes/scs-schema).

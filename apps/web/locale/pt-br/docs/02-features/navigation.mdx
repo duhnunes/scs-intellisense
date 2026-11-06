@@ -1,0 +1,87 @@
+---
+title: Navegação
+description: Pule para uma unit, encontre o que a usa, renomeie-a em todo lugar e abra os arquivos que o seu mod cita.
+order: 4
+---
+
+A navegação funciona em todos os arquivos das pastas abertas no VS Code. Abra o seu
+mod como pasta (**File → Open Folder...**) para aproveitar ao máximo.
+
+## Outline e breadcrumbs
+
+A visualização **Outline**, no Explorer, lista as units do arquivo atual, com os
+atributos e `@include`s delas. Os breadcrumbs acima do editor mostram onde o cursor
+está.
+
+Para pular para uma unit do arquivo atual, aperte :kbd[Ctrl + Shift + O] e digite o
+nome dela.
+
+## Go to Definition
+
+Dê :kbd[Ctrl] + clique no nome de uma unit num ponteiro, ou ponha o cursor nele e
+aperte :kbd[F12], para abrir o arquivo e a linha onde aquela unit é definida:
+
+```sui
+animation: my_truck.anim
+           ^^^^^^^^^^^^^ Ctrl+clique: abre a unit "my_truck.anim"
+```
+
+Se o mesmo nome é definido em mais de um arquivo, o VS Code lista todos e você
+escolhe um.
+
+Uma unit do jogo, ou de outro mod que você não abriu, não tem definição para abrir.
+
+## Find References
+
+Ponha o cursor no nome de uma unit, no cabeçalho dela ou num ponteiro, e aperte
+:kbd[Shift + F12] para listar tudo que aponta para ela, em todos os arquivos. Ou clique
+com o botão direito e escolha **Find All References** para ver tudo num painel
+lateral.
+
+## Renomear uma unit
+
+Ponha o cursor no nome de uma unit e aperte :kbd[F2]. Digite o nome novo e aperte
+:kbd[Enter]: a unit e todos os ponteiros para ela são renomeados, em todos os arquivos.
+
+- O nome novo tem que ser válido: as mesmas regras dos
+  [diagnósticos](./diagnostics.mdx#nomes). Um nome inválido é recusado, com o motivo.
+- Units sem nome (`.x`) também podem ser renomeadas. Elas só existem no próprio
+  arquivo.
+- Uma unit que não é definida nas pastas abertas, como uma unit do jogo, não pode ser
+  renomeada.
+
+> [!WARNING] Mapas e outros mods
+>
+> O renomear só enxerga arquivos de texto (`.sii`, `.sui`). Um mapa usa nomes de unit
+> nos arquivos binários dele, então, se o seu mapa usa a unit que você renomeia,
+> renomeie no editor de mapas também. Outros mods que usam o nome também não são
+> alterados.
+
+## Abrir um arquivo pelo caminho
+
+Todo caminho para um arquivo do seu mod é um link. Dê :kbd[Ctrl] + clique nele para
+abrir o arquivo:
+
+```sui
+model: "/vehicle/truck/my_truck/cabin.pmd"
+@include "parts/engine_common.sui"
+```
+
+![Com Ctrl e o mouse em cima, o caminho do material fica sublinhado, com "Follow link (ctrl + click)"](/images/screenshots/ctrlClick.png)
+
+Caminhos depois de um nome também funcionam (`sounds[]: "horn|/sound/truck/horn.soundref"`),
+assim como bancos de som com um evento (`"/sound/music/scene.bank#scene/logo_ats"`
+abre o `scene.bank`). Também funciona nos arquivos `.mat`, `.tobj` e `.soundref`. Um
+caminho para um arquivo do jogo não é link, porque a extensão não lê os arquivos
+compactados do jogo.
+
+## Descobrir onde um arquivo é usado
+
+Ponha o cursor num caminho dentro de um arquivo `.sii` ou `.sui` e aperte
+:kbd[Shift + F12] para listar todos os caminhos que citam o mesmo arquivo: nos arquivos
+`.sii` e `.sui`, e também nos `.mat`, `.tobj` e `.soundref`. Para um banco de som, um
+caminho conta com qualquer evento depois do `#`
+(`"/sound/music/scene.bank#scene/logo_ats"`).
+
+Assim você sabe, antes de apagar ou mudar um modelo ou uma textura, quais arquivos
+ainda o usam.

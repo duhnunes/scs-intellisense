@@ -1,0 +1,110 @@
+---
+title: Solução de problemas
+description: Respostas para os problemas mais comuns.
+order: 1
+---
+
+Se o seu problema não está aqui, abra o log da extensão com **SCS IntelliSense: Show
+Output**: ele muitas vezes diz o que aconteceu. Ainda sem saída?
+[Relate](./reporting-issues.mdx).
+
+:::accordion
+
+### Meu arquivo está sem cores
+
+- Olhe o canto inferior direito do VS Code: deve estar escrito **SII** ou **SUI**. Se
+  estiver outra coisa, clique e escolha **SII** (ou **SUI**).
+- Confira se **SCS IntelliSense: Semantic Highlighting** está ligado nas
+  configurações.
+- Um tema muito simples pode colorir tudo igual. Teste um dos temas do próprio
+  VS Code, como o **Dark Modern**, para comparar.
+
+### Meus arquivos da SCS estão sem ícones
+
+O seu tema de ícones de arquivo decide qual ícone cada arquivo recebe, e muitos temas
+mostram um ícone próprio, ou nenhum, no lugar do da extensão. Veja
+[Com um tema de ícones de arquivo](../02-features/highlighting.mdx#com-um-tema-de-ícones-de-arquivo)
+para saber o que cada tipo de tema faz, e quando uma configuração traz os ícones de
+volta.
+
+### Não aparece nenhuma sugestão
+
+- O autocompletar vem desligado. Ligue-o em
+  [Recursos experimentais](../01-getting-started/experimental-features.mdx).
+- Aperte :kbd[Ctrl + Space] para abrir a lista à mão.
+- O [banco de dados de schema](../03-reference/schema-database.mdx) precisa ser
+  baixado uma vez. Se você estava offline, conecte-se e rode **SCS IntelliSense:
+  Refresh Schema Database**.
+- Dentro de um [fragmento `.sui`](../01-getting-started/your-mod.mdx#fragmentos-sui), os
+  atributos vêm da unit que o inclui. Se nada nas pastas abertas o inclui, não há o
+  que sugerir.
+
+### Ctrl+clique no nome de uma unit não faz nada
+
+- Abra o seu mod como pasta (**File → Open Folder...**), não como arquivo solto: a
+  unit pode estar definida em outro arquivo.
+- Numa pasta grande, a extensão pode ainda estar lendo os arquivos. Espere um pouco e
+  tente de novo.
+- A unit pode ser do jogo: essas não têm definição para abrir. Veja
+  [Arquivos do jogo](../01-getting-started/your-mod.mdx#arquivos-do-jogo).
+
+### Ctrl+clique num caminho não faz nada
+
+- O arquivo precisa existir no seu mod. Um caminho para um arquivo do jogo, ou para um
+  arquivo que foi movido ou apagado, não é link.
+- Procure erro de digitação no caminho: passe o mouse sobre ele segurando :kbd[Ctrl],
+  e só os caminhos que levam a um arquivo ficam sublinhados.
+
+### Nenhuma sugestão depois do \# de um banco de som
+
+- Os eventos vêm do arquivo `.bank.guids` ao lado do banco. O FMOD Studio grava esse
+  arquivo quando você exporta os GUIDs: ponha ao lado do `.bank`, com o mesmo nome.
+- Um banco do jogo não tem lista: ele está dentro dos arquivos compactados do jogo.
+- O autocompletar precisa estar ligado. Veja
+  [Recursos experimentais](../01-getting-started/experimental-features.mdx).
+
+### Um atributo que eu sei que está certo aparece como desconhecido
+
+- Confira o nome da classe da unit: o atributo pode ser de outra classe.
+- Rode **SCS IntelliSense: Refresh Schema Database** para pegar a versão mais nova.
+- Se continuar aparecendo, pode estar faltando no banco de dados. Abra uma issue no
+  [repositório do scs-schema](https://github.com/duhnunes/scs-schema) com a classe e o
+  atributo.
+
+### A formatação não faz nada
+
+- O formatador vem desligado. Ligue-o em
+  [Recursos experimentais](../01-getting-started/experimental-features.mdx).
+- Um arquivo com erros de estrutura (sublinhados vermelhos) não é formatado. Corrija
+  primeiro.
+- O arquivo pode já estar formatado: aí não há nada para mudar.
+
+### Os caminhos não foram atualizados quando movi um arquivo
+
+- Mova os arquivos dentro do VS Code, no Explorer dele. Mudanças feitas no Explorador
+  do Windows ou por outro programa não são vistas.
+- Se o VS Code perguntou se devia aplicar as mudanças e você disse que não, os
+  caminhos ficam como estavam. Desfaça a mudança com :kbd[Ctrl + Z] e mova de novo.
+- Arquivos `.tobj` compilados são binários e não podem ser atualizados.
+
+### O VS Code pergunta toda vez que movo um arquivo
+
+Essa janela é do próprio VS Code. Marque **Do not ask me again** para parar. Veja
+[Mover e renomear arquivos](../02-features/moving-files.mdx#como-usar).
+
+### Por que maiúsculas num nome de unit são só uma dica?
+
+A documentação da SCS diz que os nomes de unit são em minúsculas, mas os próprios
+arquivos do jogo também usam maiúsculas, e o jogo os carrega. Por isso só aparece
+como dica (hint). Você pode esconder as dicas nas configurações: veja
+[Níveis](../02-features/diagnostics.mdx#níveis).
+
+### O VS Code fica lento com o jogo extraído aberto
+
+Todos os arquivos compactados do jogo extraídos somam cerca de 230.000 arquivos. Logo
+depois de abri-los, a extensão precisa de um a três minutos para lê-los, e o próprio
+VS Code fica lento com tantos arquivos. Abra só o arquivo compactado ou a pasta que
+você está estudando, como `def`. Veja
+[Pastas grandes](../01-getting-started/your-mod.mdx#pastas-grandes).
+
+:::

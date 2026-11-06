@@ -1,0 +1,52 @@
+---
+title: Instalação
+description: Instale o SCS IntelliSense e abra o seu primeiro mod.
+order: 2
+---
+
+## Requisitos
+
+- [Visual Studio Code](https://code.visualstudio.com/) 1.118 ou mais novo.
+- Uma conexão com a internet na primeira vez que você usar o autocompletar, o hover
+  ou as verificações de atributos, para baixar o
+  [banco de dados de schema](../03-reference/schema-database.mdx). Depois disso,
+  funciona offline.
+
+## Instale a extensão
+
+1. Abra o VS Code.
+2. Abra a visualização **Extensions** com :kbd[Ctrl + Shift + X].
+3. Procure por **SCS IntelliSense**.
+4. Clique em **Install**.
+
+Você também pode instalar pela
+[página dela no Marketplace](https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense).
+
+Abra qualquer arquivo `.sii` ou `.sui` e ele já aparece colorido: a extensão está
+ativa.
+
+## Abra o seu mod como pasta
+
+Use **File → Open Folder...** e escolha a pasta do seu mod, a que tem o
+`manifest.sii`. Abrir arquivos soltos também funciona, mas aí a extensão só enxerga
+aquele arquivo. Com a pasta inteira aberta, ela consegue:
+
+- encontrar uma unit definida em outro arquivo quando você dá :kbd[Ctrl] + clique no
+  nome dela;
+- sugerir units e arquivos de todo o seu mod;
+- atualizar caminhos quando você move um arquivo;
+- saber em qual unit um arquivo `.sui` é colado.
+
+Leia [Como o seu mod é lido](./your-mod.mdx) para ver quais estruturas de pasta a
+extensão entende.
+
+## Ligue os recursos experimentais
+
+O autocompletar, o hover e o formatador vêm desligados enquanto ainda estão sendo
+testados. Eles são estáveis nos arquivos do próprio jogo e valem a pena ligar:
+veja [Recursos experimentais](./experimental-features.mdx).
+
+## Atualizar
+
+O VS Code atualiza as extensões sozinho. Para atualizar à mão, abra a visualização
+**Extensions**, encontre o SCS IntelliSense e clique em **Update** quando aparecer.

@@ -1,5 +1,6 @@
 import { defineConfig } from '@lexibase/rdx'
 import { Logo } from './components/logo'
+import { i18n } from '@lexibase/rdx-i18n'
 
 export default defineConfig({
   description:
@@ -71,6 +72,7 @@ export default defineConfig({
     },
     themes: {
       dark: 'catppuccin-mocha',
+      light: 'catppuccin-latte',
     },
   },
   // Floating heading navigation; shown only on pages with enough sections.
@@ -97,4 +99,19 @@ export default defineConfig({
   theme: {
     defaultTheme: 'system',
   },
+
+  plugins: [
+    i18n({
+      locales: [
+        {
+          code: 'en',
+          label: 'English',
+        },
+        {
+          code: 'pt-BR',
+          label: 'Português (Brasil)',
+        },
+      ],
+    }),
+  ],
 })

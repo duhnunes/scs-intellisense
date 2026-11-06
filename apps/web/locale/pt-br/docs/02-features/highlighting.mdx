@@ -1,0 +1,92 @@
+---
+title: Realce e ícones
+description: Cores por significado para arquivos .sii e .sui, e ícones para os tipos de arquivo da SCS.
+order: 1
+---
+
+## Realce
+
+Cada parte de um arquivo `.sii` ou `.sui` ganha uma cor de acordo com o que é:
+
+- **nomes de classe**, com namespace (`ui::text`);
+- **nomes de unit** (`my_truck.engine`, `.nameless`);
+- **chaves de atributo** (`price`, `sounds[]`, `items[0]`);
+- **valores**: números, strings, `true`/`false`, e nomes como `factory` ou uma unit
+  que um ponteiro indica;
+- **comentários** (`#`, `//` e `/* ... */`);
+- **`@include`** e o seu caminho.
+
+As cores vêm do seu tema do VS Code, então combinam com o resto do editor.
+
+O realce fica ligado nos arquivos `.sii`/`.sui` mesmo que o seu tema ou o
+`editor.semanticHighlighting.enabled` desligue as cores semânticas no resto. Para
+desligar nesses arquivos, desmarque **SCS IntelliSense: Semantic Highlighting** nas
+configurações (`scs-intellisense.semanticHighlighting`).
+
+A colorização de pares de chaves ignora as chaves dentro de comentários e strings,
+então uma `{` num comentário nunca bagunça as cores.
+
+## Ícones de arquivo
+
+Os arquivos dos formatos do jogo ganham ícone próprio no Explorer e nas abas do
+editor:
+
+| Ícone | Extensão | O que é |
+| :---: | :------- | :------ |
+| ![ícone .sii](/images/extensions/sii.svg) | `.sii` | Definições |
+| ![ícone .sui](/images/extensions/sui.svg) | `.sui` | Definições incluídas por `@include` |
+| ![ícone .pmd](/images/extensions/pmd.svg) | `.pmd` | Modelo |
+| ![ícone .pmg](/images/extensions/pmg.svg) | `.pmg` | Geometria do modelo |
+| ![ícone .pmc](/images/extensions/pmc.svg) | `.pmc` | Colisão do modelo |
+| ![ícone .pma](/images/extensions/pma.svg) | `.pma` | Animação do modelo |
+| ![ícone .pim](/images/extensions/pim.svg) | `.pim` | Fonte do modelo |
+| ![ícone .pit](/images/extensions/pit.svg) | `.pit` | Fonte do modelo: aparências e variantes |
+| ![ícone .pic](/images/extensions/pic.svg) | `.pic` | Fonte do modelo: colisão |
+| ![ícone .pia](/images/extensions/pia.svg) | `.pia` | Fonte do modelo: animação |
+| ![ícone .pip](/images/extensions/pip.svg) | `.pip` | Fonte do prefab |
+| ![ícone .ppd](/images/extensions/ppd.svg) | `.ppd` | Prefab |
+| ![ícone .mat](/images/extensions/mat.svg) | `.mat` | Material |
+| ![ícone .tobj](/images/extensions/tobj.svg) | `.tobj` | Textura |
+| ![ícone .soundref](/images/extensions/sndr.svg) | `.soundref` | Referência de som |
+| ![ícone .bank](/images/extensions/bnk.svg) | `.bank` | Banco de som |
+| ![ícone .bank.guids](/images/extensions/bnk.gds.svg) | `.bank.guids` | Os IDs dos eventos de um banco de som |
+
+Os formatos fonte (`.pim`, `.pit`, `.pic`, `.pia`, `.pip`) são o que o SCS Blender
+Tools exporta, antes de o conversor da SCS transformá-los nos formatos do jogo.
+
+Só `.sii` e `.sui` ganham cores e verificações. Os outros tipos ganham um ícone para
+ficarem fáceis de distinguir. Nos arquivos `.mat`, `.tobj` e `.soundref`, os caminhos
+também são links e acompanham arquivos movidos: veja
+[Navegação](./navigation.mdx#abrir-um-arquivo-pelo-caminho) e
+[Mover e renomear arquivos](./moving-files.mdx).
+
+### Com um tema de ícones de arquivo
+
+Os ícones vêm da extensão, mas é o seu **tema de ícones de arquivo** que decide o que
+aparece. O VS Code só mostra o ícone de uma extensão quando o tema não tem um ícone
+próprio para aquele arquivo:
+
+| Tema de ícones | O que você vê |
+| :------------- | :------------ |
+| **Seti** (o padrão do VS Code), **vscode-icons** | Os ícones da extensão, sem configurar nada |
+| **Minimal**, e outros temas com um único ícone para todo arquivo | Esse único ícone: esses temas nunca mostram os ícones de uma extensão |
+| Um tema com ícones próprios (**Symbols**, **Material Icon Theme**...) | O ícone dele quando tem um para aquele tipo de arquivo, ou um genérico, ou nenhum |
+
+Alguns temas deixam você escolher o ícone de um tipo de arquivo nas configurações
+deles, geralmente com um nome parecido com `files.associations` sob o nome do tema.
+Procure na documentação do seu tema. O **Symbols**, por exemplo, mostra os ícones da
+extensão para todos os tipos menos `.sii` e `.sui`, e isto traz esses dois de volta:
+
+```json title="settings.json"
+"symbols.files.associations": {
+  "*.sii": "sii",
+  "*.sui": "sui"
+}
+```
+
+Nem todo tema consegue: no **Material Icon Theme** a configuração só escolhe um dos
+ícones do próprio Material, então um arquivo `.sui` mostra o ícone do Material para
+aquele tipo.
+
+Para ver os ícones da extensão sem mudar mais nada, escolha **Seti** em
+**Preferences: File Icon Theme** (:kbd[Ctrl + Shift + P]).

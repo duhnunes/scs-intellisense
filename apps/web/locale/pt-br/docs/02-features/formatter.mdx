@@ -1,0 +1,138 @@
+---
+title: Formatador
+description: Indentação, chaves e espaços consistentes para arquivos .sii e .sui, sem mudar o conteúdo.
+order: 6
+---
+
+> [!WARNING] Experimental
+>
+> O formatador vem desligado. Ligue-o em
+> [Recursos experimentais](../01-getting-started/experimental-features.mdx).
+
+O formatador reescreve só o layout de um arquivo: indentação, onde ficam as chaves,
+os espaços em volta do `:` e as linhas em branco. Ele nunca muda um nome, um valor ou
+um comentário.
+
+```sii title="Antes"
+SiiNunit
+{
+accessory_engine_data:my_engine.engine{
+  name:"Big Engine"
+      price :  18000
+
+
+  torque: 2400 }
+}
+```
+
+```sii title="Depois (configurações padrão)"
+SiiNunit {
+	accessory_engine_data : my_engine.engine {
+		name: "Big Engine"
+		price: 18000
+
+		torque: 2400
+	}
+}
+```
+
+## Seguro por padrão
+
+- **O conteúdo nunca muda.** Antes de aplicar um resultado, o formatador confere se
+  cada nome, chave, valor e comentário está exatamente como era. Se algo for
+  diferente, o arquivo fica como está.
+- **Um arquivo com erros de estrutura não é formatado.** Corrija primeiro os erros que
+  os [diagnósticos](./diagnostics.mdx) apontam: com uma `}` faltando, o formatador
+  não tem como saber onde uma unit termina.
+- **O `@include` sempre começa a linha**, porque o jogo ignora um que esteja
+  indentado.
+
+Ele é testado em 73.224 arquivos `.sii`/`.sui` do ATS 1.61, do jogo base e de 56
+DLCs: nenhum perde conteúdo, e formatar um arquivo duas vezes dá o mesmo resultado.
+
+## Formatar um arquivo
+
+- **Format Document:** :kbd[Shift + Alt + F], ou botão direito → **Format Document**.
+- **Format Selection:** :kbd[Ctrl + K] e depois :kbd[Ctrl + F] formata as units que a sua
+  seleção toca. Com só o cursor dentro de uma unit, formata aquela unit.
+- **Ao salvar:** ligado por padrão. Veja abaixo.
+
+A extensão já é o formatador dos arquivos `.sii` e `.sui` desde a instalação, mesmo
+que o seu formatador padrão seja outro, como o Prettier.
+
+## Formatar ao salvar
+
+Com o formatador ligado, todo arquivo `.sii`/`.sui` é formatado quando você salva.
+Não há mais nada para configurar: você não precisa do `editor.formatOnSave` do
+VS Code. :kbd[Ctrl + Z] desfaz a formatação.
+
+Para formatar só quando pedir, desmarque **Formatter: Format On Save**
+(`scs-intellisense.formatter.formatOnSave`).
+
+## Opções
+
+### Estilo das chaves
+
+**Formatter: Brace Style** (`scs-intellisense.formatter.braceStyle`):
+
+:::tabs
+
+### 1tbs (padrão)
+
+A `{` fica na linha do cabeçalho:
+
+```sii
+accessory_engine_data : my_engine.engine {
+	price: 18000
+}
+```
+
+### allman
+
+A `{` fica numa linha só dela, como nos próprios arquivos do jogo:
+
+```sii
+accessory_engine_data : my_engine.engine
+{
+	price: 18000
+}
+```
+
+:::
+
+### Indentar units
+
+**Formatter: Indent Units** (`scs-intellisense.formatter.indentUnits`, ligado por
+padrão) indenta as units dentro de `SiiNunit { }`. Desmarque para mantê-las no começo
+da linha. Os arquivos do jogo usam os dois estilos. Não se aplica aos arquivos `.sui`,
+que não têm `SiiNunit`.
+
+### Tabs ou espaços
+
+A indentação segue as suas configurações do VS Code, então a formatação bate com o
+que o editor faz quando você aperta :kbd[Enter]: `editor.tabSize`,
+`editor.insertSpaces` e `editor.detectIndentation`, que detecta tabs num arquivo que
+já os usa.
+
+Para usar sempre tabs só nos arquivos da SCS, adicione isto ao seu `settings.json`:
+
+```json title="settings.json"
+"[sii]": { "editor.insertSpaces": false },
+"[sui]": { "editor.insertSpaces": false }
+```
+
+## Formatar todos os arquivos
+
+Dois comandos agem em todos os arquivos `.sii`/`.sui` das pastas abertas. Rode-os
+pela Paleta de Comandos (:kbd[Ctrl + Shift + P]):
+
+- **SCS IntelliSense: Check Formatting of All Files** lista os arquivos que
+  mudariam, sem mudar nada. A lista vai para o
+  [Output](../03-reference/commands.mdx#show-output) da extensão.
+- **SCS IntelliSense: Format All Files** formata todos, depois de pedir confirmação.
+
+> [!DANGER] Format All Files não pode ser desfeito
+>
+> Os arquivos que não estão abertos são alterados direto no disco, e o
+> :kbd[Ctrl + Z] não consegue trazê-los de volta. Use git ou faça um backup antes.
+> Nunca rode nos arquivos extraídos do jogo que você guarda como referência.

@@ -1,0 +1,105 @@
+---
+title: Diagnósticos e correções rápidas
+description: Os problemas que o SCS IntelliSense encontra enquanto você digita, e como corrigi-los com um clique.
+order: 2
+---
+
+Os problemas são sublinhados enquanto você digita, antes mesmo de abrir o jogo. Eles
+também aparecem no painel **Problems** (:kbd[Ctrl + Shift + M]) para todos os
+arquivos abertos.
+
+## Níveis
+
+| Nível | Significado |
+| :---- | :---------- |
+| **Error** (vermelho) | O jogo deve falhar ao carregar isto. |
+| **Warning** (amarelo) | Provavelmente um engano, ou contra a documentação da SCS. O jogo carrega mesmo assim. |
+| **Hint** (pontilhado) | Contra a documentação da SCS, mas os próprios arquivos do jogo fazem isso também. |
+
+Os níveis são escolhidos a partir dos próprios arquivos do jogo: se o jogo traz um
+arquivo que faz algo, isso nunca é apontado como erro.
+
+Para esconder um nível, abra as configurações, procure por **Diagnostics: Enabled
+Severities** e desmarque-o. Por exemplo, desmarque `warning` e `hint` para ver só os
+erros.
+
+## O que é verificado
+
+### Estrutura (erros)
+
+- Um `:`, `{` ou `}` faltando, ou uma `}` sem nada para fechar.
+- Um `SiiNunit { }` faltando ou duplicado num arquivo `.sii`, ou conteúdo depois da
+  chave que o fecha.
+- Um `@include` que não começa a linha: o jogo ignora um que esteja indentado.
+- Uma aspa que nunca fecha (`name: "Big Engine`). O texto é sublinhado até o fim da
+  linha, e o resto do arquivo continua sendo lido como está escrito. Texto que
+  realmente ocupa várias linhas, como nos arquivos de interface do jogo, não tem
+  problema.
+
+### Nomes
+
+| Problema | Nível |
+| :------- | :---- |
+| Um nome de classe inválido (`ui::` sem nada depois, um nome que começa com dígito) | Error |
+| Um nome de unit inválido: uma parte com mais de 12 caracteres, um caractere que não é letra, dígito ou `_`, uma parte vazia (`a..b`), uma aspa sem par | Error |
+| Duas units com o mesmo nome num arquivo, incluindo as sem nome (`.x`) | Error |
+| Letras maiúsculas num nome de unit | Hint |
+
+### Atributos
+
+Estas precisam do [banco de dados de schema](../03-reference/schema-database.mdx), que
+conhece todas as classes do jogo, seus atributos e os tipos deles:
+
+| Problema | Exemplo | Nível |
+| :------- | :------ | :---- |
+| Um atributo que a classe não tem | `prcie: 18000` | Warning |
+| Um valor que o atributo não aceita | `part_type: factroy` | Warning |
+| Algo que não é número onde vai um número | `price: abc`, `unlock: 1.5` | Warning |
+| Um número negativo onde só 0 ou mais é permitido | `unlock: -5` | Warning |
+| Um vetor com a quantidade errada de números | `color: (1.0, 0.5)` onde vão três | Warning |
+| Algo que não é true nem false | `use_perlin: yes` | Warning |
+
+As listas de atributos vêm do próprio jogo, então um atributo desconhecido quase
+sempre é um erro de digitação. Os números são aceitos em todas as formas que os
+arquivos do jogo usam: `1.5`, `+6`, `2e-6`, `25.0f`, `&3f800000`, `0x10DE` e `nil`;
+um bool também pode ser `0` ou `1`.
+
+Todas essas verificações também funcionam dentro de um
+[fragmento `.sui`](../01-getting-started/your-mod.mdx#fragmentos-sui), usando a classe da
+unit que o inclui.
+
+### O fim do arquivo (warning)
+
+Um arquivo deve terminar com uma quebra de linha. Quase todos os arquivos do jogo
+terminam.
+
+## Correções rápidas
+
+Quando um problema tem uma correção óbvia, aparece uma lâmpada ao lado dele. Clique
+nela, ou ponha o cursor no problema e aperte :kbd[Ctrl + .]:
+
+![A correção rápida "Change to name" oferecida para o atributo escrito errado nme](/images/screenshots/quickFix.png)
+
+| Problema | Correção |
+| :------- | :------- |
+| `prcie: 18000` | Trocar por `price` |
+| `part_type: factroy` | Trocar por `factory` |
+| `price: "18000"` | Tirar as aspas |
+| `truck my.truck {` | Adicionar o `:` que falta |
+| `price 18000` ou `price = 18000` | Trocar por `price: 18000` |
+| `my..truck` | Trocar por `my.truck` |
+| `"my.truck` | Adicionar a aspa que falta, ou tirar esta |
+| `name: "Big Engine` | Fechar a aspa no fim da linha, ou tirá-la |
+| Um `@include` indentado | Mover para o começo da linha |
+| Nenhuma quebra de linha no fim | Adicionar |
+
+:kbd[Shift + Alt + .] aplica a correção na hora quando só existe uma.
+
+Alguns problemas não têm correção rápida de propósito, porque só você sabe a
+resposta certa: qual de duas units duplicadas renomear, ou onde vai uma `}` que falta.
+
+## O que não é verificado
+
+A extensão não lê os arquivos compactados do jogo, então não consegue saber se um
+caminho ou um ponteiro para um arquivo do jogo está certo. Veja
+[Arquivos do jogo](../01-getting-started/your-mod.mdx#arquivos-do-jogo).

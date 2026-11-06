@@ -1,0 +1,56 @@
+---
+title: Introdução
+description: O que é o SCS IntelliSense e o que ele faz pelos seus mods.
+order: 1
+---
+
+O SCS IntelliSense é uma extensão do Visual Studio Code para criar mods de
+**American Truck Simulator** e **Euro Truck Simulator 2**. Ela entende os arquivos
+de definição do jogo (`.sii` e `.sui`) e ajuda você a escrevê-los como se escreve
+código em qualquer editor moderno: com cores, verificação de erros, sugestões e
+navegação.
+
+> [!NOTE] Projeto não oficial da comunidade
+>
+> O SCS IntelliSense não tem vínculo com a SCS Software nem é endossado por ela.
+> Euro Truck Simulator 2, American Truck Simulator e SCS Software são marcas
+> registradas de seus respectivos donos.
+
+## O que ela faz
+
+- **Cores por significado.** Nomes de classe, nomes de unit, chaves de atributo,
+  valores e comentários ganham cada um a sua cor, e o arquivo fica mais fácil de ler.
+  Veja [Realce e ícones](../02-features/highlighting.mdx).
+- **Encontra erros enquanto você digita.** Um `:` ou `}` faltando, um nome de unit
+  inválido, duas units com o mesmo nome, um atributo escrito errado, como `prcie` em
+  vez de `price`, ou um valor que o tipo não aceita, como `price: abc`. A maioria dos
+  problemas vem com uma correção de um clique.
+  Veja [Diagnósticos e correções rápidas](../02-features/diagnostics.mdx).
+- **Sugere o que vem em seguida.** Nomes de classe, chaves de atributo, os valores
+  que um atributo aceita, units para apontar, os arquivos do seu mod e os eventos dos
+  seus bancos de som.
+  Veja [Autocompletar e hover](../02-features/completion.mdx).
+- **Deixa você navegar pelo mod.** Ctrl+clique no nome de uma unit para abrir onde
+  ela é definida, listar tudo que a usa ou renomeá-la em todo lugar de uma vez.
+  Ctrl+clique num caminho para abrir aquele arquivo.
+  Veja [Navegação](../02-features/navigation.mdx).
+- **Mantém os caminhos funcionando.** Renomeie ou mova um arquivo no VS Code, e
+  todo caminho que aponta para ele é atualizado para você.
+  Veja [Mover e renomear arquivos](../02-features/moving-files.mdx).
+- **Formata seus arquivos.** Indentação, chaves e espaços consistentes, sem nunca
+  mudar um valor. Veja [Formatador](../02-features/formatter.mdx).
+
+## Testada nos arquivos do próprio jogo
+
+Cada verificação é testada nos arquivos que vêm com o próprio jogo: 73.224
+arquivos `.sii`/`.sui` do American Truck Simulator 1.61, do jogo base e de 56 DLCs.
+Nenhum deles é apontado como quebrado, então, quando a extensão diz que algo está
+errado no seu mod, vale a pena dar uma olhada.
+
+O Euro Truck Simulator 2 usa o mesmo motor e o mesmo formato de arquivo, mas a
+extensão ainda não foi testada nos arquivos dele. Se você faz mods de ETS2 e algo
+parecer errado, [avise](../04-help/reporting-issues.mdx).
+
+## Próximo passo
+
+[Instale a extensão](./installation.mdx) e abra o seu mod.

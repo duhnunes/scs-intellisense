@@ -1,0 +1,98 @@
+---
+title: Autocompletar e hover
+description: Sugestões de classes, atributos, valores, units e arquivos, e descrições ao passar o mouse.
+order: 3
+---
+
+> [!WARNING] Experimental
+>
+> O autocompletar e o hover vêm desligados. Ligue-os em
+> [Recursos experimentais](../01-getting-started/experimental-features.mdx).
+> Os caminhos de `@include` são sempre sugeridos.
+
+As sugestões aparecem enquanto você digita. Aperte :kbd[Ctrl + Space] para abri-las a
+qualquer momento. Elas vêm do [banco de dados de schema](../03-reference/schema-database.mdx),
+que lista todas as classes do jogo com os atributos que o próprio jogo lê.
+
+## Nomes de classe
+
+No começo de uma unit, a lista mostra todas as classes. As classes documentadas vêm
+primeiro, depois as que o jogo mais usa, então a classe de que você precisa costuma
+estar perto do topo. Uma classe documentada mostra a descrição ao lado da lista.
+
+![Nomes de classe sugeridos no começo de uma unit, com animated_gate mostrando a classe que ela estende](/images/screenshots/comp-className.png)
+
+## Chaves de atributo
+
+Dentro de uma unit, a lista mostra os atributos da classe dela, com o tipo. Atributos
+que o jogo não usa mais, e os que ele mesmo controla, não são sugeridos.
+
+![Os atributos de prefab_model sugeridos dentro da unit dele](/images/screenshots/comp-attributes.png)
+
+Isso funciona num [fragmento `.sui`](../01-getting-started/your-mod.mdx#fragmentos-sui)
+também: ele recebe os atributos da unit que o inclui.
+
+## Valores
+
+Depois do `:` de um atributo, a lista depende do que o atributo recebe.
+
+### Valores fixos
+
+Para um atributo com um conjunto fixo de valores, a lista mostra todos, e o valor
+padrão vem marcado:
+
+![Os valores de part_type sugeridos, com unknown marcado como padrão](/images/screenshots/comp-part_type.png)
+
+O valor é escrito sem aspas. Se você digitou uma aspa antes, as aspas são mantidas.
+
+### Units
+
+Para um atributo que aponta para uma unit (como `animation` num chassi, que recebe
+um `vehicle_animation_data`), a lista mostra as units da classe certa: primeiro as do
+mesmo arquivo, depois as do resto do seu mod, e `null`.
+
+Uma unit de uma subclasse também conta: um atributo que recebe um
+`sign_template_item` também lista as suas units `sign_template_text`.
+
+### Arquivos
+
+Para um atributo que recebe um arquivo, como `model` (um `.pmd`) ou `shadow_texture`
+(um `.tobj`), digite `"/` e a lista mostra as pastas do seu mod e só os arquivos do
+tipo certo:
+
+![Só os arquivos .pmd de /model/props/street/ listados para model, embora a pasta também tenha arquivos .pmc e .pma](/images/screenshots/comp-model.png)
+
+Nessa pasta, `collision` listaria só os arquivos `.pmc`, e `animation` só os `.pma`.
+
+Os arquivos do próprio jogo não são listados: a extensão não lê os arquivos
+compactados do jogo.
+
+### Eventos de som
+
+Depois de um banco de som e do seu `#` (`scene_music: "/sound/music/scene.bank#`), a
+lista mostra os eventos do banco. Eles vêm do arquivo `.bank.guids` que o FMOD Studio
+grava ao lado do banco, então isso funciona com os bancos do seu mod: os do jogo
+ficam dentro dos arquivos compactados dele.
+
+## Caminhos de `@include`
+
+Digite `@include "` e a lista mostra as pastas e os arquivos `.sui` ao lado do
+arquivo atual. Comece com `/` para listar a partir da raiz do seu mod. Isso funciona
+mesmo com o autocompletar desligado, porque não precisa do banco de dados de schema.
+
+![Pastas e arquivos .sui de /def/vehicle/truck/ sugeridos depois de @include](/images/screenshots/include.png)
+
+Se o seu mod é dividido em pastas `base/` e `dlc_*`, a lista junta a mesma pasta de
+todas elas, como o jogo faz.
+
+## Hover
+
+Passe o mouse sobre um nome de classe ou uma chave de atributo para ver o que é: o
+tipo, o valor padrão, os valores que aceita e a descrição. O hover também avisa sobre
+um atributo que não tem mais efeito (o jogo ainda aceita, mas ignora), ou um que o
+próprio jogo controla e que você não deveria definir.
+
+A maioria das classes do jogo ainda não tem descrição. O banco de dados é um esforço
+da comunidade; para essas classes, o hover avisa e mostra só o tipo.
+
+![Hover sobre prefab_model, uma classe ainda sem descrição](/images/screenshots/hover.png)

@@ -1,0 +1,56 @@
+---
+title: Recursos experimentais
+description: Ligue o autocompletar, o hover e o formatador.
+order: 4
+---
+
+Três recursos vêm **desligados** enquanto são testados em mais mods:
+
+| Recurso | O que faz |
+| :------ | :-------- |
+| [Autocompletar](../02-features/completion.mdx) | Sugere nomes de classe, chaves de atributo, valores, units e arquivos enquanto você digita |
+| [Hover](../02-features/completion.mdx#hover) | Mostra o que é uma classe ou um atributo quando você passa o mouse sobre ele |
+| [Formatador](../02-features/formatter.mdx) | Corrige indentação, chaves e espaços |
+
+Todo o resto (realce, diagnósticos, correções rápidas, navegação, atualização de
+caminhos) fica sempre ligado.
+
+## Como ligar
+
+:::tabs
+
+### Editor de configurações
+
+1. Abra as configurações com :kbd[Ctrl + ,].
+2. Digite `@ext:DuHNunes.scs-intellisense` na busca para ver só as configurações
+   desta extensão.
+3. Marque **Completion: Enabled**, **Hover: Enabled** e **Formatter: Enabled**, as
+   que você quiser.
+
+### settings.json
+
+Abra a Paleta de Comandos (:kbd[Ctrl + Shift + P]), rode **Preferences: Open User
+Settings (JSON)** e adicione:
+
+```json title="settings.json"
+"scs-intellisense.completion.enabled": true,
+"scs-intellisense.hover.enabled": true,
+"scs-intellisense.formatter.enabled": true
+```
+
+:::
+
+Elas valem na hora: não precisa recarregar o VS Code.
+
+> [!TIP] Formatar ao salvar
+>
+> Com o formatador ligado, os arquivos `.sii` e `.sui` são formatados toda vez que
+> você salva. Não precisa configurar mais nada. Se preferir formatar só quando pedir,
+> desligue **Formatter: Format On Save**. Veja [Formatador](../02-features/formatter.mdx).
+
+## Encontrou um problema?
+
+Esses recursos são experimentais porque precisam ser testados em mais mods reais.
+Se uma sugestão estiver errada ou o formatador fizer algo inesperado,
+[avise](../04-help/reporting-issues.mdx): é assim que eles deixam de ser
+experimentais.

@@ -1,0 +1,48 @@
+---
+title: Comandos
+description: Os comandos que o SCS IntelliSense adiciona à Paleta de Comandos.
+order: 2
+---
+
+Abra a Paleta de Comandos com :kbd[Ctrl + Shift + P] e digite **SCS IntelliSense**
+para ver todos.
+
+## Show Output
+
+**SCS IntelliSense: Show Output** abre o log da extensão no painel **Output**. Ele
+mostra informações, avisos e erros.
+
+Quando algo dá errado, mais detalhes ajudam: escolha **Debug** no filtro de nível de
+log do painel Output (ou rode **Developer: Set Log Level**) e repita o que você estava
+fazendo.
+
+**SCS IntelliSense: Clear Output** limpa o log.
+
+## Copy Bug Report Info
+
+**SCS IntelliSense: Copy Bug Report Info** copia para a área de transferência o que é
+preciso para investigar um problema: as versões da extensão e do VS Code, as suas
+configurações do SCS IntelliSense e o log recente. Cole no seu relato. Veja
+[Relatar problemas](../04-help/reporting-issues.mdx).
+
+## Refresh Schema Database
+
+**SCS IntelliSense: Refresh Schema Database** baixa agora a versão mais nova do
+[banco de dados de schema](./schema-database.mdx), em vez de esperar o VS Code
+iniciar de novo.
+
+## Check Formatting of All Files
+
+**SCS IntelliSense: Check Formatting of All Files** lista todos os arquivos
+`.sii`/`.sui` das pastas abertas que o formatador mudaria, sem mudar nada. A lista vai
+para o Output. Precisa do [formatador](../02-features/formatter.mdx) ligado.
+
+## Format All Files
+
+**SCS IntelliSense: Format All Files** formata todos os arquivos `.sii`/`.sui` das
+pastas abertas, depois de pedir confirmação. Precisa do formatador ligado.
+
+> [!DANGER] Não pode ser desfeito
+>
+> Os arquivos que não estão abertos são alterados no disco, e o :kbd[Ctrl + Z] não
+> consegue trazê-los de volta. Use git ou faça um backup antes.
