@@ -112,6 +112,10 @@ export default defineConfig({
           label: 'Português (Brasil)',
         },
       ],
+      // "Help translate" (language menu) and "Translate this page" (on a
+      // page missing its translation) open the translations folder.
+      contributionUrl:
+        'https://github.com/duhnunes/scs-intellisense/tree/main/apps/web/locale',
     }),
   ],
 })
