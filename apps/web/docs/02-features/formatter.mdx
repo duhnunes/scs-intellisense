@@ -12,7 +12,7 @@ order: 6
 The formatter rewrites only the layout of a file: indentation, where braces go,
 spaces around `:`, and blank lines. It never changes a name, a value or a comment.
 
-```text title="Before"
+```sii title="Before"
 SiiNunit
 {
 accessory_engine_data:my_engine.engine{
@@ -24,7 +24,7 @@ accessory_engine_data:my_engine.engine{
 }
 ```
 
-```text title="After (default settings)"
+```sii title="After (default settings)"
 SiiNunit {
 	accessory_engine_data : my_engine.engine {
 		name: "Big Engine"
@@ -80,7 +80,7 @@ To format only when you ask, uncheck **Formatter: Format On Save**
 
 The `{` goes on the header line:
 
-```text
+```sii
 accessory_engine_data : my_engine.engine {
 	price: 18000
 }
@@ -90,7 +90,7 @@ accessory_engine_data : my_engine.engine {
 
 The `{` goes on its own line, as in the game's own files:
 
-```text
+```sii
 accessory_engine_data : my_engine.engine
 {
 	price: 18000

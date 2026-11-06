@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "SUI",
+  "scopeName": "source.sui",
+  "comment": "A .sui holds units or bare attributes (a unit body pasted in by @include). The reader tells them apart by a '{' after the line, often on the next one, which a line-based grammar can't see. So a line is a unit header when a '{' follows on it, or when it is only `class : name` with a dotted name (a unit name: 19,181 such headers in ATS 1.61 .sui files, against 60 bare attributes that look like one). The rules come from sii.tmLanguage.json.",
+  "patterns": [
+    {
+      "include": "source.sii#comments"
+    },
+    {
+      "include": "source.sii#include"
+    },
+    {
+      "include": "source.sii#unit-same-line"
+    },
+    {
+      "include": "source.sii#unit-dotted-name"
+    },
+    {
+      "include": "source.sii#attribute"
+    },
+    {
+      "include": "source.sii#quoted"
+    },
+    {
+      "include": "source.sii#braces"
+    }
+  ]
+}

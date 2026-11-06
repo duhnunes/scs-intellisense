@@ -108,7 +108,7 @@ ATS_extracted/
 A `.sui` file can hold a whole unit, or just a list of attributes that
 `@include` pastes into a unit written in another file:
 
-```text title="engine.sii"
+```sii title="engine.sii"
 accessory_engine_data : my_engine.engine {
 @include "engine_common.sui"
 	price: 18000
@@ -117,7 +117,7 @@ accessory_engine_data : my_engine.engine {
 
 And the fragment, next to it:
 
-```text title="engine_common.sui"
+```sui title="engine_common.sui"
 torque: 2400
 volume: 15
 ```

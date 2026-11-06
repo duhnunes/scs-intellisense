@@ -1,0 +1,292 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "SII",
+  "scopeName": "source.sii",
+  "comment": "Full grammar for the docs site's code blocks (RDX syntaxHighlighting). It mirrors the extension's semantic tokens (apps/server/src/semantic/index.ts) and the reader's rules (apps/server/src/sii/reader.ts, value.ts): the same parts are colored, with the scopes VS Code maps those semantic token types to. The extension keeps its minimal grammar in apps/client/syntaxes. sui.tmLanguage.json reuses these rules.",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "name": "keyword.other.magic.sii",
+      "match": "\\bSiiNunit\\b"
+    },
+    {
+      "include": "#include"
+    },
+    {
+      "include": "#unit"
+    },
+    {
+      "include": "#braces"
+    }
+  ],
+  "repository": {
+    "unit": {
+      "name": "meta.unit.sii",
+      "begin": "(?:((?:[^\\s{}:]+::)*[^\\s{}:]+)(::))?([^\\s{}:]+)[ \\t]*(:)[ \\t]*([^\\s{}]+)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.namespace.sii"
+        },
+        "2": {
+          "name": "punctuation.separator.namespace.sii"
+        },
+        "3": {
+          "name": "entity.name.type.class.sii"
+        },
+        "4": {
+          "name": "punctuation.separator.colon.sii"
+        },
+        "5": {
+          "name": "meta.unit-name.sii"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.block.end.sii"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#body"
+        }
+      ]
+    },
+    "unit-same-line": {
+      "name": "meta.unit.sii",
+      "begin": "(?:((?:[^\\s{}:]+::)*[^\\s{}:]+)(::))?([^\\s{}:]+)[ \\t]*(:)[ \\t]*([^\\s{}]+)(?=[^\\n\"]*\\{)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.namespace.sii"
+        },
+        "2": {
+          "name": "punctuation.separator.namespace.sii"
+        },
+        "3": {
+          "name": "entity.name.type.class.sii"
+        },
+        "4": {
+          "name": "punctuation.separator.colon.sii"
+        },
+        "5": {
+          "name": "meta.unit-name.sii"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.block.end.sii"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#body"
+        }
+      ]
+    },
+    "unit-dotted-name": {
+      "name": "meta.unit.sii",
+      "begin": "(?:((?:[^\\s{}:\\[\\]]+::)*[^\\s{}:\\[\\]]+)(::))?([^\\s{}:\\[\\]]+)[ \\t]*(:)[ \\t]*(?![+-]?[\\d.]+[ \\t]*(?:$|\\}|/\\*|//|#))(\\.?[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+|\\.[A-Za-z0-9_]+)(?=[ \\t]*(?:$|\\}|/\\*|//|#))",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.namespace.sii"
+        },
+        "2": {
+          "name": "punctuation.separator.namespace.sii"
+        },
+        "3": {
+          "name": "entity.name.type.class.sii"
+        },
+        "4": {
+          "name": "punctuation.separator.colon.sii"
+        },
+        "5": {
+          "name": "meta.unit-name.sii"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.block.end.sii"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#body"
+        }
+      ]
+    },
+    "body": {
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#include"
+        },
+        {
+          "include": "#attribute"
+        },
+        {
+          "include": "#quoted"
+        },
+        {
+          "include": "#braces"
+        }
+      ]
+    },
+    "braces": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.block.begin.sii",
+          "match": "\\{"
+        },
+        {
+          "name": "punctuation.definition.block.end.sii",
+          "match": "\\}"
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "include": "#block-comment"
+        },
+        {
+          "name": "comment.line.double-slash.sii",
+          "begin": "//",
+          "end": "$"
+        },
+        {
+          "name": "comment.line.number-sign.sii",
+          "begin": "#",
+          "end": "$"
+        }
+      ]
+    },
+    "block-comment": {
+      "name": "comment.block.sii",
+      "begin": "/\\*",
+      "end": "\\*/",
+      "patterns": [
+        {
+          "include": "#block-comment"
+        }
+      ]
+    },
+    "include": {
+      "begin": "(@include)(?=[ \\t]|$)[ \\t]*",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.control.import.sii"
+        }
+      },
+      "end": "(?=[ \\t]*(?:$|\\}|/\\*|//|#))|^",
+      "patterns": [
+        {
+          "include": "#value"
+        }
+      ]
+    },
+    "attribute": {
+      "begin": "(?:^|(?<=[\\s{]))([A-Za-z0-9_.\\-]+(?:[ \\t]*\\[[ \\t]*\\d*[ \\t]*\\])?)[ \\t]*(:)[ \\t]*",
+      "beginCaptures": {
+        "1": {
+          "name": "variable.parameter.sii"
+        },
+        "2": {
+          "name": "punctuation.separator.colon.sii"
+        }
+      },
+      "end": "(?=[ \\t]*(?:$|\\}|/\\*|//|#))|^",
+      "patterns": [
+        {
+          "include": "#value"
+        }
+      ]
+    },
+    "value": {
+      "comment": "Each rule matches the whole value (\\G is where the value starts, the lookahead where it ends), in the order inferSiiValueType() decides: bool, number, tuple, placement, name; anything else is a string.",
+      "patterns": [
+        {
+          "name": "keyword.other.boolean.sii",
+          "match": "\\G(?:true|false)(?=[ \\t]*(?:$|\\}|/\\*|//|#))"
+        },
+        {
+          "name": "constant.numeric.sii",
+          "match": "\\G(?:&[0-9a-fA-F]+|[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?)(?=[ \\t]*(?:$|\\}|/\\*|//|#))"
+        },
+        {
+          "begin": "\\G(?=\\([,; \\t]*(?:&[0-9a-fA-F]+|[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?)(?:[ \\t]*[,;][,; \\t]*(?:&[0-9a-fA-F]+|[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?))*[,; \\t]*\\)[ \\t]*(?:$|\\}|/\\*|//|#))",
+          "end": "(?=[ \\t]*(?:$|\\}|/\\*|//|#))",
+          "patterns": [
+            {
+              "include": "#number"
+            }
+          ]
+        },
+        {
+          "begin": "\\G(?=\\([^\\n}#/]*\\)[ \\t]*\\([^\\n}#/]*\\)[ \\t]*(?:$|\\}|/\\*|//|#))",
+          "end": "(?=[ \\t]*(?:$|\\}|/\\*|//|#))",
+          "patterns": [
+            {
+              "include": "#number"
+            }
+          ]
+        },
+        {
+          "comment": "A unit name, pointer or token: each part between dots.",
+          "begin": "\\G(?=[a-z0-9_.]+[ \\t]*(?:$|\\}|/\\*|//|#))",
+          "end": "(?=[ \\t]*(?:$|\\}|/\\*|//|#))",
+          "patterns": [
+            {
+              "name": "entity.name.function.sii",
+              "match": "[a-z0-9_]+"
+            }
+          ]
+        },
+        {
+          "name": "string.unquoted.sii",
+          "begin": "\\G(?![ \\t]*(?:$|\\}|/\\*|//|#))",
+          "end": "(?=[ \\t]*(?:$|\\}|/\\*|//|#))|^",
+          "patterns": [
+            {
+              "include": "#quoted"
+            }
+          ]
+        }
+      ]
+    },
+    "number": {
+      "name": "constant.numeric.sii",
+      "match": "(?:&[0-9a-fA-F]+|[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?)"
+    },
+    "quoted": {
+      "comment": "A string may span lines. One that never closes ends where the reader ends it (unclosedQuoteLineEnd()): before a line that is a '}', or a `key:` without ';'.",
+      "patterns": [
+        {
+          "name": "string.quoted.double.sii",
+          "begin": "\"",
+          "end": "\"|(?=^[ \\t]*\\})|(?=^[ \\t]*[A-Za-z0-9_.\\-]+(?:[ \\t]*\\[[ \\t]*\\d*[ \\t]*\\])?[ \\t]*:(?![^\\n]*;))",
+          "patterns": [
+            {
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.sii",
+          "begin": "'",
+          "end": "'|(?=^[ \\t]*\\})|(?=^[ \\t]*[A-Za-z0-9_.\\-]+(?:[ \\t]*\\[[ \\t]*\\d*[ \\t]*\\])?[ \\t]*:(?![^\\n]*;))",
+          "patterns": [
+            {
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

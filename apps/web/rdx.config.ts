@@ -61,6 +61,18 @@ export default defineConfig({
   editPage: {
     baseUrl: 'https://github.com/duhnunes/scs-intellisense/edit/main/apps/web',
   },
+  // Colors for ```sii and ```sui code blocks. The grammars mirror the
+  // extension's highlighting; edit grammars/generate.mjs, not the JSON. sui
+  // reuses sii's rules, so both are listed.
+  syntaxHighlighting: {
+    languages: {
+      sii: './grammars/sii.tmLanguage.json',
+      sui: './grammars/sui.tmLanguage.json',
+    },
+    themes: {
+      dark: 'catppuccin-mocha',
+    },
+  },
   // Floating heading navigation; shown only on pages with enough sections.
   TOC: true,
   // Local documentation search in the navbar; no external search service needed.
