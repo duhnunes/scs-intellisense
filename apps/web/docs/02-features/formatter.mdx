@@ -51,8 +51,8 @@ formatting a file twice gives the same result.
 
 ## Format a file
 
-- **Format Document:** :kbd[Shift] + :kbd[Alt] + :kbd[F], or right-click → **Format Document**.
-- **Format Selection:** :kbd[Ctrl] + :kbd[K] then :kbd[Ctrl] + :kbd[F] formats the units your selection touches.
+- **Format Document:** :kbd[Shift + Alt + F], or right-click → **Format Document**.
+- **Format Selection:** :kbd[Ctrl + K] then :kbd[Ctrl + F] formats the units your selection touches.
   With just the cursor inside a unit, it formats that unit.
 - **On save:** on by default. See below.
 
@@ -63,7 +63,7 @@ your default formatter is another one, such as Prettier.
 
 With the formatter on, every `.sii`/`.sui` file is formatted when you save it.
 There's nothing else to set up: you don't need VS Code's `editor.formatOnSave`.
-:kbd[Ctrl] + :kbd[Z] undoes the formatting.
+:kbd[Ctrl + Z] undoes the formatting.
 
 To format only when you ask, uncheck **Formatter: Format On Save**
 (`scs-intellisense.formatter.formatOnSave`).
@@ -122,7 +122,7 @@ To always use tabs in SCS files only, add this to your `settings.json`:
 ## Format every file
 
 Two commands work on every `.sii`/`.sui` file of the open folders. Run them from
-the Command Palette (:kbd[Ctrl] + :kbd[Shift] + :kbd[P]):
+the Command Palette (:kbd[Ctrl + Shift + P]):
 
 - **SCS IntelliSense: Check Formatting of All Files** lists the files that would
   change, without changing anything. The list goes to the extension's
@@ -132,6 +132,6 @@ the Command Palette (:kbd[Ctrl] + :kbd[Shift] + :kbd[P]):
 
 > [!DANGER] Format All Files can't be undone
 >
-> Files that aren't open are changed directly on disk, and :kbd[Ctrl] + :kbd[Z] can't bring them
+> Files that aren't open are changed directly on disk, and :kbd[Ctrl + Z] can't bring them
 > back. Use git or make a backup first. Never run it on the game's extracted files
 > that you keep as a reference.
