@@ -1,7 +1,7 @@
 ---
 title: Diagnostics and quick fixes
 description: The problems SCS IntelliSense finds while you type, and how to fix them in one click.
-link_position: 2
+order: 2
 ---
 
 Problems are underlined as you type, before you ever start the game. They're also
@@ -45,7 +45,7 @@ errors.
 
 ### Attributes
 
-These need the [schema database](../reference/schema-database.mdx), which knows
+These need the [schema database](../03-reference/schema-database.mdx), which knows
 every class of the game, its attributes and their types:
 
 | Problem | Example | Level |
@@ -63,7 +63,7 @@ always a typo. Numbers are accepted in every form the game's own files use: `1.5
 `1`.
 
 All of these checks also work inside a
-[`.sui` fragment](../getting-started/your-mod.mdx#sui-fragments), using the class of
+[`.sui` fragment](../01-getting-started/your-mod.mdx#sui-fragments), using the class of
 the unit that includes it.
 
 ### The end of the file (warning)
@@ -99,4 +99,4 @@ answer: which of two duplicate units to rename, or where a missing `}` goes.
 
 The extension doesn't read the game's archives, so it can't tell whether a
 path or a pointer to one of the game's files is right. See
-[Files of the game](../getting-started/your-mod.mdx#files-of-the-game).
+[Files of the game](../01-getting-started/your-mod.mdx#files-of-the-game).

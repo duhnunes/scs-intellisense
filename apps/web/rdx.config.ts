@@ -57,6 +57,10 @@ export default defineConfig({
       images: ['/images/icons/web-app-manifest-512x512.png'],
     },
   },
+  // "Edit this page" link to the page's file on GitHub.
+  editPage: {
+    baseUrl: 'https://github.com/duhnunes/scs-intellisense/edit/main/apps/web',
+  },
   // Floating heading navigation; shown only on pages with enough sections.
   TOC: true,
   // Local documentation search in the navbar; no external search service needed.

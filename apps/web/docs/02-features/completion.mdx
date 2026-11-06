@@ -1,17 +1,17 @@
 ---
 title: Completion and hover
 description: Suggestions for classes, attributes, values, units and files, and descriptions on hover.
-link_position: 3
+order: 3
 ---
 
 > [!WARNING] Experimental
 >
 > Completion and hover are off by default. Turn them on in
-> [Experimental features](../getting-started/experimental-features.mdx).
+> [Experimental features](../01-getting-started/experimental-features.mdx).
 > `@include` paths are always suggested.
 
 Suggestions appear as you type. Press :kbd[Ctrl] + :kbd[Space] to open them at any time.
-They come from the [schema database](../reference/schema-database.mdx), which lists
+They come from the [schema database](../03-reference/schema-database.mdx), which lists
 every class of the game with the attributes the game itself reads.
 
 ## Class names
@@ -29,7 +29,7 @@ Attributes the game no longer uses, and those it manages itself, aren't suggeste
 
 ![The attributes of prefab_model suggested inside its unit](/images/screenshots/comp-attributes.png)
 
-This works in a [`.sui` fragment](../getting-started/your-mod.mdx#sui-fragments)
+This works in a [`.sui` fragment](../01-getting-started/your-mod.mdx#sui-fragments)
 too: it gets the attributes of the unit that includes it.
 
 ## Values

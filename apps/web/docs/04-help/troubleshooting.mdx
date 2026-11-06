@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
 description: Answers to the most common problems.
-link_position: 1
+order: 1
 ---
 
 If your problem isn't here, open the extension's log with **SCS IntelliSense: Show
@@ -22,18 +22,18 @@ Output**: it often says what happened. Still stuck?
 
 Your file icon theme decides which icon a file gets, and many themes show their own
 icon, or none, instead of the extension's. See
-[With a file icon theme](../features/highlighting.mdx#with-a-file-icon-theme) for
+[With a file icon theme](../02-features/highlighting.mdx#with-a-file-icon-theme) for
 what each kind of theme does, and when a setting brings the icons back.
 
 ### I get no suggestions
 
 - Completion is off by default. Turn it on in
-  [Experimental features](../getting-started/experimental-features.mdx).
+  [Experimental features](../01-getting-started/experimental-features.mdx).
 - Press :kbd[Ctrl] + :kbd[Space] to open the list by hand.
-- The [schema database](../reference/schema-database.mdx) needs to be downloaded
+- The [schema database](../03-reference/schema-database.mdx) needs to be downloaded
   once. If you were offline, connect and run **SCS IntelliSense: Refresh Schema
   Database**.
-- Inside a [`.sui` fragment](../getting-started/your-mod.mdx#sui-fragments), the
+- Inside a [`.sui` fragment](../01-getting-started/your-mod.mdx#sui-fragments), the
   attributes come from the unit that includes it. If nothing in the open folders
   includes it, there's nothing to suggest.
 
@@ -44,7 +44,7 @@ what each kind of theme does, and when a setting brings the icons back.
 - On a large folder, the extension may still be reading the files. Wait a moment
   and try again.
 - The unit may be one of the game's: those have no definition to open. See
-  [Files of the game](../getting-started/your-mod.mdx#files-of-the-game).
+  [Files of the game](../01-getting-started/your-mod.mdx#files-of-the-game).
 
 ### Ctrl+click on a path does nothing
 
@@ -59,7 +59,7 @@ what each kind of theme does, and when a setting brings the icons back.
   it when you export the GUIDs: put it beside the `.bank`, with the same name.
 - A bank of the game has no list: it's inside the game's archives.
 - Completion must be on. See
-  [Experimental features](../getting-started/experimental-features.mdx).
+  [Experimental features](../01-getting-started/experimental-features.mdx).
 
 ### An attribute I know is right is reported as unknown
 
@@ -72,7 +72,7 @@ what each kind of theme does, and when a setting brings the icons back.
 ### Formatting does nothing
 
 - The formatter is off by default. Turn it on in
-  [Experimental features](../getting-started/experimental-features.mdx).
+  [Experimental features](../01-getting-started/experimental-features.mdx).
 - A file with structural errors (red underlines) isn't formatted. Fix them first.
 - The file may already be formatted: then there's nothing to change.
 
@@ -87,20 +87,20 @@ what each kind of theme does, and when a setting brings the icons back.
 ### VS Code asks every time I move a file
 
 That dialog is VS Code's own. Tick **Do not ask me again** to stop it. See
-[Moving and renaming files](../features/moving-files.mdx#how-to-use-it).
+[Moving and renaming files](../02-features/moving-files.mdx#how-to-use-it).
 
 ### Why is uppercase in a unit name only a hint?
 
 SCS's documentation says unit names are lowercase, but the game's own files use
 uppercase too, and the game loads them. So it's reported only as a hint. You can
 hide hints in the Settings: see
-[Levels](../features/diagnostics.mdx#levels).
+[Levels](../02-features/diagnostics.mdx#levels).
 
 ### VS Code is slow with the extracted game open
 
 All of the game's archives extracted are about 230,000 files. Right after opening
 them, the extension needs one to three minutes to read them, and VS Code itself
 slows down with that many files. Open only the archive or folder you're studying,
-such as `def`. See [Large folders](../getting-started/your-mod.mdx#large-folders).
+such as `def`. See [Large folders](../01-getting-started/your-mod.mdx#large-folders).
 
 :::

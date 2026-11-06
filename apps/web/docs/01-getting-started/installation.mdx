@@ -1,14 +1,14 @@
 ---
 title: Installation
 description: Install SCS IntelliSense and open your first mod.
-link_position: 2
+order: 2
 ---
 
 ## Requirements
 
 - [Visual Studio Code](https://code.visualstudio.com/) 1.118 or newer.
 - An internet connection the first time you use completion, hover or the
-  attribute checks, to download the [schema database](../reference/schema-database.mdx).
+  attribute checks, to download the [schema database](../03-reference/schema-database.mdx).
   After that, it works offline.
 
 ## Install the extension
@@ -30,7 +30,7 @@ Use **File → Open Folder...** and pick your mod's folder, the one that holds
 `manifest.sii`. Opening single files works too, but then the extension only sees
 that file. With the whole folder open it can:
 
-- find a unit defined in another file when you Ctrl+click its name;
+- find a unit defined in another file when you :kbd[Ctrl] + click its name;
 - suggest units and files from all of your mod;
 - update paths when you move a file;
 - know which unit a `.sui` file is pasted into.
