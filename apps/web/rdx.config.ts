@@ -1,6 +1,5 @@
 import { defineConfig } from '@lexibase/rdx'
 import { Logo } from './components/logo'
-import Home from './components/home'
 import { i18n } from '@lexibase/rdx-i18n'
 
 export default defineConfig({
@@ -92,11 +91,12 @@ export default defineConfig({
       showToggleMode: false,
     },
   },
-  // The landing page at '/': components/home.tsx. When disabled, '/'
-  // redirects to '/docs'.
+  // The landing page at '/': components/home.tsx, translated by the
+  // phrases in locale/<folder>/home.json. When disabled, '/' redirects to
+  // '/docs'.
   homepage: {
     enabled: true,
-    component: Home,
+    translations: true,
   },
   theme: {
     defaultTheme: 'system',

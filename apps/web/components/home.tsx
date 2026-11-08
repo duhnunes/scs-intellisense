@@ -1,16 +1,19 @@
-import type { RdxHomepageProps } from '@lexibase/rdx'
+import type { RdxTranslatedHomepageProps } from '@lexibase/rdx'
 import type { ReactNode } from 'react'
 
 import { Logo } from './logo'
-import { ScreenshotGallery, type ShotText } from './screenshot-gallery'
+import { ScreenshotGallery } from './screenshot-gallery'
 import { SiiSnippet } from './sii-snippet'
 import { Video } from './video'
 
-// The landing page at "/" (homepage.component in rdx.config.ts). The layout
-// lives here; each language passes its own HomeText: English below, others in
-// locale/<folder>/home.tsx (RDX 5.2: served at /<locale>). Every example on it
-// is real: game files from ATS 1.61, the extension's own messages and hover
-// text. Those stay in English in every language, as the extension shows them.
+// The landing page at "/" (homepage.translations in rdx.config.ts; RDX 6
+// loads this file by its path). Each phrase is a literal t('...') call: RDX
+// looks it up in locale/<folder>/home.json (served at /<locale>), falling back
+// to the English, and `rdx check` lists missing and orphaned phrases by
+// reading these literals, so never pass t() a variable. Every example on the
+// page is real: game files from ATS 1.61, the extension's own messages and
+// hover text. Those stay in English in every language, as the extension
+// shows them.
 
 const MARKETPLACE =
   'https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense'
@@ -107,114 +110,6 @@ const ICONS = {
       <path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.07 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.62-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3" />
     </svg>
   ),
-}
-
-/** Every piece of text on the page that a translation changes. */
-export type HomeText = {
-  tagline: string
-  subtitle: string
-  install: string
-  readDocs: string
-  playVideo: string
-  featuresTitle: string
-  highlighting: { title: string; text: string }
-  diagnostics: { title: string; text: string }
-  hover: { title: string; text: string }
-  experimental: string
-  icons: { title: string; text: string; treeLabel: string }
-  paths: { title: string; text: string }
-  more: { title: string; text: string; items: string[]; link: string }
-  screenshotsTitle: string
-  screenshotsLabel: string
-  shots: ShotText
-  ctaTitle: string
-  ctaText: string
-  ctaButton: string
-  footerText: string
-  footerLabel: string
-  footerDocs: string
-}
-
-const EN: HomeText = {
-  tagline: 'A modern development experience for SCS Software modding.',
-  subtitle:
-    'A free VS Code extension for American Truck Simulator and Euro Truck Simulator 2 mods.',
-  install: 'Install for VS Code',
-  readDocs: 'Read the docs',
-  playVideo: 'Play video',
-  featuresTitle: 'Built for SCS modding.',
-  highlighting: {
-    title: 'Semantic Highlighting',
-    text: 'Classes, keys, values and paths, each in its own color.',
-  },
-  diagnostics: {
-    title: 'Diagnostics',
-    text: 'Mistakes are flagged as you type, before the game finds them.',
-  },
-  hover: {
-    title: 'Hover Info',
-    text: "An attribute's type and what it does, without leaving the editor.",
-  },
-  experimental: 'Experimental',
-  icons: {
-    title: 'File Icons',
-    text: 'Models, materials, textures and sound banks: recognized at a glance.',
-    treeLabel: "A mod's files with their icons",
-  },
-  paths: {
-    title: 'Paths Follow Your Files',
-    text: 'Rename or move a file in VS Code, and every path to it is updated.',
-  },
-  more: {
-    title: 'And More',
-    text: 'Everything a modder reaches for, in one extension.',
-    items: [
-      'Completion for classes, attributes, values and paths (experimental)',
-      'Go to Definition, Find References and Rename',
-      'Quick fixes for common mistakes',
-      'A formatter that never changes your content (experimental)',
-      'Outline and breadcrumbs for every unit',
-    ],
-    link: 'See every feature →',
-  },
-  screenshotsTitle: 'SCS files, with a little more intelligence.',
-  screenshotsLabel: 'Screenshots',
-  shots: {
-    hover: {
-      label: 'Hover',
-      caption:
-        'Point at a class to see the class it extends, or at an attribute to see its type.',
-    },
-    quickFix: {
-      label: 'Quick fix',
-      caption:
-        'A misspelled attribute is flagged as you type, with the fix one click away.',
-    },
-    completion: {
-      label: 'Completion',
-      caption: "Suggestions for the unit's own attributes, with their types.",
-    },
-    ctrlClick: {
-      label: 'Ctrl+click',
-      caption:
-        'Ctrl+click a path to open the file, or a unit name to go to where it is defined.',
-    },
-    include: {
-      label: '@include',
-      caption: 'Completion lists the folders and .sui files you can include.',
-    },
-    moving: {
-      label: 'Moving files',
-      caption:
-        'Rename or move a file, and every path to it is updated and marked for review.',
-    },
-  },
-  ctaTitle: 'Ready to mod with more?',
-  ctaText: 'Get SCS IntelliSense for VS Code.',
-  ctaButton: 'Install Extension',
-  footerText: 'Modern tools for SCS Software modding.',
-  footerLabel: 'Footer',
-  footerDocs: 'Docs',
 }
 
 function Card({
@@ -328,19 +223,8 @@ function FileTree({ label }: { label: string }) {
   )
 }
 
-/** English homepage, at "/". */
-export default function Home({ docsHref }: RdxHomepageProps) {
-  return <HomeLayout text={EN} docsHref={docsHref} />
-}
-
-/** The page itself, in the language of `text`. */
-export function HomeLayout({
-  text: t,
-  docsHref,
-}: {
-  text: HomeText
-  docsHref: string
-}) {
+/** The homepage; t() translates each phrase (locale/<folder>/home.json). */
+export default function Home({ docsHref, t }: RdxTranslatedHomepageProps) {
   return (
     <div className="scs-home">
       {/* Hero */}
@@ -350,10 +234,12 @@ export function HomeLayout({
           SCS IntelliSense
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground sm:text-xl">
-          {t.tagline}
+          {t('A modern development experience for SCS Software modding.')}
         </p>
         <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-          {t.subtitle}
+          {t(
+            'A free VS Code extension for American Truck Simulator and Euro Truck Simulator 2 mods.'
+          )}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a
@@ -362,10 +248,10 @@ export function HomeLayout({
             rel="noreferrer"
             className="scs-button scs-button-primary"
           >
-            {t.install} {ICONS.external}
+            {t('Install for VS Code')} {ICONS.external}
           </a>
           <a href={docsHref} className="scs-button">
-            {t.readDocs}
+            {t('Read the docs')}
           </a>
         </div>
 
@@ -373,7 +259,7 @@ export function HomeLayout({
           <Video
             id={VIDEO_ID}
             title="ATS & ETS2 Modding, the Easy Way | SCS IntelliSense"
-            playLabel={t.playVideo}
+            playLabel={t('Play video')}
           />
         </div>
       </section>
@@ -384,21 +270,23 @@ export function HomeLayout({
           id="features"
           className="text-center text-2xl font-semibold sm:text-3xl"
         >
-          {t.featuresTitle}
+          {t('Built for SCS modding.')}
         </h2>
         <div className="mx-auto mt-10 grid max-w-6xl gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card
             icon={ICONS.palette}
-            title={t.highlighting.title}
-            text={t.highlighting.text}
+            title={t('Semantic Highlighting')}
+            text={t('Classes, keys, values and paths, each in its own color.')}
           >
             <SiiSnippet code={HIGHLIGHT} />
           </Card>
 
           <Card
             icon={ICONS.warning}
-            title={t.diagnostics.title}
-            text={t.diagnostics.text}
+            title={t('Diagnostics')}
+            text={t(
+              'Mistakes are flagged as you type, before the game finds them.'
+            )}
           >
             <SiiSnippet
               code={DIAGNOSTIC}
@@ -416,9 +304,11 @@ export function HomeLayout({
 
           <Card
             icon={ICONS.info}
-            title={t.hover.title}
-            badge={t.experimental}
-            text={t.hover.text}
+            title={t('Hover Info')}
+            badge={t('Experimental')}
+            text={t(
+              "An attribute's type and what it does, without leaving the editor."
+            )}
           >
             <SiiSnippet
               code={HOVER}
@@ -440,11 +330,23 @@ export function HomeLayout({
             />
           </Card>
 
-          <Card icon={ICONS.file} title={t.icons.title} text={t.icons.text}>
-            <FileTree label={t.icons.treeLabel} />
+          <Card
+            icon={ICONS.file}
+            title={t('File Icons')}
+            text={t(
+              'Models, materials, textures and sound banks: recognized at a glance.'
+            )}
+          >
+            <FileTree label={t("A mod's files with their icons")} />
           </Card>
 
-          <Card icon={ICONS.move} title={t.paths.title} text={t.paths.text}>
+          <Card
+            icon={ICONS.move}
+            title={t('Paths Follow Your Files')}
+            text={t(
+              'Rename or move a file in VS Code, and every path to it is updated.'
+            )}
+          >
             <pre className="sii-snippet">
               <code>
                 <span className="block text-muted-foreground">
@@ -469,9 +371,21 @@ export function HomeLayout({
             </pre>
           </Card>
 
-          <Card icon={ICONS.more} title={t.more.title} text={t.more.text}>
+          <Card
+            icon={ICONS.more}
+            title={t('And More')}
+            text={t('Everything a modder reaches for, in one extension.')}
+          >
             <ul className="list-disc space-y-1.5 ps-5 text-sm text-muted-foreground marker:text-(--rdx-highlighting)">
-              {t.more.items.map((item) => (
+              {[
+                t(
+                  'Completion for classes, attributes, values and paths (experimental)'
+                ),
+                t('Go to Definition, Find References and Rename'),
+                t('Quick fixes for common mistakes'),
+                t('A formatter that never changes your content (experimental)'),
+                t('Outline and breadcrumbs for every unit'),
+              ].map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -479,7 +393,7 @@ export function HomeLayout({
               href={docsHref}
               className="mt-4 inline-block text-sm font-medium text-(--rdx-highlighting) hover:underline"
             >
-              {t.more.link}
+              {t('See every feature →')}
             </a>
           </Card>
         </div>
@@ -491,9 +405,49 @@ export function HomeLayout({
           id="screenshots"
           className="mb-8 text-center text-2xl font-semibold sm:text-3xl"
         >
-          {t.screenshotsTitle}
+          {t('SCS files, with a little more intelligence.')}
         </h2>
-        <ScreenshotGallery shots={t.shots} label={t.screenshotsLabel} />
+        <ScreenshotGallery
+          shots={{
+            hover: {
+              label: t('Hover'),
+              caption: t(
+                'Point at a class to see the class it extends, or at an attribute to see its type.'
+              ),
+            },
+            quickFix: {
+              label: t('Quick fix'),
+              caption: t(
+                'A misspelled attribute is flagged as you type, with the fix one click away.'
+              ),
+            },
+            completion: {
+              label: t('Completion'),
+              caption: t(
+                "Suggestions for the unit's own attributes, with their types."
+              ),
+            },
+            ctrlClick: {
+              label: t('Ctrl+click'),
+              caption: t(
+                'Ctrl+click a path to open the file, or a unit name to go to where it is defined.'
+              ),
+            },
+            include: {
+              label: t('@include'),
+              caption: t(
+                'Completion lists the folders and .sui files you can include.'
+              ),
+            },
+            moving: {
+              label: t('Moving files'),
+              caption: t(
+                'Rename or move a file, and every path to it is updated and marked for review.'
+              ),
+            },
+          }}
+          label={t('Screenshots')}
+        />
       </section>
 
       {/* Call to action */}
@@ -502,16 +456,18 @@ export function HomeLayout({
         className="px-4 pt-12 pb-20 text-center"
       >
         <h2 id="install" className="text-2xl font-semibold sm:text-3xl">
-          {t.ctaTitle}
+          {t('Ready to mod with more?')}
         </h2>
-        <p className="mt-3 text-muted-foreground">{t.ctaText}</p>
+        <p className="mt-3 text-muted-foreground">
+          {t('Get SCS IntelliSense for VS Code.')}
+        </p>
         <a
           href={MARKETPLACE}
           target="_blank"
           rel="noreferrer"
           className="scs-button scs-button-primary mt-6"
         >
-          {t.ctaButton} {ICONS.external}
+          {t('Install Extension')} {ICONS.external}
         </a>
       </section>
 
@@ -521,15 +477,17 @@ export function HomeLayout({
             <Logo className="size-8" />
             <div>
               <p className="text-sm font-medium">SCS IntelliSense</p>
-              <p className="text-xs text-muted-foreground">{t.footerText}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('Modern tools for SCS Software modding.')}
+              </p>
             </div>
           </div>
           <nav
-            aria-label={t.footerLabel}
+            aria-label={t('Footer')}
             className="flex items-center gap-5 text-sm"
           >
             <a href={docsHref} className="hover:text-(--rdx-highlighting)">
-              {t.footerDocs}
+              {t('Docs')}
             </a>
             <a
               href={GITHUB}

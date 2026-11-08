@@ -37,13 +37,25 @@ The [Brazilian Portuguese pages](./pt-br/docs) are a complete example.
 
 ## Translate the homepage
 
-The homepage text is in [`components/home.tsx`](../components/home.tsx), in
-the `EN` object. To translate it, copy
-[`pt-br/home.tsx`](./pt-br/home.tsx) to `locale/<language>/home.tsx` and
-translate the strings in it. The layout stays shared, so you only touch text.
-The code examples and the extension's messages on the page stay in English,
-as the extension shows them. Without this file, the language shows the English
-homepage.
+The homepage's translations live in `locale/<language>/home.json`: each
+English phrase, exactly as written in
+[`components/home.tsx`](../components/home.tsx) inside `t('...')`, followed by
+its translation. Copy [`pt-br/home.json`](./pt-br/home.json) and replace the
+Portuguese. `$metadata` holds the page title and description shown in search
+results and link previews.
+
+```json
+{
+  "Built for SCS modding.": "Feito para mods da SCS."
+}
+```
+
+A phrase you leave out shows in English, so a partial translation works. Keep
+the English side exactly as it is: if it doesn't match the page, the
+translation isn't used. `pnpm build` lists, per language, the phrases still
+missing and the ones whose English changed or no longer exists. The code
+examples and the extension's messages on the page stay in English, as the
+extension shows them.
 
 ## Add a new language
 
