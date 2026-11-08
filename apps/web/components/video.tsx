@@ -5,7 +5,16 @@ import { useState } from 'react'
 // A YouTube video that loads only when played: until then, its thumbnail and
 // a play button. The page stays light, and YouTube sees nothing from readers
 // who don't watch.
-export function Video({ id, title }: { id: string; title: string }) {
+export function Video({
+  id,
+  title,
+  playLabel,
+}: {
+  id: string
+  title: string
+  /** "Play video", in the page's language. */
+  playLabel: string
+}) {
   const [playing, setPlaying] = useState(false)
   return (
     <div className="relative aspect-video w-full">
@@ -23,7 +32,7 @@ export function Video({ id, title }: { id: string; title: string }) {
           type="button"
           onClick={() => setPlaying(true)}
           className="group absolute inset-0 size-full cursor-pointer"
-          aria-label={`Play video: ${title}`}
+          aria-label={`${playLabel}: ${title}`}
         >
           <img
             src={`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`}

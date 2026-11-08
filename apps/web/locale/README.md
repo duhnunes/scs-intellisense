@@ -35,6 +35,16 @@ Keep these as they are in English:
 
 The [Brazilian Portuguese pages](./pt-br/docs) are a complete example.
 
+## Translate the homepage
+
+The homepage text is in [`components/home.tsx`](../components/home.tsx), in
+the `EN` object. To translate it, copy
+[`pt-br/home.tsx`](./pt-br/home.tsx) to `locale/<language>/home.tsx` and
+translate the strings in it. The layout stays shared, so you only touch text.
+The code examples and the extension's messages on the page stay in English,
+as the extension shows them. Without this file, the language shows the English
+homepage.
+
 ## Add a new language
 
 1. Create `locale/<tag>/docs/`, where `<tag>` is the language tag in lowercase:

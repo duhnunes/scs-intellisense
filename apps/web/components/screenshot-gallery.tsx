@@ -3,57 +3,42 @@
 import { useState } from 'react'
 
 // Real screenshots of the extension (public/images/screenshots), one at a
-// time, picked by tab.
-const SHOTS = [
-  {
-    label: 'Hover',
-    src: '/images/screenshots/hover.png',
-    caption:
-      'Point at a class to see the class it extends, or at an attribute to see its type.',
-  },
-  {
-    label: 'Quick fix',
-    src: '/images/screenshots/quickFix.png',
-    caption:
-      'A misspelled attribute is flagged as you type, with the fix one click away.',
-  },
-  {
-    label: 'Completion',
-    src: '/images/screenshots/comp-attributes.png',
-    caption: "Suggestions for the unit's own attributes, with their types.",
-  },
-  {
-    label: 'Ctrl+click',
-    src: '/images/screenshots/ctrlClick.png',
-    caption:
-      'Ctrl+click a path to open the file, or a unit name to go to where it is defined.',
-  },
-  {
-    label: '@include',
-    src: '/images/screenshots/include.png',
-    caption: 'Completion lists the folders and .sui files you can include.',
-  },
-  {
-    label: 'Moving files',
-    src: '/images/screenshots/renameFile.png',
-    caption:
-      'Rename or move a file, and every path to it is updated and marked for review.',
-  },
-]
+// time, picked by tab. Labels and captions come from the page's language.
+const SHOTS = {
+  hover: '/images/screenshots/hover.png',
+  quickFix: '/images/screenshots/quickFix.png',
+  completion: '/images/screenshots/comp-attributes.png',
+  ctrlClick: '/images/screenshots/ctrlClick.png',
+  include: '/images/screenshots/include.png',
+  moving: '/images/screenshots/renameFile.png',
+}
 
-export function ScreenshotGallery() {
+/** Tab label and caption for each screenshot. */
+export type ShotText = Record<
+  keyof typeof SHOTS,
+  { label: string; caption: string }
+>
+
+export function ScreenshotGallery({
+  shots,
+  label,
+}: {
+  shots: ShotText
+  label: string
+}) {
+  const keys = Object.keys(SHOTS) as (keyof typeof SHOTS)[]
   const [current, setCurrent] = useState(0)
-  const shot = SHOTS[current]
+  const shot = shots[keys[current]]
   return (
     <div className="mx-auto w-full max-w-4xl">
       <div
         role="tablist"
-        aria-label="Screenshots"
+        aria-label={label}
         className="mb-4 flex flex-wrap justify-center gap-2"
       >
-        {SHOTS.map((s, i) => (
+        {keys.map((key, i) => (
           <button
-            key={s.label}
+            key={key}
             type="button"
             role="tab"
             id={`shot-tab-${i}`}
@@ -66,7 +51,7 @@ export function ScreenshotGallery() {
                 : 'bg-card text-muted-foreground hover:text-foreground'
             }`}
           >
-            {s.label}
+            {shots[key].label}
           </button>
         ))}
       </div>
@@ -77,7 +62,7 @@ export function ScreenshotGallery() {
       >
         <div className="mx-auto max-w-3xl overflow-hidden rounded-xl border bg-[#1e1e1e] shadow-2xl">
           <img
-            src={shot.src}
+            src={SHOTS[keys[current]]}
             alt={`${shot.label}: ${shot.caption}`}
             width={944}
             height={896}
