@@ -132,8 +132,8 @@ importers:
         specifier: 5.2.0
         version: 5.2.0(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@lexibase/rdx-i18n':
-        specifier: ^1.0.4
-        version: 1.0.4(react@19.3.1)
+        specifier: ^1.0.5
+        version: 1.0.5(react@19.3.1)
       next:
         specifier: ^16.4.2
         version: 16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -915,16 +915,12 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@lexibase/rdx-core@3.1.0':
-    resolution: {integrity: sha512-IRaBSwI7j5F0CE+L301Oo+SSXDQhgVRddnsrtwkN6YBKc3cLV/GbutsFJrFbMMQTIVajoTjQ8YgR/CmMm4UofA==}
-    engines: {node: ^22.18.0 || ^24.11.0}
-
   '@lexibase/rdx-core@3.1.1':
     resolution: {integrity: sha512-1ydixmldGfhVA3wotULNwtiue90l/jgv6ARyxuCZi7nHCDBY7ha0IuZO1FOOooTbGu8rMasRrlJNXot6nNNPQQ==}
     engines: {node: ^22.18.0 || ^24.11.0}
 
-  '@lexibase/rdx-i18n@1.0.4':
-    resolution: {integrity: sha512-h5pkWKNRnoI6Ia9tS+1WM4tEtcqd9ZJyN00mj/HJZMzMuK5DOMpDwf4CbUV26T8pK3jDXxc3m6GUuJZ/+h3uZw==}
+  '@lexibase/rdx-i18n@1.0.5':
+    resolution: {integrity: sha512-1gVDyBHkcQmsG0WCLBjgYY4JY6nJVdYJAdH+ygEmDfhLEgLBGB+QjoUgqvyQy/1/OY2EY7pUUhVSSUtfGkxzhA==}
     engines: {node: ^22.18.0 || ^24.11.0}
 
   '@lexibase/rdx-next@5.2.0':
@@ -936,12 +932,6 @@ packages:
       next: ^16.4.2
       react: ^19.3.1
       react-dom: ^19.3.1
-
-  '@lexibase/rdx-types@2.4.0':
-    resolution: {integrity: sha512-wejufp4rHYx/zpBMAcRCz66H6PAzPMTsbIw0loNvz3sR5V8ELeCutJrxiCcVilDjiSjW/VRwlPAsSEFvzpdiqA==}
-    engines: {node: ^22.18.0 || ^24.11.0}
-    peerDependencies:
-      react: ^19.3.1
 
   '@lexibase/rdx-types@2.5.0':
     resolution: {integrity: sha512-bVPgsx8CpkUA29xTllfqu9RQvhyYuIw3VMJKrJVhR/uvedlRl1AMaTycAfgk2z8lNnR39hofG1Lp//kB4hTH1g==}
@@ -5703,24 +5693,6 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@lexibase/rdx-core@3.1.0(react@19.3.1)':
-    dependencies:
-      '@lexibase/rdx-types': 2.4.0(react@19.3.1)
-      '@shikijs/rehype': 4.5.0
-      github-slugger: 2.0.0
-      gray-matter: 4.0.3
-      rehype-slug: 6.0.0
-      remark-directive: 4.0.0
-      remark-gfm: 4.0.1
-      remark-mdx: 3.1.1
-      remark-parse: 11.0.0
-      remark-stringify: 11.0.0
-      shiki: 4.5.0
-      unified: 11.0.5
-    transitivePeerDependencies:
-      - react
-      - supports-color
-
   '@lexibase/rdx-core@3.1.1(react@19.3.1)':
     dependencies:
       '@lexibase/rdx-types': 2.5.0(react@19.3.1)
@@ -5739,10 +5711,10 @@ snapshots:
       - react
       - supports-color
 
-  '@lexibase/rdx-i18n@1.0.4(react@19.3.1)':
+  '@lexibase/rdx-i18n@1.0.5(react@19.3.1)':
     dependencies:
-      '@lexibase/rdx-core': 3.1.0(react@19.3.1)
-      '@lexibase/rdx-types': 2.4.0(react@19.3.1)
+      '@lexibase/rdx-core': 3.1.1(react@19.3.1)
+      '@lexibase/rdx-types': 2.5.0(react@19.3.1)
     transitivePeerDependencies:
       - react
       - supports-color
@@ -5764,10 +5736,6 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
       - supports-color
-
-  '@lexibase/rdx-types@2.4.0(react@19.3.1)':
-    dependencies:
-      react: 19.3.1
 
   '@lexibase/rdx-types@2.5.0(react@19.3.1)':
     dependencies:
