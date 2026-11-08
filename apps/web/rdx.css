@@ -7,3 +7,149 @@
 .dark {
   --rdx-highlighting: #fe712e;
 }
+
+/* Homepage (components/home.tsx). Code colors are Catppuccin, like the docs'
+   code blocks: Latte on light, Mocha on dark. */
+.scs-home {
+  --sii-bg: #eff1f5;
+  --sii-text: #4c4f69;
+  --sii-magic: #8839ef;
+  --sii-class: #df8e1d;
+  --sii-key: #e64553;
+  --sii-string: #40a02b;
+  --sii-number: #fe640b;
+  --sii-word: #1e66f5;
+  --sii-colon: #7c7f93;
+  --sii-warning: #df8e1d;
+  --sii-popup-bg: #e6e9ef;
+}
+
+.dark .scs-home {
+  --sii-bg: #1e1e2e;
+  --sii-text: #cdd6f4;
+  --sii-magic: #cba6f7;
+  --sii-class: #f9e2af;
+  --sii-key: #eba0ac;
+  --sii-string: #a6e3a1;
+  --sii-number: #fab387;
+  --sii-word: #89b4fa;
+  --sii-colon: #9399b2;
+  --sii-warning: #f9e2af;
+  --sii-popup-bg: #181825;
+}
+
+.scs-home .sii-snippet {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--sii-bg);
+  color: var(--sii-text);
+  padding: 0.875rem 1rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.scs-home .sii-magic {
+  color: var(--sii-magic);
+}
+.scs-home .sii-class {
+  color: var(--sii-class);
+}
+.scs-home .sii-key {
+  color: var(--sii-key);
+  font-style: italic;
+}
+.scs-home .sii-string {
+  color: var(--sii-string);
+}
+.scs-home .sii-number {
+  color: var(--sii-number);
+}
+.scs-home .sii-word {
+  color: var(--sii-word);
+}
+.scs-home .sii-colon {
+  color: var(--sii-colon);
+}
+.scs-home .sii-comment {
+  color: var(--sii-colon);
+  font-style: italic;
+}
+
+.scs-home .sii-squiggle {
+  text-decoration: underline wavy var(--sii-warning);
+  text-underline-offset: 3px;
+}
+.scs-home .sii-hover {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--sii-word) 22%, transparent);
+}
+
+/* VS Code's hover/problem popup, under the marked line. */
+.scs-home .sii-popup {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0.375rem 0 0.25rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background: var(--sii-popup-bg);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  line-height: 1.45;
+  white-space: normal;
+}
+.scs-home .sii-popup code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+.scs-home .sii-popup-action {
+  display: block;
+  margin-top: 0.375rem;
+  color: var(--sii-word);
+}
+
+.scs-home .sii-diff-del {
+  background: color-mix(in srgb, #f38ba8 16%, transparent);
+}
+.scs-home .sii-diff-add {
+  background: color-mix(in srgb, #a6e3a1 18%, transparent);
+}
+
+.scs-home .scs-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+.scs-home .scs-button:hover {
+  background: var(--accent);
+}
+.scs-home .scs-button-primary {
+  border-color: var(--rdx-highlighting);
+  background: var(--rdx-highlighting);
+}
+
+/* Text on the orange: white on light (#c04b10, 5:1), near-black on dark
+   (#fe712e is too light for white: 2.8:1). */
+.scs-home .scs-button-primary,
+.scs-home .scs-on-accent {
+  color: #fff;
+}
+.dark .scs-home .scs-button-primary,
+.dark .scs-home .scs-on-accent {
+  color: #1c1917;
+}
+.scs-home .scs-button-primary:hover {
+  background: color-mix(in srgb, var(--rdx-highlighting) 85%, #000);
+}

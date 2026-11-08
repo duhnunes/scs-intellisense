@@ -1,5 +1,6 @@
 import { defineConfig } from '@lexibase/rdx'
 import { Logo } from './components/logo'
+import Home from './components/home'
 import { i18n } from '@lexibase/rdx-i18n'
 
 export default defineConfig({
@@ -91,10 +92,11 @@ export default defineConfig({
       showToggleMode: false,
     },
   },
-  // When disabled, '/' redirects to '/docs'.
-  // To use your own home.tsx, import its component and set homepage.component.
+  // The landing page at '/': components/home.tsx. When disabled, '/'
+  // redirects to '/docs'.
   homepage: {
-    enabled: false,
+    enabled: true,
+    component: Home,
   },
   theme: {
     defaultTheme: 'system',
