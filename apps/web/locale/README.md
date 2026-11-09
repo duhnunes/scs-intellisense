@@ -40,9 +40,14 @@ The [Brazilian Portuguese pages](./pt-br/docs) are a complete example.
 The homepage's translations live in `locale/<language>/home.json`: each
 English phrase, exactly as written in
 [`components/home.tsx`](../components/home.tsx) inside `t('...')`, followed by
-its translation. Copy [`pt-br/home.json`](./pt-br/home.json) and replace the
-Portuguese. `$metadata` holds the page title and description shown in search
-results and link previews.
+its translation. You don't write the English side: from `apps/web`, run
+
+```bash
+pnpm rdx i18n sync
+```
+
+and it creates `home.json` for every language in `rdx.config.ts`, or adds the
+phrases it is missing, each with an empty translation. Fill in the right side:
 
 ```json
 {
@@ -50,10 +55,15 @@ results and link previews.
 }
 ```
 
-A phrase you leave out shows in English, so a partial translation works. Keep
+`$metadata` (add it by hand, see [`pt-br/home.json`](./pt-br/home.json)) holds
+the page title and description shown in search results and link previews.
+
+A phrase left empty shows in English, so a partial translation works. Keep
 the English side exactly as it is: if it doesn't match the page, the
 translation isn't used. `pnpm build` lists, per language, the phrases still
-missing and the ones whose English changed or no longer exists. The code
+missing and the ones whose English changed or no longer exists. Sync never
+deletes those: rewrite the old translation under the new phrase, then delete
+the old entry. The code
 examples and the extension's messages on the page stay in English, as the
 extension shows them.
 
@@ -69,6 +79,8 @@ extension shows them.
 
    Until it is there, the site doesn't show the language, even with the pages
    in place.
+3. Run `pnpm rdx i18n sync` to create the language's `home.json` (see
+   [Translate the homepage](#translate-the-homepage)).
 
 ## Check your work
 
@@ -89,4 +101,6 @@ Then open a pull request. The commit message is `docs: translate ... to <languag
 
 A translation doesn't update itself. When an English page changes, its
 translations need the same change; a pull request that changes an English page
-updates the translations it can and says which ones it couldn't.
+updates the translations it can and says which ones it couldn't. The same goes
+for the homepage: a pull request that adds or changes a `t('...')` phrase runs
+`pnpm rdx i18n sync`, so every `home.json` lists it.
