@@ -1,6 +1,6 @@
 # Translating the docs
 
-The user docs at [scs-intellisense.vercel.app](https://scs-intellisense.vercel.app/docs)
+The user docs at [docs.duhnunes.dev/scs-intellisense](https://docs.duhnunes.dev/scs-intellisense/docs)
 are written in English in [`apps/web/docs/`](../docs). Each translation lives
 here, in a folder named after its language, with the same files at the same
 paths:
@@ -93,7 +93,7 @@ pnpm build
 
 It checks every page and link in every language and lists any broken one. To
 read the pages as you write, run `pnpm dev`, open the address it prints and
-add `/<tag>/docs` to it.
+add `/scs-intellisense/<tag>/docs` to it.
 
 Then open a pull request. The commit message is `docs: translate ... to <language>`.
 

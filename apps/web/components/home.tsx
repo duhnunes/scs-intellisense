@@ -1,4 +1,5 @@
-import type { RdxTranslatedHomepageProps } from '@lexibase/rdx'
+import { withBasePath, type RdxTranslatedHomepageProps } from '@lexibase/rdx'
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import { Logo } from './logo'
@@ -187,7 +188,7 @@ const FILES: [icon: string, name: string, depth: number][] = [
   ['bnk', 'engine.bank', 2],
 ]
 
-function FileTree({ label }: { label: string }) {
+function FileTree({ label, basePath }: { label: string; basePath?: string }) {
   return (
     <ul className="sii-snippet space-y-1.5" aria-label={label}>
       {FILES.map(([icon, name, depth]) => (
@@ -209,7 +210,7 @@ function FileTree({ label }: { label: string }) {
             </svg>
           ) : (
             <img
-              src={`/images/extensions/${icon}.svg`}
+              src={withBasePath(`/images/extensions/${icon}.svg`, basePath)}
               alt=""
               width={16}
               height={16}
@@ -224,7 +225,11 @@ function FileTree({ label }: { label: string }) {
 }
 
 /** The homepage; t() translates each phrase (locale/<folder>/home.json). */
-export default function Home({ docsHref, t }: RdxTranslatedHomepageProps) {
+export default function Home({
+  docsHref,
+  t,
+  basePath,
+}: RdxTranslatedHomepageProps) {
   return (
     <div className="scs-home">
       {/* Hero */}
@@ -250,9 +255,9 @@ export default function Home({ docsHref, t }: RdxTranslatedHomepageProps) {
           >
             {t('Install for VS Code')} {ICONS.external}
           </a>
-          <a href={docsHref} className="scs-button">
+          <Link href={docsHref} className="scs-button">
             {t('Read the docs')}
-          </a>
+          </Link>
         </div>
 
         <div className="mx-auto mt-12 max-w-4xl overflow-hidden rounded-xl border bg-black shadow-2xl">
@@ -337,7 +342,10 @@ export default function Home({ docsHref, t }: RdxTranslatedHomepageProps) {
               'Models, materials, textures and sound banks: recognized at a glance.'
             )}
           >
-            <FileTree label={t("A mod's files with their icons")} />
+            <FileTree
+              label={t("A mod's files with their icons")}
+              basePath={basePath}
+            />
           </Card>
 
           <Card
@@ -389,12 +397,12 @@ export default function Home({ docsHref, t }: RdxTranslatedHomepageProps) {
                 <li key={item}>{item}</li>
               ))}
             </ul>
-            <a
+            <Link
               href={docsHref}
               className="mt-4 inline-block text-sm font-medium text-(--rdx-highlighting) hover:underline"
             >
               {t('See every feature →')}
-            </a>
+            </Link>
           </Card>
         </div>
       </section>
@@ -408,6 +416,7 @@ export default function Home({ docsHref, t }: RdxTranslatedHomepageProps) {
           {t('SCS files, with a little more intelligence.')}
         </h2>
         <ScreenshotGallery
+          basePath={basePath}
           shots={{
             hover: {
               label: t('Hover'),
@@ -486,9 +495,9 @@ export default function Home({ docsHref, t }: RdxTranslatedHomepageProps) {
             aria-label={t('Footer')}
             className="flex items-center gap-5 text-sm"
           >
-            <a href={docsHref} className="hover:text-(--rdx-highlighting)">
+            <Link href={docsHref} className="hover:text-(--rdx-highlighting)">
               {t('Docs')}
-            </a>
+            </Link>
             <a
               href={GITHUB}
               target="_blank"

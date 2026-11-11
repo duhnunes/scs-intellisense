@@ -7,7 +7,7 @@
 <div align="center">
   <a href="./LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-FF6A00?style=for-the-badge" alt="MIT License" /></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=DuHNunes.scs-intellisense"><img src="https://img.shields.io/github/v/release/duhnunes/scs-intellisense?display_name=tag&style=for-the-badge" alt="Latest release" /></a>
-  <a href="https://scs-intellisense.vercel.app/docs"><img src="https://img.shields.io/badge/docs-scs--intellisense-FF6A00?style=for-the-badge" alt="Documentation" /></a>
+  <a href="https://docs.duhnunes.dev/scs-intellisense/docs"><img src="https://img.shields.io/badge/docs-scs--intellisense-FF6A00?style=for-the-badge" alt="Documentation" /></a>
   <img src="https://img.shields.io/badge/status-beta-FF6A00?style=for-the-badge" alt="Status: beta" />
 </div>
 
@@ -39,7 +39,7 @@ Experimental (off by default):
 - 🖱️ **Hover** with descriptions of classes and attributes.
 - ✨ **Formatter**: Format Document and Format Selection, plus **Check Formatting of All Files** and **Format All Files** for the whole workspace.
 
-To turn experimental features on, open the Settings (`Ctrl+,`), search for `@ext:DuHNunes.scs-intellisense`, and check the ones you want. They take effect right away. See the [documentation](https://scs-intellisense.vercel.app/docs) for how to use every feature, every setting and every command.
+To turn experimental features on, open the Settings (`Ctrl+,`), search for `@ext:DuHNunes.scs-intellisense`, and check the ones you want. They take effect right away. See the [documentation](https://docs.duhnunes.dev/scs-intellisense/docs) for how to use every feature, every setting and every command.
 
 ## Tested against the game
 

@@ -3,6 +3,9 @@ import { Logo } from './components/logo'
 import { i18n } from '@lexibase/rdx-i18n'
 
 export default defineConfig({
+  // Served at docs.duhnunes.dev/scs-intellisense: that domain's router
+  // project rewrites /scs-intellisense/* here, so every URL keeps the prefix.
+  basePath: '/scs-intellisense',
   description:
     'VS Code extension for modding American Truck Simulator and Euro Truck Simulator 2: highlighting, diagnostics, completion and navigation for .sii and .sui files.',
   // Site identity, SEO and link previews. '/' paths refer to files in public/.
@@ -12,7 +15,7 @@ export default defineConfig({
     // Footer starting year. Change it to an earlier founding year if needed.
     since: 2026,
     // The public site URL: relative share images resolve against it.
-    metadataBase: 'https://scs-intellisense.vercel.app',
+    metadataBase: 'https://docs.duhnunes.dev',
     keywords: [
       'SCS IntelliSense',
       'American Truck Simulator',

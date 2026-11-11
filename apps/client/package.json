@@ -5,7 +5,7 @@
   "description": "Extension to add intellisense for SCS Software files.",
   "author": "DuH Nunes",
   "license": "MIT",
-  "homepage": "https://scs-intellisense.vercel.app/docs",
+  "homepage": "https://docs.duhnunes.dev/scs-intellisense/docs",
   "bugs": {
     "url": "https://github.com/duhnunes/scs-intellisense/issues",
     "email": "duhnunes.dev@gmail.com"

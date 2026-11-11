@@ -4,6 +4,8 @@ import { useState } from 'react'
 
 // Real screenshots of the extension (public/images/screenshots), one at a
 // time, picked by tab. Labels and captions come from the page's language.
+// Native <img> gets no basePath from Next, so the prefix is added here (every
+// path starts with "/"; withBasePath lives in the server-side package).
 const SHOTS = {
   hover: '/images/screenshots/hover.png',
   quickFix: '/images/screenshots/quickFix.png',
@@ -22,9 +24,12 @@ export type ShotText = Record<
 export function ScreenshotGallery({
   shots,
   label,
+  basePath = '',
 }: {
   shots: ShotText
   label: string
+  /** The site's deployment prefix, such as "/scs-intellisense". */
+  basePath?: string
 }) {
   const keys = Object.keys(SHOTS) as (keyof typeof SHOTS)[]
   const [current, setCurrent] = useState(0)
@@ -62,7 +67,7 @@ export function ScreenshotGallery({
       >
         <div className="mx-auto max-w-3xl overflow-hidden rounded-xl border bg-[#1e1e1e] shadow-2xl">
           <img
-            src={SHOTS[keys[current]]}
+            src={basePath + SHOTS[keys[current]]}
             alt={`${shot.label}: ${shot.caption}`}
             width={944}
             height={896}
