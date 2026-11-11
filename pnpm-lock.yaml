@@ -129,8 +129,8 @@ importers:
   apps/web:
     dependencies:
       '@lexibase/rdx':
-        specifier: 6.3.0
-        version: 6.3.0(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 6.3.1
+        version: 6.3.1(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@lexibase/rdx-i18n':
         specifier: ^1.0.7
         version: 1.0.7(react@19.3.1)
@@ -923,8 +923,8 @@ packages:
     resolution: {integrity: sha512-8k9cXll4UDUYzQH6KrjA7fydgq9/Jer8ikrx6gGaStBH8t+E6Ry+8/g4XXzErQXmEaQhF8gVGVaqfUtq1er6sw==}
     engines: {node: ^22.18.0 || ^24.11.0}
 
-  '@lexibase/rdx-next@6.2.0':
-    resolution: {integrity: sha512-NqTDioiYCkRFJZp6wgWm63y76VMmU2/3UKbEE/r48NVEVu7WCnrp997B1KOA5T1eQTst2gK2L22MWp4MaQKI9A==}
+  '@lexibase/rdx-next@6.2.1':
+    resolution: {integrity: sha512-Oex505uE10nSGc5E63eZMh3/5R0kZYrzP0s6LLnXPG+hpyS0EccSwgxC5kFkfzzFzJBNMXyUpik6HCZ86GWkkQ==}
     engines: {node: ^22.18.0 || ^24.11.0}
     hasBin: true
     peerDependencies:
@@ -939,16 +939,16 @@ packages:
     peerDependencies:
       react: ^19.3.1
 
-  '@lexibase/rdx-ui@3.5.7':
-    resolution: {integrity: sha512-w34s3NjSd3wf2af52TbUB0HM50iEWGJtpaE9sMIs/jP9Pn9NA9tXMYV5DERYrIucMvZEfAZBWZz3jKWoPZVMfQ==}
+  '@lexibase/rdx-ui@3.5.8':
+    resolution: {integrity: sha512-GB1EjASAh8CQZVkBX7RqnHTQn2L7Lro/NQ3fX1IR+1nipF6erqjAt+o+D26zBwuGGn35opNMtI9U5ODbD+T60A==}
     engines: {node: ^22.18.0 || ^24.11.0}
     peerDependencies:
       next: ^16.4.2
       react: ^19.3.1
       react-dom: ^19.3.1
 
-  '@lexibase/rdx@6.3.0':
-    resolution: {integrity: sha512-7plaUFyndP0XtLjWT9+yW1bM4PjpK1DFV+gJdV3xM8QS8YxuxEMN1Rpo0/hCbpU62smO3GcBeDmo5ZiavUPc3A==}
+  '@lexibase/rdx@6.3.1':
+    resolution: {integrity: sha512-f8tSxh6/o9G2+d+WzcCLHiKmkYsljc9cF1fEwWcyyqckOZlUm+Nh9pnF80bnBvlnWSsNzRAGaOKBBL/8QKnFlA==}
     engines: {node: ^22.18.0 || ^24.11.0}
     hasBin: true
     peerDependencies:
@@ -5719,11 +5719,11 @@ snapshots:
       - react
       - supports-color
 
-  '@lexibase/rdx-next@6.2.0(@lexibase/rdx-ui@3.5.7(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@lexibase/rdx-next@6.2.1(@lexibase/rdx-ui@3.5.8(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@lexibase/rdx-core': 3.3.0(react@19.3.1)
       '@lexibase/rdx-types': 2.7.0(react@19.3.1)
-      '@lexibase/rdx-ui': 3.5.7(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@lexibase/rdx-ui': 3.5.8(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       cross-spawn: 7.0.6
       jiti: 2.7.0
       next: 16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -5741,7 +5741,7 @@ snapshots:
     dependencies:
       react: 19.3.1
 
-  '@lexibase/rdx-ui@3.5.7(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@lexibase/rdx-ui@3.5.8(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@base-ui/react': 1.9.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@lexibase/rdx-types': 2.7.0(react@19.3.1)
@@ -5769,10 +5769,10 @@ snapshots:
       - '@types/react-dom'
       - date-fns
 
-  '@lexibase/rdx@6.3.0(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@lexibase/rdx@6.3.1(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
-      '@lexibase/rdx-next': 6.2.0(@lexibase/rdx-ui@3.5.7(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@lexibase/rdx-ui': 3.5.7(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@lexibase/rdx-next': 6.2.1(@lexibase/rdx-ui@3.5.8(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@lexibase/rdx-ui': 3.5.8(@types/react@19.3.0)(next@16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       next: 16.4.3(@types/node@22.19.18)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)

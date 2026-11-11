@@ -9,7 +9,7 @@
     "start": "rdx start"
   },
   "dependencies": {
-    "@lexibase/rdx": "6.3.0",
+    "@lexibase/rdx": "6.3.1",
     "@lexibase/rdx-i18n": "^1.0.7",
     "next": "^16.4.2",
     "react": "19.3.1",
